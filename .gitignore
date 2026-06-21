@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*-server/
+*-env/
+
+# Audio temporal / modelos pesados
+*.wav
+*.mp3
+*.onnx
+muestras_karen/
+
+# Binarios descargados
+ffmpeg.exe
+ffprobe.exe
+*.zip
+
+# Bases de datos locales
+*.db
+
+# Entorno
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
