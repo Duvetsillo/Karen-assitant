@@ -1,7 +1,7 @@
 # 🚀 Karen — Roadmap: De Asistente de Voz a Control Total del PC
 **Proyecto:** [KAREN_Bitacora](KAREN_Bitacora.md)
 **Errores resueltos:** [KAREN_Errores](KAREN_Errores.md)
-**Fecha:** 2026-06-07
+**Actualizado:** 2026-08-29
 **Meta:** Convertir a Karen en un agente que escucha, razona y controla Windows como administrador — sin pagar nada.
 
 ---
@@ -29,8 +29,8 @@ Tú hablas → Karen escucha → Karen entiende → Karen actúa
 | Fase | Descripción | Estado |
 |---|---|---|
 | Fase 1 | Base funcional (voz → LLM → voz) | ✅ Completada |
-| Fase 2 | Mejor modelo y calidad de respuesta | ⏳ En progreso |
-| Fase 3 | Activación por palabra clave | 🔲 Pendiente |
+| Fase 2 | Mejor modelo y calidad de respuesta | ✅ Completada |
+| Fase 3 | Activación por palabra clave | ⏳ En progreso |
 | Fase 4 | Control del sistema operativo | 🔲 Pendiente |
 | Fase 5 | Control de aplicaciones | 🔲 Pendiente |
 | Fase 6 | Memoria persistente | 🔲 Pendiente |
@@ -57,7 +57,7 @@ Tú hablas → Karen escucha → Karen entiende → Karen actúa
 
 ---
 
-## ⏳ FASE 2 — Mejor Modelo y Calidad (EN PROGRESO)
+## ✅ FASE 2 — Mejor Modelo y Calidad (COMPLETADA)
 
 > El gemma3:1b funciona pero da respuestas básicas. Necesitamos un modelo más capaz.
 
@@ -73,7 +73,7 @@ Tú hablas → Karen escucha → Karen entiende → Karen actúa
   ```
 - [x] Reiniciar servidor Flask (ahora vía `karen.service` systemd)
 - [x] Probar conversación y evaluar calidad de respuestas
-- [ ] Comparar velocidad con gemma3:1b
+- [x] Comparar velocidad con gemma3:1b — `llama3.2:3b` ofrece el mejor equilibrio para el hardware disponible.
 
 ### 2.2 Diagnosticar qwen2.5:7b
 
@@ -83,28 +83,30 @@ Tú hablas → Karen escucha → Karen entiende → Karen actúa
 ### 2.3 Mejorar el System Prompt
 
 - [x] Personalidad tipo VIERAS/Iron Man, se dirige a Dayver como "Jefe" o "Dayver"
-- [ ] Reforzar que Karen recuerde que puede ejecutar comandos en Windows (para Fase 4)
-- [ ] Diferenciar mejor entre preguntas y comandos de acción
+- [x] Definir personalidad: Karen responde en español, se dirige a Dayver como "Jefe" y mantiene respuestas aptas para voz.
+- [ ] Diferenciar mejor entre preguntas y comandos de acción — se retomará al iniciar Fase 4.
 
 ---
 
-## 🔲 FASE 3 — Activación por Palabra Clave
+## ⏳ FASE 3 — Activación por Palabra Clave
 
 > En vez de presionar ENTER, Karen escucha siempre y actúa al oír "Karen".
 
 ### 3.1 Wake word con openwakeword
 
-- [x] `openwakeword 0.6.0` instalado
-- [x] Modelo pre-entrenado `hey_jarvis` confirmado funcionando con alta confianza
-- [x] 25 muestras de audio personalizadas de "Karen" grabadas en `C:\karen\muestras_karen\`
-- [ ] Entrenar modelo custom de "Karen" — falló en Windows por dependencias, **plan: entrenar en la LXC de Linux y generar `karen.onnx` portable**
-- [ ] Copiar `karen.onnx` a `C:\karen\` y cargarlo con `inference_framework="onnx"`
+- [x] Se descartó `pvporcupine` para evitar depender de una API key; se usa `openWakeWord`.
+- [x] Se generaron 1,500 muestras sintéticas de "Karen" con Edge-TTS y voces latinoamericanas.
+- [x] Se preparó el entrenamiento en la LXC de Linux para evitar las dependencias de Windows.
+- [x] Se corrigieron problemas de memoria y compatibilidad de dependencias durante el entrenamiento.
+- [ ] Confirmar que el fix de exportación de `entrenar_karen.py` está aplicado y completar una corrida de entrenamiento.
+- [ ] Obtener `~/karen-training/karen_model/karen.onnx`.
+- [ ] Copiar `karen.onnx` a `C:\karen\`, activar `WAKE_WORD_ACTIVO = True` y validar la detección en Windows.
 
 ### 3.2 Detección automática de silencio (VAD)
 
 - [x] Función `hay_voz()` implementada con `np.max` (cambiado desde `np.mean`) para detección de picos
 - [x] `UMBRAL_VOZ = 0.15` configurado — pendiente de validar a fondo
-- [ ] Confirmar que el filtro RMS de energía pre-transcripción (`np.sqrt(np.mean(audio_np**2)) > umbral`) en `cliente.py` está implementado y funcionando — está diseñado para corregir alucinaciones de Whisper transcribiendo silencio/ruido ambiente como frases fantasma
+- [x] Filtro RMS pre-transcripción implementado con `UMBRAL_RMS = 0.02` para evitar alucinaciones de Whisper sobre silencio o ruido.
 
 ---
 

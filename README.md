@@ -12,7 +12,7 @@ Karen es un asistente de voz personal, gratuito y 100% local, inspirado en Jarvi
 - Razona con un **LLM local vía Ollama** (`llama3.2:3b`)
 - Responde por voz con **Edge-TTS** en español
 - Corre como servicio systemd en una LXC de Proxmox (arranque automático)
-- Detecta la palabra de activación ("Karen") con `openwakeword`
+- Tiene preparada la integración de activación por palabra clave con `openWakeWord`; falta validar y desplegar el modelo personalizado `karen.onnx`
 - Personalidad propia (tipo VIERAS/Iron Man), se dirige al usuario como "Jefe" o por su nombre
 
 ## 🎯 Hacia dónde va
@@ -59,7 +59,7 @@ Windows (altavoz)
 | Capa | Tecnología |
 |---|---|
 | LLM | Ollama + `llama3.2:3b` |
-| STT | OpenAI Whisper (`small`) |
+| STT | OpenAI Whisper (`base`) |
 | TTS | Edge-TTS (`es-ES-ElviraNeural`) |
 | Wake word | openWakeWord 0.6.0 (ONNX) |
 | Backend | Flask (Python) |
@@ -81,33 +81,31 @@ Esto es una restricción de diseño constante: cualquier modelo por encima de ~3
 
 ```
 karen-assistant/
-├── docs/
-│   ├── KAREN_Bitacora.md   # Log técnico de la instalación inicial
-│   ├── KAREN_Errores.md    # Errores encontrados y sus soluciones
-│   └── KAREN_Roadmap.md    # Roadmap por fases
-├── server/
-│   └── server.py           # Backend Flask + Ollama (corre en la LXC)
-└── client/
-    └── cliente.py           # Cliente de voz (corre en Windows)
+└── docs/
+    ├── KAREN_Bitacora.md   # Log técnico de la instalación inicial
+    ├── KAREN_Errores.md    # Errores encontrados y sus soluciones
+    └── KAREN_Roadmap.md    # Roadmap por fases
 ```
+
+> El código operativo vive actualmente en el cliente Windows y en la LXC. Aún falta sincronizar y versionar aquí `cliente.py`, `server.py` y `requirements.txt`.
 
 ---
 
 ## 🚀 Cómo correrlo
 
 ### 1. Servidor (LXC / Linux)
+
+> Referencia de despliegue: el servicio de producción corre como `karen.service`. Los archivos de código todavía no están incluidos en este repositorio.
 ```bash
-ollama pull llama3.2:3b
-python -m venv ~/karen-server
-source ~/karen-server/bin/activate
-pip install flask requests
-python server/server.py
+sudo systemctl status karen.service
+curl http://localhost:5000/salud
 ```
 
 ### 2. Cliente (Windows)
 ```powershell
+cd C:\karen
 pip install -r requirements.txt
-python client/cliente.py
+python cliente.py
 ```
 
 > Nota: requiere `ffmpeg.exe` accesible (ver [`docs/KAREN_Errores.md`](docs/KAREN_Errores.md) para el setup en Windows).
@@ -119,6 +117,12 @@ python client/cliente.py
 - [Bitácora técnica](docs/KAREN_Bitacora.md) — cómo se montó todo, paso a paso
 - [Registro de errores](docs/KAREN_Errores.md) — problemas reales y cómo se resolvieron
 - [Roadmap](docs/KAREN_Roadmap.md) — fases del proyecto, de chatbot a agente de control del PC
+
+## 📌 Estado al 29 de agosto de 2026
+
+- Fases 1 y 2 completadas: flujo voz → LLM → voz, `llama3.2:3b`, personalidad de Karen y servicio systemd.
+- Fase 3 en progreso: se generaron muestras sintéticas para entrenar la wake word; está pendiente confirmar el entrenamiento y obtener `karen.onnx`.
+- El siguiente hito es desplegar el modelo ONNX en el cliente Windows y activar `WAKE_WORD_ACTIVO`.
 
 ---
 
