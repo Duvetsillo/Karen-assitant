@@ -1,0 +1,8 @@
+requests
+edge-tts
+sounddevice
+soundfile
+numpy
+openai-whisper
+onnxruntime
+openwakeword
