@@ -24,3 +24,41 @@ KAREN fue la fase de experimentación pura. A través de ella, identifiqué las 
 - **Modelos:** Implementaciones tempranas de LLMs locales.
 - **OS:** Linux / Windows (Híbrido).
 - **Integraciones:** Scripts de shell y APIs de automatización básica.
+
+## ⚙️ Configuración portable
+
+El cliente ya no depende de una IP privada escrita en el código. Por defecto
+busca el servidor en `http://127.0.0.1:5000`, pero puedes conectarlo a tu
+servidor local o de tu red sin editar `cliente.py`.
+
+Windows PowerShell:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+py -m pip install -r requirements.txt
+$env:KAREN_SERVER = "http://192.168.1.20:5000"
+py cliente.py
+```
+
+También puedes pasar el servidor directamente:
+
+```powershell
+py cliente.py --server http://192.168.1.20:5000 --whisper-model base
+```
+
+Consulta `.env.example` para todas las variables disponibles. El archivo no
+se carga automáticamente y no contiene secretos; sirve como plantilla para
+tu entorno local.
+
+## 🧪 Tests
+
+Los tests no requieren micrófono, GPU, Whisper ni un servidor KAREN activo:
+
+```powershell
+py -m pip install -r requirements-dev.txt
+py -m pytest -q
+```
+
+La configuración por defecto es segura para una instalación nueva: apunta a
+localhost y no expone ningún endpoint de red por sí sola.
