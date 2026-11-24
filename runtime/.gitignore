@@ -51,6 +51,7 @@ obsidian-forge/
 !/qa/verify_core_interop.py
 !/qa/verify_conversation_live.py
 !/qa/measure_ollama_latency.py
+!/qa/measure_personal_core.py
 !/qa/measure_core.py
 !/qa/ui_helpers.py
 !/qa/measure_core_ui.py

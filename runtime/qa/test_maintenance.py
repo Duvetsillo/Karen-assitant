@@ -8,6 +8,31 @@ from maintenance import backup, verify
 
 
 class MaintenanceTests(unittest.TestCase):
+    def test_personality_memory_and_reviewed_knowledge_restore_together(self):
+        from personal_profile import DEFAULTS, load, save
+        from karen_core2.memory import ContextMemory
+        from karen_core2.knowledge import KnowledgeStore
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'source'
+            private = root / '.private'
+            private.mkdir(parents=True)
+            memory = ContextMemory(private / 'conversations.sqlite3')
+            memory.add('Karen', 'Proyecto telescopio de prueba.')
+            knowledge = KnowledgeStore(memory)
+            note = root / 'synthetic.md'
+            note.write_text('Saturno tiene anillos.', encoding='utf-8')
+            document = knowledge.import_file('Karen', note)
+            knowledge.review(document['id'], approve=True)
+            save({**DEFAULTS, 'initiative': 'passive'}, private / 'personality.json')
+            destination = Path(directory) / 'backup'
+            count = backup(destination, root)
+            self.assertEqual(verify(destination), count)
+            restored = destination / 'user-data/.private'
+            recovered = ContextMemory(restored / 'conversations.sqlite3')
+            self.assertEqual(load(restored / 'personality.json')['initiative'], 'passive')
+            self.assertIn('telescopio', recovered.retrieve('Karen', 'telescopio')[0]['content'])
+            self.assertEqual(KnowledgeStore(recovered).search('Karen', 'Saturno')[0]['document_id'], document['id'])
+
     def test_online_sqlite_backup_contains_committed_wal_and_detects_tampering(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'source'

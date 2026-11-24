@@ -6,6 +6,8 @@ La clásica carga, refresca y cambia chats con un trabajador SQLite, sin consult
 
 ## Ejecutar Karen clásica
 
+La [actualización personal local](docs/PERSONAL_AI_UPGRADE.md) documenta identidad persistente, documentos revisados, perfiles de recursos y continuidad tras cancelación manual. El [registro de progreso](KAREN_PROGRESS.md) distingue lo integrado de full-duplex y otras capacidades pendientes.
+
 Requiere Python y las dependencias de `requirements.txt`; funciones de voz y calendario usan además `requirements-voice.txt` y `requirements-calendar.txt`. Revisa `settings.json` y usa tus propios endpoints y credenciales. Los datos privados van en `.private/`.
 
 ```powershell

@@ -50,7 +50,7 @@ Archivos: `personal_profile.py`, `karen_personality.py`, `karen_core2/runtime.py
 - Importación y lista en Core 2 de Tkinter; revisión/aprobación/eliminación mediante `/conocimiento` o `knowledge_cli.py`. No se modificaron las rutas de publicación del servidor móvil ni las integraciones externas.
 - Menú Más acciones conserva controles secundarios y deja resultados legibles en 1180×850. Corregidas etiquetas españolas con codificación dañada. Verificación visual de la ventana sintética propia: salida de 13 px antes a 110 px en tamaño mínimo después. Skill impeccable; detector mecánico sin hallazgos (no equivale a auditoría de accesibilidad).
 
-Archivos principales: `conversation_turn.py`, `voice.py`, `karen_app.py`, `karen_core2/runtime.py`, `karen_core2/knowledge.py`, `knowledge_cli.py`, `karen_core2/panel.py`, `ui.py`, `requirements.txt` y pruebas específicas. Pruebas de conocimiento, turnos, Core 2 y GUI: 39 OK antes de ampliar la verificación de cola; políticas y GUI ampliada: 13 OK; cola y GUI: 9 OK. Regresión intermedia: 317 OK, 56.570 s. Regresiones finales con ambos intérpretes en curso.
+Archivos principales: `conversation_turn.py`, `voice.py`, `karen_app.py`, `karen_core2/runtime.py`, `karen_core2/knowledge.py`, `knowledge_cli.py`, `karen_core2/panel.py`, `ui.py`, `requirements.txt` y pruebas específicas. Pruebas de conocimiento, turnos, Core 2 y GUI: 39 OK antes de ampliar la verificación de cola; políticas y GUI ampliada: 13 OK; cola y GUI: 9 OK. Regresión intermedia: 317 OK, 56.570 s. Regresiones finales: **330 OK en Python 3.14 (62.107 s) y 330 OK en Python 3.11 (61.485 s)**. La guía `docs/PERSONAL_AI_UPGRADE.md` registra comandos, privacidad, modelos, evidencia y los 22 criterios con alcance explícito.
 
 ## Próxima tarea
 
