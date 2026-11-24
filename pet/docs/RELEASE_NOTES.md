@@ -1,4 +1,21 @@
-Cambios posteriores a 1.6.8 (sin versión publicada): modos manuales Normal,
+## 1.8.1 — Escucha recuperable y diagnóstico visible
+
+Los fallos transitorios del grabador reabren el micrófono hasta dos veces.
+Los fragmentos incompletos se descartan antes de transcribir; pausar o detener
+invalida las operaciones anteriores. Se conserva el bloqueo entre interfaces.
+Un dispositivo elegido que desaparece muestra cómo restaurarlo, sin abrir otro
+micrófono automáticamente. Los errores de permisos no se reintentan solos.
+
+Pet y Voz muestran la causa de la escucha detenida y permiten reintentar.
+La recuperación limpia únicamente su aviso anterior, sin borrar errores de la
+conversación. Los eventos recientes de escucha prevalecen sobre snapshots viejos.
+Esta versión también incluye los materiales, gestos y ritmos de Pet del último
+cambio visual. No modifica modelos, identidad de voz ni preferencias personales.
+
+La activación sigue utilizando transcripción por fragmentos. No incluye AEC
+comprobado, interrupción por voz durante la reproducción ni STT incremental.
+
+Cambios posteriores a 1.6.8: modos manuales Normal,
 Gaming y No molestar en Sistema y menú de bandeja. Los perfiles aplican un
 overlay en tiempo de ejecución y conservan todas las preferencias existentes.
 Gaming reduce renderizado y presencia visual sin desactivar voz configurada.

@@ -86,3 +86,28 @@ Validación: 170 pruebas de Pet aprobadas, compilación TypeScript/Vite correcta
 y revisión visual en 1280×720 y 820×640, incluyendo saludo, reposo y ambos
 fondos. La advertencia de tamaño del paquete Pixi continúa sin impedir la
 compilación. Los datos personales y credenciales permanecen fuera de Git.
+
+## Recuperación de voz — Pet 1.8.1
+
+El aviso compartido por el usuario procede de la activación por voz, no del
+motor de síntesis. En la instalación local, el modelo de reconocimiento pudo
+cargar y procesar silencio sintético en un proceso real. Una prueba adicional
+de TTS Windows → PCM → Whisper terminó sin usar ni reproducir el micrófono,
+con errores de transcripción; no constituye aceptación acústica.
+
+Corregidos el cierre definitivo ante fallos transitorios del grabador y la
+pérdida de su causa entre Pet y Ajustes. Los reintentos son acotados, respetan
+el bloqueo entre interfaces y descartan grabaciones fallidas. Un micrófono
+guardado ausente conserva su selección visible. Los avisos anteriores se
+limpian al recuperar la escucha sin borrar errores ajenos de conversación.
+
+Validación: **176 pruebas de Pet aprobadas en 27 archivos**, comprobación de
+tipos y compilación correctas. La instancia nativa de prueba mostró la causa
+real de bloqueo de micrófono. La guía `pet/docs/VOICE_TROUBLESHOOTING.md`
+describe recuperación y aceptación física. Ajustes y almacén DPAPI respaldados
+localmente; ningún dato de usuario se incorpora a los commits.
+
+Límites: el fallo físico original no se ha reproducido con el micrófono del
+usuario. Se observó poca RAM/VRAM libre; no se forzó una inferencia Qwen bajo
+esa carga ni se modificaron programas externos. Siguen pendientes AEC e
+interrupción vocal verificables, STT incremental y la sección de datos propios.
