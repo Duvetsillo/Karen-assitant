@@ -1,0 +1,2 @@
+# Isolated overlay only. Do not install into expressive-runtime or upgrade its dependencies.
+faster-qwen3-tts==0.2.6 --hash=sha256:3881a41dc189f0a6e93fa047f376deffeb2fa84e888e7d570f79b3e2267765cc

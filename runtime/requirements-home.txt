@@ -1,0 +1,2 @@
+# Optional: Home Assistant WebSocket discovery and event subscriptions only.
+aiohttp>=3.12,<4

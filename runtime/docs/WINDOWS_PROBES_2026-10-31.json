@@ -1,0 +1,32 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "scope": "One real read-only CPU/RAM/system disk sample during build. No GPU sensors or services tested.",
+  "status": "completed",
+  "elapsed_ms": 253.77099999968777,
+  "results": [
+    {
+      "step": 0,
+      "tool": "cpu_sample",
+      "result": {
+        "cpu_percent": 11.8
+      }
+    },
+    {
+      "step": 1,
+      "tool": "memory_sample",
+      "result": {
+        "ram_total_bytes": 17063333888,
+        "ram_available_bytes": 6720188416
+      }
+    },
+    {
+      "step": 2,
+      "tool": "disk_sample",
+      "result": {
+        "drive": "C:",
+        "disk_total_bytes": 999014002688,
+        "disk_free_bytes": 117907496960
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+requests
+edge-tts==7.3.1
+sounddevice
+soundfile
+numpy
+openai-whisper
+onnxruntime
+openwakeword
+SpeechRecognition
+PyAudio
+pyttsx3

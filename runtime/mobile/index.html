@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#101815">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Karen">
+  <meta name="description" content="Tu espacio para conversar con Karen desde el iPhone.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+  <title>Karen · Contigo</title>
+</head>
+<body>
+<div class="app">
+  <header class="topbar"><div class="identity"><img src="/icon.svg" width="44" height="44" alt=""><div><h1>Karen</h1><p id="connection">Tu asistente, contigo</p></div></div><button id="new-chat" class="icon-button" aria-label="Nueva conversación" title="Nueva conversación">＋</button></header>
+  <main id="main">
+    <section id="login" class="page" hidden>
+      <div class="welcome-mark" aria-hidden="true">k<span>✦</span></div><h2>Hola, estamos<br>a un mensaje.</h2><p class="intro">Conecta con tu Karen del PC y llévala contigo.</p>
+      <form id="login-form"><label for="access-code">Tu código de acceso</label><input id="access-code" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" required placeholder="Pega el código del PC"><button class="primary" type="submit">Conectar con Karen</button></form>
+      <p class="help">En tu PC, ejecuta <code>python mobile_server.py code</code> para ver tu código.</p>
+      <details><summary>Instalar en mi iPhone</summary><p>Abre esta dirección en Safari. Pulsa Compartir, Añadir a pantalla de inicio y Añadir. Mantén Tailscale conectado y el PC encendido para hablar con Karen.</p></details>
+    </section>
+    <section id="chat" class="chat-page" hidden>
+      <div id="messages" role="log" aria-label="Conversación" aria-live="polite"></div>
+      <div id="welcome" class="chat-welcome"><div class="welcome-mark" aria-hidden="true">k<span>✦</span></div><h2>¿Qué tienes<br>en mente?</h2><p>Cuéntame. Lo pensamos juntos.</p><div class="suggestions"><button data-prompt="Ayúdame a organizar mi día.">Organizar mi día <span>＋</span></button><button data-prompt="Quiero pensar una idea contigo.">Pensar una idea <span>＋</span></button><button data-prompt="Explícame algo de forma sencilla: ">Entender algo <span>＋</span></button></div></div>
+      <form id="composer"><label class="sr-only" for="message">Tu mensaje</label><div class="compose-row"><textarea id="message" placeholder="Escríbele a Karen…" rows="1" maxlength="8000" enterkeyhint="enter"></textarea><button class="send" id="send" type="submit" aria-label="Enviar mensaje">Enviar</button></div><p id="generation-status">Puedes usar el dictado del teclado del iPhone.</p></form>
+    </section>
+    <section id="history" class="page" hidden><div class="section-heading"><div><h2>Tus conversaciones</h2></div><button id="refresh-history" class="text-button">Actualizar</button></div><label for="search" class="sr-only">Buscar conversaciones</label><input id="search" type="search" placeholder="Buscar por título"><div id="chat-list" class="list"></div></section>
+    <section id="consult" class="page" hidden><h2>De un vistazo</h2><p class="intro">Consulta la información guardada en tu PC.</p><div class="segmented" role="group" aria-label="Qué consultar"><button data-resource="tasks" aria-pressed="true">Tareas</button><button data-resource="alerts" aria-pressed="false">Alertas</button><button data-resource="memories" aria-pressed="false">Recuerdos</button></div><form id="memory-form" hidden><label for="project">Proyecto</label><div class="project-row"><input id="project" value="Karen" maxlength="120" required><button class="primary">Consultar</button></div></form><button id="refresh-resource" class="text-button">Actualizar</button><div id="resource-list" class="list" aria-live="polite"></div></section>
+    <section id="settings" class="page" hidden><h2>Tu Karen</h2><div class="settings-row"><div><h3>Centro de operaciones</h3><p>Planes, memoria y estado real del PC.</p><a href="/jarvis">Abrir interfaz Jarvis</a></div></div><div class="settings-row"><div><h3>Leer las respuestas</h3><p>Usa la voz disponible en tu iPhone.</p></div><input type="checkbox" id="read-aloud" role="switch" aria-label="Leer respuestas en voz alta"></div><button id="stop-speaking" class="text-button">Detener voz</button><div class="settings-row"><div><h3>Modelo conectado</h3><p id="model-name">—</p></div></div><details open><summary>Instalar en tu pantalla de inicio</summary><p>En Safari, pulsa Compartir y Añadir a pantalla de inicio. Abre Karen desde su nuevo icono.</p></details><details><summary>Qué puedes hacer aquí</summary><p>Conversar, retomar chats y consultar tareas, alertas y recuerdos no sensibles. Los controles de casa, PC y servidores siguen en la aplicación de escritorio. No hay activación por «Karen» en segundo plano.</p><p>Con Core 2, Karen responde con Ollama en este PC. El razonamiento no depende de servicios de IA externos.</p></details><p class="help">Para conectar fuera de casa, el iPhone debe estar en tu misma red de Tailscale. Tu PC debe permanecer encendido con Karen móvil en ejecución.</p><button id="logout" class="logout">Desconectar este iPhone</button></section>
+  </main>
+  <div id="notice" role="status" hidden></div>
+  <nav id="nav" aria-label="Navegación principal" hidden><button data-page="chat" aria-current="page"><span aria-hidden="true">◌</span>Chat</button><button data-page="history"><span aria-hidden="true">☷</span>Historial</button><button data-page="consult"><span aria-hidden="true">▦</span>Consultar</button><button data-page="settings"><span aria-hidden="true">⚙</span>Ajustes</button></nav>
+</div>
+</body></html>
