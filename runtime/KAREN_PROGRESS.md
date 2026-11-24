@@ -41,9 +41,20 @@ Core 2 convierte Edge a Qwen3 local, conservando los demás proveedores configur
 
 Archivos: `personal_profile.py`, `karen_personality.py`, `karen_core2/runtime.py`, `.env.example`, pruebas de perfil y expectativa local en `qa/test_core2.py`. Pruebas: `python -m unittest qa.test_personal_profile qa.test_core2_models qa.test_core2`: OK (resultado detallado en registro local).
 
+## Conversación y conocimiento — integración funcional
+
+- Turnos con UUID, señales separadas para cancelar generación o solo audio, colas limitadas y rechazo de fragmentos obsoletos. Se distinguen frases generadas, sintetizadas y reproducidas completamente por el dispositivo. No demuestra que el usuario las oyó. Una frase interrumpida queda sin confirmación.
+- Core 2 recibe continuidad acotada al siguiente turno del mismo chat/sesión/proveedor. Puede retomar una explicación o atender correcciones; la intención la interpreta el modelo, sin prometer acierto semántico. Resultados de herramientas y comandos privados nunca se transfieren como continuidad.
+- Conocimiento local en el SQLite existente: TXT, Markdown, JSON, CSV y HTML UTF-8, máximo 1 MiB y 256 fragmentos. Extracción sin scripts ni descargas de imágenes, deduplicación, versiones por fuente, revisión, aprobación explícita, búsqueda FTS5 y eliminación de fuente/fragmentos/índice. No son embeddings semánticos.
+- Los documentos pendientes y sensibles quedan fuera del contexto automático. El almacenamiento sensible exige autorización explícita. El filtro de posibles credenciales es conservador y no garantiza detectar todo secreto.
+- Importación y lista en Core 2 de Tkinter; revisión/aprobación/eliminación mediante `/conocimiento` o `knowledge_cli.py`. No se modificaron las rutas de publicación del servidor móvil ni las integraciones externas.
+- Menú Más acciones conserva controles secundarios y deja resultados legibles en 1180×850. Corregidas etiquetas españolas con codificación dañada. Verificación visual de la ventana sintética propia: salida de 13 px antes a 110 px en tamaño mínimo después. Skill impeccable; detector mecánico sin hallazgos (no equivale a auditoría de accesibilidad).
+
+Archivos principales: `conversation_turn.py`, `voice.py`, `karen_app.py`, `karen_core2/runtime.py`, `karen_core2/knowledge.py`, `knowledge_cli.py`, `karen_core2/panel.py`, `ui.py`, `requirements.txt` y pruebas específicas. Pruebas de conocimiento, turnos, Core 2 y GUI: 39 OK antes de ampliar la verificación de cola; políticas y GUI ampliada: 13 OK; cola y GUI: 9 OK. Regresión intermedia: 317 OK, 56.570 s. Regresiones finales con ambos intérpretes en curso.
+
 ## Próxima tarea
 
-Turnos cancelables con seguimiento de audio realmente entregado al dispositivo y continuidad explícita tras una interrupción manual. Mantener la captura acústica simultánea pendiente hasta validar AEC.
+Completar regresión final, documentar aceptación y realizar la integración en main autorizada por el usuario. Después, prioridad funcional: captura full-duplex con AEC verificable y STT incremental. No habilitar captura simultánea nativa basándose solo en RMS.
 
 ## Recursos — perfiles y medidas
 

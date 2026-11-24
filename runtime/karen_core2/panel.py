@@ -2,7 +2,7 @@
 import json
 import threading
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, filedialog, messagebox
 import webbrowser
 
 
@@ -18,11 +18,19 @@ class CorePanel(tk.Frame):
         self.goal.insert(0, 'Diagnostica mi PC')
         self.goal.pack(fill='x', ipady=5)
         for text, command in [('Preparar plan', self.prepare), ('Ejecutar / reanudar', self.run),
-                              ('Cancelar plan', self.cancel), ('Recordar procedimiento verificado', self.remember),
+                              ('Cancelar plan', self.cancel), ('Importar conocimiento', self.import_knowledge),
+                              ('Ver documentos locales', self.list_knowledge)]:
+            tk.Button(self, text=text, command=command, bg='#F1F6F3', fg='#146B55', relief='flat', font=('Segoe UI', 10)).pack(fill='x', pady=3)
+        more = tk.Menubutton(self, text='Más acciones', bg='#F1F6F3', fg='#146B55', relief='flat',
+                             font=('Segoe UI', 10), takefocus=True, direction='below')
+        menu = tk.Menu(more, tearoff=False)
+        for text, command in [('Recordar procedimiento verificado', self.remember),
                               ('Actualizar estado y memoria', self.refresh), ('Analizar ventana una vez', self.perceive),
                               ('Pausar percepción', lambda: self.runtime.vision.pause()),
                               ('Abrir interfaz Jarvis', lambda: webbrowser.open('http://127.0.0.1:18793/jarvis'))]:
-            tk.Button(self, text=text, command=command, bg='#F1F6F3', fg='#146B55', relief='flat', font=('Segoe UI', 10)).pack(fill='x', pady=3)
+            menu.add_command(label=text, command=command)
+        more.configure(menu=menu)
+        more.pack(fill='x', pady=3)
         self.output = scrolledtext.ScrolledText(self, wrap='word', height=16, font=('Segoe UI', 10), bg='#F1F6F3', fg='#173D32')
         self.output.pack(fill='both', expand=True, pady=10)
         self.output.insert('end', 'Core 2 local. Prepara un plan para revisar sus subtareas antes de ejecutarlas.\n')
@@ -70,6 +78,33 @@ class CorePanel(tk.Frame):
 
     def refresh(self):
         self.background(lambda: {'core': self.runtime.status(), 'memories': self.runtime.memory.retrieve('Karen')})
+
+    def list_knowledge(self):
+        self.background(lambda: {'documents': self.runtime.knowledge.list('Karen'),
+                                'help': 'Revisa con /conocimiento revisar ID. Autoriza contexto con /conocimiento aprobar ID. Elimina con /conocimiento eliminar ID.'})
+
+    def import_knowledge(self):
+        if self.worker and self.worker.is_alive():
+            self.show('Espera a que termine la operación actual antes de importar un documento.')
+            return
+        filename = filedialog.askopenfilename(parent=self, title='Importar conocimiento local',
+            filetypes=[('Documentos de texto', '*.txt *.md *.json *.csv *.html *.htm')])
+        if not filename:
+            return
+        if not messagebox.askokcancel('Guardar documento local',
+                'Se extraerá y guardará el contenido en la base local. No importes contraseñas ni credenciales. '
+                'El documento no se usará en respuestas hasta que lo revises y apruebes. ¿Continuar?', parent=self):
+            return
+        sensitive = messagebox.askyesnocancel('Privacidad del documento',
+                '¿Contiene información personal sensible? Sí autoriza guardarla como sensible; quedará excluida '
+                'del contexto automático. Cancelar abandona la importación.', parent=self)
+        if sensitive is None:
+            return
+        def work():
+            result = self.runtime.knowledge.import_file('Karen', filename, sensitive=sensitive, allow_sensitive=sensitive)
+            result['next_step'] = 'Revisa con /conocimiento revisar ' + result['id'] + '. Los documentos sensibles se gestionan con knowledge_cli.py --allow-sensitive.'
+            return result
+        self.background(work)
 
     def perceive(self):
         def capture():

@@ -34,7 +34,7 @@ def build_ui(app):
     app.status_label = tk.Label(header, text="Lista", bg="#0D493A", fg="#FFFFFF", font=("Segoe UI", 11), anchor="e", padx=16, pady=10)
     app.status_label.pack(side="right", padx=(20, 0))
 
-    footer = tk.Label(root, text="Escucha local Â· La captura se pausa durante el procesamiento y la voz", bg=BG, fg=MUTED, font=("Segoe UI", 10), anchor="w", padx=24, pady=10)
+    footer = tk.Label(root, text="Escucha local · La captura se pausa durante el procesamiento y la voz", bg=BG, fg=MUTED, font=("Segoe UI", 10), anchor="w", padx=24, pady=10)
     footer.pack(side='bottom', fill='x')
 
     main = tk.Frame(root, bg=BG, padx=20, pady=4)
@@ -167,27 +167,27 @@ def build_ui(app):
     field(connection, "Modelo de este nodo", "model", [app.config.model])
     app.fields["model"].configure(state="disabled")
     app.fields["model"].bind("<<ComboboxSelected>>", app.select_model)
-    app.catalog_status = tk.Label(connection, text="Cargando catÃ¡logoâ€¦", wraplength=290, justify="left", bg=PANEL, fg=MUTED, font=("Segoe UI", 10))
+    app.catalog_status = tk.Label(connection, text="Cargando catálogo…", wraplength=290, justify="left", bg=PANEL, fg=MUTED, font=("Segoe UI", 10))
     app.catalog_status.pack(anchor="w", pady=(6, 0))
     app.active_target = tk.Label(connection, text="Esperando nodo/modelo", wraplength=290, justify="left", bg=PANEL, fg=TEXT, font=("Segoe UI", 10))
     app.active_target.pack(anchor="w", pady=(6, 0))
-    field(connection, "API key Â· solo esta sesiÃ³n", "api_key")
+    field(connection, "API key · solo esta sesión", "api_key")
     app.fields["api_key"].bind("<KeyRelease>", app.schedule_catalog)
-    app.test_button = button(connection, "Refrescar catÃ¡logo / salud", app.test_api)
+    app.test_button = button(connection, "Refrescar catálogo / salud", app.test_api)
     app.test_button.pack(fill="x", pady=(18, 0))
 
     tk.Label(benchmark, text="Aetherion", bg=PANEL, fg=TEXT, font=("Segoe UI", 13, "bold"), anchor="w").pack(fill="x", pady=(8, 12))
     app.benchmark_selection = tk.Label(benchmark, text="Modelo pendiente", wraplength=290, justify="left", bg=PANEL, fg=MUTED, font=("Segoe UI", 10))
     app.benchmark_selection.pack(fill="x")
-    app.benchmark_status = tk.Label(benchmark, text="API de integraciÃ³n pendiente de conexiÃ³n", wraplength=290, justify="left", bg=PANEL, fg=MUTED, font=("Segoe UI", 10))
+    app.benchmark_status = tk.Label(benchmark, text="API de integración pendiente de conexión", wraplength=290, justify="left", bg=PANEL, fg=MUTED, font=("Segoe UI", 10))
     app.benchmark_status.pack(fill="x", pady=(16, 12))
     connect_button = button(benchmark, 'Conectar Aetherion', app.connect_benchmark)
     connect_button.pack(fill='x', pady=(0, 12))
-    label(benchmark, 'CategorÃ­a de la prueba')
+    label(benchmark, 'Categoría de la prueba')
     app.benchmark_category = ttk.Combobox(benchmark, values=['general', 'coding', 'math', 'json', 'spanish'], state='readonly')
     app.benchmark_category.set('spanish')
     app.benchmark_category.pack(fill='x')
-    label(benchmark, 'LÃ­mite de tiempo Â· segundos')
+    label(benchmark, 'Límite de tiempo · segundos')
     app.benchmark_budget = tk.Entry(benchmark, bg=INPUT, fg=TEXT, insertbackground=TEXT, relief='flat', font=('Segoe UI', 11))
     app.benchmark_budget.insert(0, '60')
     app.benchmark_budget.pack(fill='x', ipady=5, pady=(0, 12))
@@ -202,19 +202,19 @@ def build_ui(app):
     app.benchmark_result = tk.Label(benchmark, text="Sin resultados. Elegir un modelo no inicia pruebas.", wraplength=290, justify="left", bg=PANEL, fg=MUTED, font=("Segoe UI", 10))
     app.benchmark_result.pack(fill="x")
 
-    label(audio, "MicrÃ³fono")
+    label(audio, "Micrófono")
     try:
-        app.device_choices = {f"{i} Â· {d['name']}": i for i, d in enumerate(sd.query_devices()) if d["max_input_channels"] > 0}
+        app.device_choices = {f"{i} · {d['name']}": i for i, d in enumerate(sd.query_devices()) if d["max_input_channels"] > 0}
     except sd.PortAudioError:
         app.device_choices = {}
     app.device_selector = ttk.Combobox(audio, state="readonly", values=["Predeterminado"] + list(app.device_choices), font=("Segoe UI", 10))
     app.device_selector.set(next((name for name, index in app.device_choices.items() if index == app.mic_index), "Predeterminado"))
     app.device_selector.pack(fill="x")
-    label(audio, "ActivaciÃ³n")
+    label(audio, "Activación")
     app.activation = ttk.Combobox(audio, state="readonly", values=["Karen/Caren: transcripcion local", "Karen: ONNX", "Manual: sin palabra clave"], font=("Segoe UI", 10))
     app.activation.set(("Karen/Caren: transcripcion local" if app.config.wake_mode == "transcript" else "Karen: ONNX") if app.config.wake_word_enabled else "Manual: sin palabra clave")
     app.activation.pack(fill="x")
-    field(audio, "TranscripciÃ³n Whisper", "whisper_model", ["tiny", "base", "small", "medium", "large"])
+    field(audio, "Transcripción Whisper", "whisper_model", ["tiny", "base", "small", "medium", "large"])
     field(audio, 'Motor de reconocimiento', 'stt_engine', ['faster-turbo', 'faster-small', 'whisper'])
     fixed_voice = (Path(__file__).resolve().parent / 'voice-models/active-voice.json').is_file()
     field(audio, 'Voz original compartida' if fixed_voice else 'Motor de voz', 'tts_engine', ['qwen3'] if fixed_voice else ['qwen3', 'kokoro', 'edge'])
@@ -226,7 +226,7 @@ def build_ui(app):
     if fixed_voice:
         for key in ('tts_engine', 'local_voice', 'voice', 'voice_rate'):
             app.fields[key].configure(state='disabled')
-    field(row, "Sensibilidad ONNX (0â€“1)", "wake_word_threshold")
+    field(row, "Sensibilidad ONNX (0–1)", "wake_word_threshold")
     app.tts_enabled = tk.BooleanVar(value=app.config.tts_enabled)
     tk.Checkbutton(audio, text="Leer respuestas en voz alta", variable=app.tts_enabled, bg=PANEL, fg=TEXT, selectcolor=INPUT, activebackground=PANEL, activeforeground=TEXT, font=("Segoe UI", 10)).pack(anchor="w", pady=(12, 4))
     voice_note = "Voz original compartida con WhatsApp y el PET. El perfil fijo conserva el mismo timbre; los ajustes de otras voces no se aplican." if fixed_voice else "Edge TTS necesita internet. ONNX requiere un detector configurado."
@@ -241,7 +241,7 @@ def build_ui(app):
         setattr(app, key, variable)
         tk.Checkbutton(audio, text=text, variable=variable, bg=PANEL, fg=TEXT, selectcolor=INPUT, activebackground=PANEL, activeforeground=TEXT, font=('Segoe UI', 10)).pack(anchor='w', pady=3)
     tk.Label(audio, text='El estilo conserva la voz original. La escucha usa transcripcion local; solo las ordenes dirigidas a Karen/Caren se envian al asistente.', wraplength=290, justify='left', bg=PANEL, fg=MUTED, font=('Segoe UI', 10)).pack(anchor='w', pady=(4, 8))
-    label(audio, 'Calendario y administraciÃ³n')
+    label(audio, 'Calendario y administración')
     button(audio, 'Vincular calendario iCloud', app.connect_icloud).pack(fill='x', pady=(6, 4))
     button(audio, 'Consultar estado del PC', lambda: app.send_prompt('Revisa el estado de mi PC')).pack(fill='x', pady=4)
     button(audio, 'Escanear mi red', lambda: app.send_prompt('Escanea mi red')).pack(fill='x', pady=4)
@@ -253,7 +253,7 @@ def build_ui(app):
     app.save_button.pack(fill="x")
     app.mic_label = tk.Label(bottom, text="", bg=PANEL, fg=MUTED, wraplength=300, justify="left", font=("Segoe UI", 10))
     app.mic_label.pack(fill="x", pady=(12, 8))
-    app.mic_button = button(bottom, "Activar micrÃ³fono", app.toggle_microphone, True)
+    app.mic_button = button(bottom, "Activar micrófono", app.toggle_microphone, True)
     app.mic_button.pack(fill="x")
 
     right = tk.Frame(main, bg=PANEL, padx=18, pady=16)
@@ -268,7 +268,7 @@ def build_ui(app):
     app.conversation_selector.pack(side='left', fill='x', expand=True)
     app.conversation_selector.bind('<<ComboboxSelected>>', lambda event: app.change_conversation())
     button(conversation_bar, 'Nuevo chat', lambda: app.change_conversation(new=True)).pack(side='right', padx=(8, 0))
-    tk.Label(toolbar, text="ConversaciÃ³n", bg=PANEL, fg=TEXT, font=("Segoe UI", 15, "bold")).pack(side="left")
+    tk.Label(toolbar, text="Conversación", bg=PANEL, fg=TEXT, font=("Segoe UI", 15, "bold")).pack(side="left")
     app.stop_voice_button = button(toolbar, "Detener voz", app.stop_voice)
     app.stop_voice_button.pack(side="right")
     app.stop_voice_button.configure(state="disabled")
@@ -283,15 +283,15 @@ def build_ui(app):
     app.retry_button.configure(state="disabled")
     app.welcome = tk.Frame(right, bg="#E8F4ED", padx=24, pady=24)
     app.welcome.grid(row=1, column=0, sticky="ew", pady=(0, 18))
-    tk.Label(app.welcome, text="Â¿QuÃ© tienes en mente?", bg="#E8F4ED", fg=TEXT, font=("Bahnschrift", 26, "bold"), anchor="w").pack(fill="x")
-    tk.Label(app.welcome, text="Habla con Karen o escribe tu mensaje. TÃº eliges el modelo.", bg="#E8F4ED", fg=MUTED, font=("Segoe UI", 11), anchor="w").pack(fill="x", pady=(8, 18))
+    tk.Label(app.welcome, text="¿Qué tienes en mente?", bg="#E8F4ED", fg=TEXT, font=("Bahnschrift", 26, "bold"), anchor="w").pack(fill="x")
+    tk.Label(app.welcome, text="Habla con Karen o escribe tu mensaje. Tú eliges el modelo.", bg="#E8F4ED", fg=MUTED, font=("Segoe UI", 11), anchor="w").pack(fill="x", pady=(8, 18))
     suggestions = tk.Frame(app.welcome, bg="#E8F4ED")
     suggestions.pack(fill="x")
     def prepare_prompt(text):
         app.prompt.delete(0, tk.END)
         app.prompt.insert(0, text)
         app.prompt.focus_set()
-    for title, prompt in [('Saludar', 'Hola, Karen.'), ('Ordenar una idea', 'AyÃºdame a ordenar una idea.'), ('Resolver una duda', 'Quiero resolver una duda.')]:
+    for title, prompt in [('Saludar', 'Hola, Karen.'), ('Ordenar una idea', 'Ayúdame a ordenar una idea.'), ('Resolver una duda', 'Quiero resolver una duda.')]:
         chip = button(suggestions, title, lambda value=prompt: prepare_prompt(value))
         chip.pack(side="left", padx=(0, 8))
     app.chat = scrolledtext.ScrolledText(right, bg="#FFFFFF", fg=TEXT, insertbackground=TEXT, relief="flat", wrap="word", font=("Segoe UI", 13), padx=24, pady=24, width=45, state="disabled")

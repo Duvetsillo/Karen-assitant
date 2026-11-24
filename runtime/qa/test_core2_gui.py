@@ -36,6 +36,18 @@ class CoreGuiTests(unittest.TestCase):
                     self.assertEqual(len(plan['steps']), 6)
                     self.assertTrue(all(step['attempts'] == 0 for step in plan['steps']))
                     self.assertIn('Respuesta existente', str(archive.exchanges(chat)))
+                    note = Path(directory) / 'synthetic.md'
+                    note.write_text('Proyecto telescopio: observar Saturno.', encoding='utf-8')
+                    with (patch('karen_core2.panel.filedialog.askopenfilename', return_value=str(note)),
+                          patch('karen_core2.panel.messagebox.askokcancel', return_value=True),
+                          patch('karen_core2.panel.messagebox.askyesnocancel', return_value=False)):
+                        panel.import_knowledge()
+                        pump_until(app, lambda: len(runtime.knowledge.list('Karen')) == 1, timeout=5)
+                        pump_until(app, lambda: not panel.worker.is_alive(), timeout=5)
+                    self.assertEqual(runtime.knowledge.search('Karen', 'telescopio'), [])
+                    document = runtime.knowledge.list('Karen')[0]
+                    runtime.command('/conocimiento aprobar ' + document['id'])
+                    self.assertEqual(len(runtime.knowledge.search('Karen', 'telescopio')), 1)
                 finally:
                     # Keep the temporary DB alive until asynchronous cancellation completes.
                     with patch.object(panel, 'cancel') as cancel:

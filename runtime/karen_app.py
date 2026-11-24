@@ -26,7 +26,7 @@ from core_archive import ArchiveWorker
 
 
 def local_command(prompt):
-    if re.match(r'^/(?:core2|plan|ejecutar|vision)(?:\s|$)', prompt.strip(), re.I):
+    if re.match(r'^/(?:core2|plan|ejecutar|vision|conocimiento)(?:\s|$)', prompt.strip(), re.I):
         return True
     return bool(re.match(
         r'^/(?:core|memoria|modo|alertas|tareas|proxmox|servidor)(?:\s|$)|^/casa\s+(?:entidades|estado)(?:\s|$)|^/ventana\s+activa\s*$',
@@ -55,8 +55,11 @@ class KarenClient:
     def cancel_generation(self):
         with self._generation_lock:
             event, response = self._generation_cancel, self._generation_response
+            turn = getattr(self, 'conversation_turn', None)
+            if turn:
+                turn.interrupt()
             if event is None:
-                return False
+                return bool(turn)
             event.set()
         if response is not None:
             threading.Thread(target=response.close, daemon=True).start()
@@ -330,7 +333,8 @@ class KarenClient:
             return local
         core2 = getattr(self, 'core2', None)
         if core2:
-            cancel = threading.Event()
+            turn = getattr(self, 'conversation_turn', None)
+            cancel = turn.cancelled if turn else threading.Event()
             with self._generation_lock:
                 self._generation_cancel = cancel
             if getattr(self, 'on_generation_start', None):
@@ -342,10 +346,15 @@ class KarenClient:
             sentences = FinalSentences(on_sentence) if on_sentence else None
             try:
                 history = self.archive.context(self.chat_id) if getattr(self, 'archive', None) else []
+                previous = getattr(self, 'interrupted_turn', None)
+                interruption = previous.context(self._memory_key()) if previous else None
                 answer = core2.chat(prompt, history, preferred=self.model, stop=cancel,
-                                    on_token=sentences.add if sentences else None, on_response=response_started)
+                                    on_token=sentences.add if sentences else None, on_response=response_started,
+                                    interruption=interruption)
                 if sentences:
                     sentences.finish()
+                if previous is getattr(self, 'interrupted_turn', None):
+                    self.interrupted_turn = None
                 return answer
             except InterruptedError:
                 return 'Respuesta cancelada.'
@@ -930,6 +939,10 @@ class KarenApp(BenchmarkControls, TargetControls):
         self.stream_preview.configure(text=self.stream_text)
         self.stream_preview.grid()
 
+    def show_turn_part(self, turn, part):
+        if not turn.cancelled.is_set() and getattr(self.client, 'conversation_turn', None) is turn:
+            self.show_stream_part(part)
+
     def clear_stream_preview(self):
         if self.closed.is_set():
             return
@@ -1190,33 +1203,49 @@ class KarenApp(BenchmarkControls, TargetControls):
         def worker():
             error = False
             request_failed = False
-            speech_parts = queue.Queue()
+            from conversation_turn import ConversationTurn
+            turn = ConversationTurn(text, client._memory_key())
+            client.conversation_turn = turn
+            speech_parts = queue.Queue(maxsize=8)
+            def enqueue(part):
+                while not turn.audio_cancelled.is_set():
+                    try:
+                        speech_parts.put(part, timeout=.05)
+                        return
+                    except queue.Full:
+                        pass
             playback = None
             try:
                 if config.tts_enabled:
                     from voice import SpeechPlayer
-                    player = SpeechPlayer()
+                    player = SpeechPlayer(turn)
                     with self.speech_lock:
                         self.speech_player = player
                     def play():
                         try:
                             player.speak_parts(speech_parts, config, self.set_state)
                         except Exception as exc:
+                            player.stop()
                             self.log(f'No se pudo reproducir la voz: {exc}. El texto sigue disponible.', 'KAREN')
                     playback = threading.Thread(target=play, daemon=True)
                     playback.start()
                 def on_sentence(part):
+                    if not turn.generated(part):
+                        return
                     if config.tts_enabled:
-                        speech_parts.put(part)
-                    self.ui_queue.put((self.show_stream_part, (part,)))
+                        enqueue(part)
+                    self.ui_queue.put((self.show_turn_part, (turn, part)))
+                def on_private_sentence(part):
+                    turn.private = True
+                    on_sentence(part)
                 from voice import speech_is_local
                 if config.tts_enabled and speech_is_local(config):
-                    response = client.ask(text, on_sentence=on_sentence, on_private_sentence=on_sentence)
+                    response = client.ask(text, on_sentence=on_sentence, on_private_sentence=on_private_sentence)
                 else:
                     response = client.ask(text, on_sentence=on_sentence)
                 if client.archive_error:
                     self.log('No se pudo guardar el historial: ' + client.archive_error, 'System')
-                speech_parts.put(None)
+                enqueue(None)
                 if self.closed.is_set():
                     return
                 self.log(response, "KAREN")
@@ -1230,13 +1259,17 @@ class KarenApp(BenchmarkControls, TargetControls):
                 error = True
                 self.log(f"No se pudo reproducir la voz: {exc}. El texto sigue disponible.", "KAREN")
             finally:
-                speech_parts.put(None)
+                if playback and playback.is_alive():
+                    player.stop()
                 self.ui_queue.put((self.clear_stream_preview, ()))
                 if playback and playback.is_alive():
                     player.stop()
                     playback.join(timeout=2)
                 with self.speech_lock:
                     self.speech_player = None
+                if turn.interrupted and not turn.private:
+                    client.interrupted_turn = turn
+                client.conversation_turn = None
                 self.busy.clear()
                 if not self.closed.is_set():
                     retryable = request_failed and client.last_request_retryable is True

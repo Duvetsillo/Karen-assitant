@@ -55,11 +55,15 @@ def speech_is_local(config):
 
 
 class SpeechPlayer:
-    def __init__(self):
-        self.cancelled = threading.Event()
+    def __init__(self, turn=None):
+        self.turn = turn
+        self.cancelled = turn.audio_cancelled if turn else threading.Event()
 
     def stop(self):
-        self.cancelled.set()
+        if self.turn:
+            self.turn.interrupt(cancel_generation=False)
+        else:
+            self.cancelled.set()
 
     async def _synthesize(self, text, config):
         import edge_tts
@@ -115,7 +119,7 @@ class SpeechPlayer:
     def play_encoded(self, encoded, state):
         import soundfile as sf
         if not encoded or self.cancelled.is_set():
-            return
+            return False
         audio, sample_rate = sf.read(io.BytesIO(encoded), dtype="float32", always_2d=True)
         state("Hablando")
         # Own the output stream; stop does not interfere with another application's audio.
@@ -123,8 +127,11 @@ class SpeechPlayer:
             for start in range(0, len(audio), 1024):
                 if self.cancelled.is_set():
                     stream.abort()
-                    return
+                    return False
                 stream.write(audio[start:start + 1024])
+                if self.turn:
+                    self.turn.audio_started()
+        return not self.cancelled.is_set()
 
     def speak(self, text, config, state):
         state('Preparando voz')
@@ -150,7 +157,10 @@ class SpeechPlayer:
                         continue
                     if text is None:
                         break
-                    put(self.encode(text, config))
+                    encoded = self.encode(text, config)
+                    if self.turn and encoded:
+                        self.turn.receipt(text, 'synthesized')
+                    put((text, encoded))
             except Exception as exc:
                 put(exc)
             finally:
@@ -166,7 +176,9 @@ class SpeechPlayer:
                 raise encoded
             if encoded is None:
                 return
-            self.play_encoded(encoded, state)
+            text, audio = encoded
+            if self.play_encoded(audio, state) and self.turn:
+                self.turn.receipt(text, 'played')
 
 
 class VoiceListener:
