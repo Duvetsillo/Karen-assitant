@@ -1,0 +1,15 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.7",
+  "scope": "One real Tk window, temporary SQLite, exclusive lock. Synthetic history. No model/audio/network measurements.",
+  "archive_refresh_submit_ms": 0.027599999157246202,
+  "busy_result_ms": 711.4832999977807,
+  "recovery_after_unlock_ms": 56.34949999875971,
+  "timer_target_ms": 5,
+  "timer_ticks": 140,
+  "timer_gap_median_ms": 5.513300002348842,
+  "timer_gap_max_ms": 6.4448000011907425,
+  "archive_sql_calls_on_tk_thread": 0,
+  "background_archive_threads": 1,
+  "recovered": true
+}

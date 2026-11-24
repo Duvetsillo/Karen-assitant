@@ -1,0 +1,8 @@
+{
+  "title": "Karen",
+  "config": {
+    "step": {"user": {"title": "Conectar Karen", "description": "Conecta con el Core local de Karen. Usa su memoria e historial compartidos. Esta conexión permite conversar; no otorga control administrativo."}},
+    "error": {"cannot_connect": "No se pudo conectar con Karen. Comprueba que el PC esté encendido y que exista la conexión privada."},
+    "abort": {"already_configured": "Karen ya está configurada."}
+  }
+}

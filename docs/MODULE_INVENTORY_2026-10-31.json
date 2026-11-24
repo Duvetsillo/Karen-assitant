@@ -1,0 +1,613 @@
+{
+  "python": [
+    {
+      "module": "admin_agent.py",
+      "lines": 104,
+      "classes": [],
+      "functions": [
+        "administration_request",
+        "administer"
+      ]
+    },
+    {
+      "module": "admin_runtime.py",
+      "lines": 369,
+      "classes": [
+        "AdminAudit",
+        "AdminRuntime"
+      ],
+      "functions": [
+        "text",
+        "choice",
+        "tool",
+        "ps_literal",
+        "validate",
+        "policy",
+        "authorize"
+      ]
+    },
+    {
+      "module": "admin_tools.py",
+      "lines": 152,
+      "classes": [],
+      "functions": [
+        "run",
+        "powershell",
+        "checked_network",
+        "inventory",
+        "port_open",
+        "scan",
+        "host_status",
+        "ssh_status",
+        "restart_gateway",
+        "normalize",
+        "route_local",
+        "main"
+      ]
+    },
+    {
+      "module": "aetherion_adapter.py",
+      "lines": 45,
+      "classes": [
+        "AetherionAdapter"
+      ],
+      "functions": []
+    },
+    {
+      "module": "alert_monitor.py",
+      "lines": 175,
+      "classes": [],
+      "functions": [
+        "check_disk",
+        "check_cpu",
+        "check_memory",
+        "check_pc",
+        "watch_disk",
+        "watch_pc",
+        "main"
+      ]
+    },
+    {
+      "module": "answers.py",
+      "lines": 17,
+      "classes": [],
+      "functions": [
+        "final_answer"
+      ]
+    },
+    {
+      "module": "bench_controls.py",
+      "lines": 113,
+      "classes": [
+        "BenchmarkControls"
+      ],
+      "functions": []
+    },
+    {
+      "module": "benchmark.py",
+      "lines": 25,
+      "classes": [
+        "BenchmarkSelection",
+        "BenchmarkUpdate",
+        "BenchmarkGateway"
+      ],
+      "functions": []
+    },
+    {
+      "module": "catalog.py",
+      "lines": 117,
+      "classes": [
+        "CatalogSource",
+        "CatalogResult",
+        "CatalogBroker"
+      ],
+      "functions": [
+        "fetch_catalog"
+      ]
+    },
+    {
+      "module": "chat_cli.py",
+      "lines": 49,
+      "classes": [],
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "module": "cliente.py",
+      "lines": 4,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "config.py",
+      "lines": 158,
+      "classes": [
+        "KarenConfig"
+      ],
+      "functions": [
+        "_as_bool",
+        "save_config",
+        "load_config"
+      ]
+    },
+    {
+      "module": "conversations.py",
+      "lines": 225,
+      "classes": [
+        "Conversations"
+      ],
+      "functions": [
+        "open_archive"
+      ]
+    },
+    {
+      "module": "core_archive.py",
+      "lines": 152,
+      "classes": [
+        "ArchiveRequest",
+        "ArchiveSnapshot",
+        "ArchiveResult",
+        "ArchiveWorker"
+      ],
+      "functions": [
+        "read_snapshot"
+      ]
+    },
+    {
+      "module": "core_events.py",
+      "lines": 108,
+      "classes": [
+        "CoreEvent",
+        "CoreActivity"
+      ],
+      "functions": [
+        "install_events",
+        "read_events",
+        "read_activity"
+      ]
+    },
+    {
+      "module": "core_local_api.py",
+      "lines": 355,
+      "classes": [
+        "InvalidRequest",
+        "ClientRegistry"
+      ],
+      "functions": [
+        "_crypt",
+        "save_token",
+        "load_token",
+        "_open_readonly",
+        "read_contract",
+        "make_handler",
+        "serve",
+        "main"
+      ]
+    },
+    {
+      "module": "core_resources.py",
+      "lines": 9,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "diagnose_devices.py",
+      "lines": 15,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "diagnose_mic.py",
+      "lines": 48,
+      "classes": [],
+      "functions": [
+        "probe"
+      ]
+    },
+    {
+      "module": "expressive_service.py",
+      "lines": 8,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "expressive_voice.py",
+      "lines": 9,
+      "classes": [],
+      "functions": [
+        "synthesize"
+      ]
+    },
+    {
+      "module": "friday_reminders.py",
+      "lines": 54,
+      "classes": [],
+      "functions": [
+        "gateway",
+        "main"
+      ]
+    },
+    {
+      "module": "gmail_tools.py",
+      "lines": 189,
+      "classes": [],
+      "functions": [
+        "environment",
+        "command",
+        "accounts",
+        "check_account",
+        "message_ids",
+        "search",
+        "metadata",
+        "prepare_trash",
+        "trash",
+        "prepare_plan",
+        "execute_plan",
+        "authorize",
+        "authorization_window"
+      ]
+    },
+    {
+      "module": "ha_control.py",
+      "lines": 166,
+      "classes": [
+        "HomeAssistantControl",
+        "HomeAssistantDiscovery"
+      ],
+      "functions": [
+        "_normalize",
+        "parse_command",
+        "main"
+      ]
+    },
+    {
+      "module": "icloud_calendar.py",
+      "lines": 227,
+      "classes": [
+        "Blob"
+      ],
+      "functions": [
+        "windows_local_appdata",
+        "crypt",
+        "load_credentials",
+        "save_credentials",
+        "connect",
+        "calendars",
+        "list_events",
+        "create_event",
+        "query_via_runtime",
+        "setup",
+        "main"
+      ]
+    },
+    {
+      "module": "iphone_routines.py",
+      "lines": 207,
+      "classes": [
+        "Routines"
+      ],
+      "functions": [
+        "launch_apps",
+        "make_handler",
+        "_validate_config",
+        "_protect",
+        "_write_protected",
+        "initialize",
+        "prepare_legacy_migration"
+      ]
+    },
+    {
+      "module": "karen_alerts.py",
+      "lines": 258,
+      "classes": [
+        "AlertEngine"
+      ],
+      "functions": [
+        "_utc",
+        "_minutes",
+        "_breached"
+      ]
+    },
+    {
+      "module": "karen_app.py",
+      "lines": 1223,
+      "classes": [
+        "KarenClient",
+        "KarenApp"
+      ],
+      "functions": [
+        "local_command",
+        "parse_args",
+        "start_gui"
+      ]
+    },
+    {
+      "module": "karen_memory.py",
+      "lines": 223,
+      "classes": [
+        "MemoryStore"
+      ],
+      "functions": [
+        "memory_command"
+      ]
+    },
+    {
+      "module": "karen_memory_transfer.py",
+      "lines": 58,
+      "classes": [
+        "MemoryTransfer"
+      ],
+      "functions": []
+    },
+    {
+      "module": "karen_personality.py",
+      "lines": 14,
+      "classes": [],
+      "functions": []
+    },
+    {
+      "module": "karen_task_tools.py",
+      "lines": 106,
+      "classes": [
+        "_FileTime",
+        "_MemoryStatus"
+      ],
+      "functions": [
+        "_windows_kernel",
+        "_cpu_times",
+        "cpu_sample",
+        "memory_sample",
+        "disk_sample",
+        "pc_report_tools",
+        "run_pc_report"
+      ]
+    },
+    {
+      "module": "karen_tasks.py",
+      "lines": 383,
+      "classes": [
+        "ToolSpec",
+        "TaskEngine"
+      ],
+      "functions": [
+        "task_database_path",
+        "_now"
+      ]
+    },
+    {
+      "module": "maintenance.py",
+      "lines": 119,
+      "classes": [],
+      "functions": [
+        "_digest",
+        "_private_directory",
+        "backup",
+        "verify",
+        "main"
+      ]
+    },
+    {
+      "module": "memory_cli.py",
+      "lines": 64,
+      "classes": [],
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "module": "proxmox_status.py",
+      "lines": 122,
+      "classes": [
+        "ProxmoxStatus"
+      ],
+      "functions": []
+    },
+    {
+      "module": "reminder_ready.py",
+      "lines": 45,
+      "classes": [],
+      "functions": [
+        "ready",
+        "main"
+      ]
+    },
+    {
+      "module": "response_stream.py",
+      "lines": 38,
+      "classes": [
+        "FinalSentences"
+      ],
+      "functions": []
+    },
+    {
+      "module": "speech_text.py",
+      "lines": 16,
+      "classes": [],
+      "functions": [
+        "spoken_text"
+      ]
+    },
+    {
+      "module": "synthesize_note.py",
+      "lines": 50,
+      "classes": [],
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "module": "targets.py",
+      "lines": 101,
+      "classes": [
+        "TargetControls"
+      ],
+      "functions": []
+    },
+    {
+      "module": "task_review.py",
+      "lines": 39,
+      "classes": [],
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "module": "transcribe_note.py",
+      "lines": 21,
+      "classes": [],
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "module": "transcription_local.py",
+      "lines": 24,
+      "classes": [],
+      "functions": [
+        "recognize"
+      ]
+    },
+    {
+      "module": "ui.py",
+      "lines": 328,
+      "classes": [],
+      "functions": [
+        "build_ui"
+      ]
+    },
+    {
+      "module": "voice.py",
+      "lines": 348,
+      "classes": [
+        "WakeDetector",
+        "SpeechPlayer",
+        "VoiceListener"
+      ],
+      "functions": [
+        "rms",
+        "speech_is_local"
+      ]
+    },
+    {
+      "module": "voice_local.py",
+      "lines": 94,
+      "classes": [],
+      "functions": [
+        "shutdown",
+        "_read_responses",
+        "operation",
+        "synthesize",
+        "transcribe"
+      ]
+    },
+    {
+      "module": "voice_worker.py",
+      "lines": 64,
+      "classes": [],
+      "functions": [
+        "process",
+        "recognize",
+        "speak"
+      ]
+    },
+    {
+      "module": "windows_context.py",
+      "lines": 54,
+      "classes": [],
+      "functions": [
+        "_clean",
+        "active_window"
+      ]
+    }
+  ],
+  "pet_source_files": [
+    "electron/capture.ts",
+    "electron/core-resource.ts",
+    "electron/core-store.ts",
+    "electron/core-style-sync.ts",
+    "electron/core-tasks.ts",
+    "electron/fast-voice.ts",
+    "electron/gateway.ts",
+    "electron/loopback.ts",
+    "electron/main.ts",
+    "electron/pointing.ts",
+    "electron/preload.cjs",
+    "electron/recognizer.ts",
+    "electron/storage.ts",
+    "electron/voice.ts",
+    "python/core_resource.py",
+    "python/design_voice.py",
+    "python/dialogue_style.py",
+    "python/edge_voice.py",
+    "python/fast_voice.py",
+    "python/loopback.py",
+    "python/recognize.py",
+    "python/shared_voice_client.py",
+    "python/shared_voice_service.py",
+    "python/voice_note.py",
+    "python/voice_profile.py",
+    "python/voice_style.py",
+    "python/wake_word.py",
+    "scripts/appearance-smoke.cjs",
+    "scripts/audit-source.cjs",
+    "scripts/copy-preload.cjs",
+    "scripts/core-qa-profile.cjs",
+    "scripts/core-resource-smoke.cjs",
+    "scripts/core-tasks-smoke.cjs",
+    "scripts/edge-voice-smoke.cjs",
+    "scripts/icon.py",
+    "scripts/installed-stt-smoke.cjs",
+    "scripts/native-debug.cjs",
+    "scripts/native-smoke.cjs",
+    "scripts/packaged-smoke.cjs",
+    "scripts/perception-smoke.cjs",
+    "scripts/pointing-smoke.cjs",
+    "scripts/probe.ts",
+    "scripts/server-browser-smoke.ts",
+    "scripts/setup-shared-voice.ps1",
+    "scripts/setup-voice.ps1",
+    "scripts/shared-voice-smoke.cjs",
+    "scripts/styles-smoke.cjs",
+    "scripts/visual-check.cjs",
+    "scripts/voice-probe.ts",
+    "scripts/voice-replies-smoke.cjs",
+    "scripts/wake-controls-smoke.cjs",
+    "server/app.ts",
+    "server/index.ts",
+    "server/storage.ts",
+    "shared/attachments.ts",
+    "shared/core-activity.ts",
+    "shared/core-events.sql",
+    "shared/core-tasks.ts",
+    "shared/expression.ts",
+    "shared/local-commands.ts",
+    "shared/pet-layout.ts",
+    "shared/pet-styles.ts",
+    "shared/protocol.ts",
+    "shared/settings.ts",
+    "shared/types.ts",
+    "shared/version.ts",
+    "shared/wake-word.ts",
+    "src/ModelPicker.tsx",
+    "src/Perception.tsx",
+    "src/main.tsx",
+    "src/native.ts",
+    "src/pet/Renderer.tsx",
+    "src/pet/StylePicker.tsx",
+    "src/pet/gaze.ts",
+    "src/pet/speech-motion.ts",
+    "src/pet/textures.ts",
+    "src/pointing.ts",
+    "src/server-bridge.ts",
+    "src/state/machine.ts",
+    "src/state/store.ts",
+    "src/style.css",
+    "src/voice/audio.ts",
+    "src/voice/microphone.ts",
+    "src/voice/pcm.ts",
+    "src/voice/pipeline.ts",
+    "src/voice/replies.ts",
+    "src/voice/wake.ts"
+  ]
+}

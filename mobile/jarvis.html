@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050b12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="/icon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/jarvis.css"><script src="/jarvis.js" defer></script>
+  <title>Karen · Interfaz Jarvis</title>
+</head>
+<body data-motion="true" data-state="offline">
+<header class="topbar">
+  <a class="brand" href="/jarvis" aria-label="Karen, interfaz Jarvis">KAREN<small>Presencia local</small></a>
+  <div class="connection"><i aria-hidden="true"></i><span id="connection" role="status">Conectando con Karen</span></div>
+  <nav aria-label="Vistas de Karen"><button id="conversation-toggle" class="quiet compact" aria-expanded="false" aria-controls="conversation-panel">Conversación</button><button id="tools-toggle" class="quiet compact" aria-expanded="false" aria-controls="tools">Herramientas</button><a href="/">Chat clásico</a><button id="motion" class="quiet compact" aria-pressed="true">Animación: activa</button><button id="form-toggle" class="quiet compact" aria-pressed="true">Forma: orgánica</button><button id="palette" class="quiet compact" aria-pressed="false">Color: cian</button></nav>
+</header>
+<form id="login" class="login panel" hidden>
+  <span class="section-code">Acceso privado</span><h1>Conecta con tu Karen.</h1>
+  <p>El mismo núcleo local. Otra forma de estar contigo.</p>
+  <label for="code">Tu código de acceso habitual</label><input id="code" type="password" autocomplete="current-password" required>
+  <button>Conectar</button><a href="/">Volver al chat clásico</a>
+</form>
+<main id="workbench" hidden>
+  <section class="space" aria-label="Presencia de Karen">
+    <canvas id="presence" aria-hidden="true"></canvas>
+    <div class="presence-caption"><span>Tu asistente, en este PC</span><h1>Karen</h1></div>
+    <div class="core-state"><span id="core-mode">Sin conexión</span><p id="core-detail" role="status">Esperando conexión con tu PC.</p></div>
+      <section class="panel conversation" id="conversation-panel" hidden><div class="panel-heading"><h2>Conversación</h2><a href="/">Historial y chat clásico</a></div><div id="messages" role="log" aria-label="Conversación con Karen" aria-live="polite"><p class="welcome">Aquí estoy.<br><span>¿Qué hacemos hoy?</span></p></div>
+
+      </section>
+    <div class="composer-dock">        <form id="chat-form"><label for="message">Escríbele a Karen</label><div class="input-row"><textarea id="message" rows="2" maxlength="8000" placeholder="Tengo una idea…" required></textarea><button id="send">Enviar</button></div><p id="chat-state" class="muted" role="status">Responde con IA en este PC.</p></form><div class="voice-controls" aria-label="Voz de Karen"><button id="voice-toggle" class="quiet" aria-pressed="true">Voz: activa</button><button id="voice-test" class="quiet">Probar voz</button><button id="voice-stop" class="quiet" disabled>Detener</button><span id="voice-state" role="status">Femenina · serena · local</span></div></div>
+  </section>
+  <section id="tools" hidden aria-label="Herramientas de Karen"><div class="tools-heading"><h2>Tu espacio de trabajo</h2><p>Los datos y las acciones siguen aquí, cuando los necesitas.</p></div>
+    <aside class="instruments">
+      <section class="panel system"><div class="panel-heading"><h2>Sistema</h2><span>Lectura local</span></div>
+        <div class="cpu-readout"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="42"/><circle id="cpu-ring" cx="50" cy="50" r="42" pathLength="100"/></svg><div><strong id="cpu">—</strong><span>CPU · última muestra</span></div></div>
+        <dl><dt>RAM disponible</dt><dd id="ram">Sin muestra</dd><dt>VRAM disponible</dt><dd id="vram">Sin muestra</dd><dt>Modelo</dt><dd id="model">En reposo</dd></dl>
+        <p id="diagnostics" class="muted">Prepara un diagnóstico para obtener muestras.</p>
+        <button id="refresh" class="quiet">Actualizar estado</button>
+        <div class="clock"><time id="clock">—</time><span id="date">Hora de La Paz</span></div>
+      </section>
+      <section class="panel memory-panel"><div class="panel-heading"><h2>Memoria</h2><span>En este PC</span></div>
+        <form id="memory-form"><label for="project">Proyecto</label><input id="project" value="Karen" maxlength="64" required><label for="query">Buscar recuerdos</label><div class="input-row"><input id="query" maxlength="200" placeholder="Hechos, procedimientos…"><button class="quiet">Consultar</button></div></form><div id="memories"></div>
+      </section>
+      <section class="panel vision-later"><details><summary>Visión · pendiente de ampliar</summary><p class="muted">Preparada y pausada. Solo captura cuando lo solicitas.</p><p id="vision-state" class="muted">Sin captura continua.</p><button id="vision">Analizar ventana una vez</button><button id="pause-vision" class="quiet">Pausar percepción</button><p id="vision-result" class="observation"></p></details></section>
+    </aside>
+  <section class="panel planning" id="planning-panel"><div class="panel-heading"><h2>Plan de ejecución</h2><span id="plan-state">Sin plan activo</span></div>
+    <form id="plan-form"><label for="goal">¿Qué quieres conseguir?</label><div class="input-row"><input id="goal" value="Diagnostica mi PC" maxlength="2000" required><button id="prepare">Preparar plan</button></div></form><p class="muted">Revisa las subtareas. Los cambios del PC se aprueban en la aplicación de escritorio.</p>
+    <div class="plan-controls"><button id="run" hidden disabled>Ejecutar lecturas</button><button id="resume" hidden disabled>Reanudar</button><button id="cancel" class="quiet" hidden disabled>Cancelar</button><button id="remember" class="quiet" hidden disabled>Recordar procedimiento</button></div>
+    <div id="plan-steps" aria-live="polite"><p class="empty">Cada etapa mostrará su herramienta, estado y resultado real.</p></div><details><summary>Planes guardados</summary><button id="refresh-plans" class="quiet">Actualizar planes</button><div id="saved-plans"></div></details>
+  </section>
+      <section class="panel activity-panel"><div class="panel-heading"><h2>Actividad</h2><span>Esta sesión</span></div><ol id="activity" aria-live="polite"><li>Esperando conexión. No se han ejecutado acciones.</li></ol></section>
+  </section>
+  <footer><span>Privado. Local. Contigo.</span><a href="/">Abrir chat clásico</a></footer>
+</main><div id="notice" role="status" hidden></div>
+</body></html>

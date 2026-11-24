@@ -1,0 +1,23 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.7",
+  "runs": 100,
+  "scope": "Temporary SQLite and direct OS lock only. No STT, LLM, TTS, GPU, or UI measurements.",
+  "measurements": {
+    "commit_ms": {
+      "median": 3.5107999992760597,
+      "p95": 4.133899998123525,
+      "max": 4.3737000014516525
+    },
+    "events_read_ms": {
+      "median": 1.6576500001974637,
+      "p95": 1.9978999989689328,
+      "max": 2.948899997136323
+    },
+    "os_lock_ms": {
+      "median": 0.41620000047259964,
+      "p95": 0.6499000010080636,
+      "max": 4.153899997618282
+    }
+  }
+}
