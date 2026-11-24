@@ -43,3 +43,29 @@ Continuar el desarrollo y publicar los próximos cambios en este repositorio.
 La siguiente fase funcional de Karen sigue siendo full-duplex con AEC comprobable
 y STT incremental, según el registro del runtime. La integración utiliza avance
 normal de `main`, sin forzar el push ni sustituir su historial anterior.
+
+## Prioridad del usuario — Desktop Pet y memoria personal
+
+El usuario aclaró que usa principalmente Desktop Pet y no quiere centrar la
+evolución en el cliente verde. Se prioriza el puente de memoria y la futura
+sección «Mis datos» del Pet, conservando los clientes existentes.
+
+Añadido `runtime/personal_learning.py`: perfiles propios registrados por
+instrucción explícita, observaciones con procedencia y fecha, y afirmaciones
+públicas no confirmadas separadas del contexto verificado. No reentrena modelos,
+no inicia sesiones, no hace scraping ni transmite recuerdos automáticamente.
+Datos de incorporación, informes y respaldo de la base operativa permanecen
+fuera de Git. Las pruebas y documentación utilizan ejemplos sintéticos.
+
+`start_pet.ps1` lee la base compartida de la configuración persistente de Windows
+y permite iniciarlo sin abrir Tkinter. La guía `docs/PET_PERSONAL_MEMORY.md`
+explica consultas y transferencias explícitas. La recuperación automática y el
+panel visual de fotos/documentos todavía no están integrados en el Pet.
+
+Validación de esta fase: 9 pruebas nuevas de fuentes; regresión completa del
+runtime **342 OK, Python 3.11, 60.508 s**; puente Core/Gateway de Pet **34 OK**;
+cliente histórico **4 OK**. El lector real del Pet pudo consultar recuerdos
+persistidos en la base operativa desde otro proceso. Lanzador validado sin abrir
+la aplicación y con rechazo de base ausente. No hubo transmisión al Gateway,
+inferencia sobre rasgos sensibles ni entrenamiento de pesos. El informe de datos
+incorporados y su respaldo quedan en almacenamiento privado, no en esta guía.

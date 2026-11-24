@@ -2,6 +2,11 @@
 
 ## Código actual de Karen
 
+**La interfaz principal es Desktop Pet.** Iníciala con `start_pet.ps1` cuando
+su código, dependencias y base compartida estén preparados. La
+[guía de memoria personal del Pet](docs/PET_PERSONAL_MEMORY.md) explica cómo
+incorporar información sin abrir el cliente verde y qué sigue pendiente.
+
 La evolución Windows validada está en [`runtime/`](runtime/), integrada el 24 de
 noviembre de 2026 desde la instalación de trabajo `C:\karen`. Incluye identidad
 persistente, memoria SQLite, documentos revisados, conversación en streaming,
