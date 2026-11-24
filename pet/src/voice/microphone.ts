@@ -1,8 +1,11 @@
 import { bridge } from '../native';
+import { inputError } from './input-error';
 
 /** Claim before opening hardware; release after every track has actually stopped. */
 export async function openMicrophone(constraints: MediaStreamConstraints): Promise<MediaStream> {
-  const token = await bridge.claimMicrophone?.();
+  let token: string | undefined;
+  try { token = await bridge.claimMicrophone?.(); }
+  catch (error) { throw inputError(error); }
   let released = false;
   const release = () => {
     if (released) return;
@@ -21,5 +24,9 @@ export async function openMicrophone(constraints: MediaStreamConstraints): Promi
       track.stop = () => { try { stop(); } finally { ended(); } };
     }
     return stream;
-  } catch (error) { release(); throw error; }
+  } catch (error) {
+    release();
+    const selectedDevice = typeof constraints.audio === 'object' && Boolean(constraints.audio.deviceId);
+    throw inputError(error, selectedDevice);
+  }
 }

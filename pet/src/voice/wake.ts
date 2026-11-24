@@ -2,6 +2,7 @@ import { wakeCommand } from '../../shared/wake-word';
 import type { WakeStatus } from '../../shared/types';
 import { pcm16 } from './pcm';
 import { openMicrophone } from './microphone';
+import { inputError } from './input-error';
 
 /** Offline transcription gates addressed commands. Quiet audio never reaches STT. */
 export class TranscriptionWakeDetector {
@@ -54,7 +55,7 @@ export class TranscriptionWakeDetector {
   stop() { this.stopped = true; this.pause(); }
   private recoverInput(error: unknown) {
     const name = error instanceof Error ? error.name : '';
-    const transient = ['AbortError', 'NotReadableError', 'NotFoundError'].includes(name);
+    const transient = ['AbortError', 'NotReadableError', 'NotFoundError', 'MicrophoneBusyError'].includes(name);
     if (transient && ++this.inputFailures < 3) {
       this.status('recovering');
       this.recoveryTimer = setTimeout(() => void this.capture(), this.inputFailures * 1000);
@@ -78,7 +79,6 @@ export class TranscriptionWakeDetector {
       this.context = new AudioContext();
       await this.context.resume();
       if (generation !== this.generation || !this.wanted) { this.closeInput(); return; }
-      this.inputFailures = 0;
       for (const track of stream.getAudioTracks()) {
         track.onended = () => {
           if (generation !== this.generation || !this.wanted) return;
@@ -104,7 +104,7 @@ export class TranscriptionWakeDetector {
         recorder.onstop = () => {
           if (!this.wanted || generation !== this.generation) return;
           clearInterval(this.interval);
-          if (!heard) { record(); return; }
+          if (!heard) { this.inputFailures = 0; record(); return; }
           this.recorder = undefined;
           this.processing = true;
           this.closeInput();
@@ -116,6 +116,7 @@ export class TranscriptionWakeDetector {
               const text = await this.transcribe(pcm);
               if (!this.wanted || generation !== this.generation) return;
               this.failures = 0;
+              this.inputFailures = 0;
               const command = wakeCommand(text);
               if (command !== null) {
                 this.wanted = false;
@@ -140,9 +141,15 @@ export class TranscriptionWakeDetector {
             }
           })();
         };
-        recorder.onerror = () => {
-          if (generation !== this.generation) return;
-          this.pause(); this.status('error'); this.fail(new Error('Windows no pudo mantener la escucha de Karen/Caren.'));
+        recorder.onerror = (event) => {
+          if (generation !== this.generation || !this.wanted) return;
+          // Invalidate onstop before closing: failed audio must never reach STT.
+          this.generation++;
+          this.closeInput();
+          const cause = (event as Event & {error?: DOMException}).error;
+          const error = new Error(cause?.message || 'Windows interrumpió la grabación.');
+          error.name = cause?.name || 'NotReadableError';
+          this.recoverInput(inputError(error, Boolean(this.device)));
         };
         recorder.start();
         this.interval = setInterval(() => {

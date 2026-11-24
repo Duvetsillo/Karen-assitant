@@ -6,6 +6,24 @@ import { openMicrophone } from '../src/voice/microphone';
 afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 
 describe('microphone hardware authorization boundary', () => {
+  it('explains a disconnected selected input without opening a different microphone', async () => {
+    vi.mocked(bridge.claimMicrophone!).mockResolvedValueOnce('ticket');
+    const missing = new DOMException('Requested device not found', 'NotFoundError');
+    const open = vi.fn().mockRejectedValue(missing);
+    vi.stubGlobal('navigator',{mediaDevices:{getUserMedia:open}});
+    await expect(openMicrophone({audio:{deviceId:{exact:'missing-device'}}}))
+      .rejects.toMatchObject({name:'NotFoundError',message:expect.stringContaining('micrófono elegido')});
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(bridge.releaseMicrophone).toHaveBeenCalledExactlyOnceWith('ticket');
+  });
+
+  it('recognizes shared ownership errors without touching hardware', async () => {
+    vi.mocked(bridge.claimMicrophone!).mockRejectedValueOnce(new Error("Error invoking remote method 'claim-microphone': Error: Otra interfaz de Karen usa el micrófono."));
+    const open=vi.fn();
+    vi.stubGlobal('navigator',{mediaDevices:{getUserMedia:open}});
+    await expect(openMicrophone({audio:true})).rejects.toMatchObject({name:'MicrophoneBusyError'});
+    expect(open).not.toHaveBeenCalled();
+  });
   it('does not open hardware when Core denies ownership', async () => {
     vi.mocked(bridge.claimMicrophone!).mockRejectedValueOnce(new Error('Busy'));
     const open = vi.fn();

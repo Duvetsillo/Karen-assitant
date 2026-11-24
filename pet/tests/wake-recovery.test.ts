@@ -5,7 +5,7 @@ import { TranscriptionWakeDetector } from '../src/voice/wake';
 vi.mock('../src/voice/pcm', () => ({ pcm16: async () => new Int16Array(16000).buffer }));
 
 describe('recuperación de escucha local', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 
   it('reabre el micrófono tras un fallo transitorio y conserva el estado real', async () => {
     const stop = vi.fn();
@@ -49,7 +49,7 @@ describe('recuperación de escucha local', () => {
     await detector.start(() => {});
     await vi.waitFor(() => expect(statuses.at(-1)).toBe('error'));
     expect(getUserMedia).toHaveBeenCalledTimes(1);
-    expect(fail).toHaveBeenCalledWith(denied);
+    expect(fail).toHaveBeenCalledWith(expect.objectContaining({name:'NotAllowedError',message:expect.stringContaining('Windows')}));
     detector.stop();
   });
 
@@ -159,4 +159,45 @@ describe('recuperación de escucha local', () => {
       expect(fail).not.toHaveBeenCalled();
     } finally { detector.stop(); }
   }, 15000);
+
+  it('recupera errores del grabador, limita los reintentos y descarta audio roto', async () => {
+    vi.useFakeTimers();
+    const stop=vi.fn();
+    const getUserMedia=vi.fn(async () => ({getTracks:()=>[{stop}],getAudioTracks:()=>[{stop}]}));
+    vi.stubGlobal('navigator',{mediaDevices:{getUserMedia}});
+    vi.stubGlobal('AudioContext',class {
+      async resume() {} async close() {}
+      createAnalyser(){return {fftSize:1024,getFloatTimeDomainData:(samples:Float32Array)=>samples.fill(0)};}
+      createMediaStreamSource(){return {connect(){}};}
+    });
+    vi.stubGlobal('MediaStream',class {constructor(_tracks:unknown[]) {}});
+    const recorders: Array<{onerror?: (event:unknown)=>void}> = [];
+    vi.stubGlobal('MediaRecorder',class {
+      state='inactive';
+      onerror?: (event:unknown)=>void;
+      constructor(){recorders.push(this);}
+      start(){this.state='recording';}
+      stop(){this.state='inactive';}
+    });
+    const statuses:string[]=[], fail=vi.fn(), transcribe=vi.fn(async()=> '');
+    const detector=new TranscriptionWakeDetector(transcribe,'',1,s=>statuses.push(s),fail);
+    try {
+      await detector.start(()=>{});
+      await vi.advanceTimersByTimeAsync(0);
+      recorders[0].onerror?.({});
+      expect(statuses.at(-1)).toBe('recovering');
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(recorders).toHaveLength(2);
+      recorders[1].onerror?.({});
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(recorders).toHaveLength(3);
+      recorders[2].onerror?.({});
+      await vi.advanceTimersByTimeAsync(10000);
+      expect(statuses.at(-1)).toBe('error');
+      expect(getUserMedia).toHaveBeenCalledTimes(3);
+      expect(transcribe).not.toHaveBeenCalled();
+      expect(fail).toHaveBeenCalledTimes(1);
+      expect(stop).toHaveBeenCalled();
+    } finally {detector.stop();}
+  });
 });
