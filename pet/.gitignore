@@ -6,6 +6,7 @@ test-results/
 .qa-profile/
 *.log
 .cache/
+.vite/
 qa/
 .env
 .env.*
