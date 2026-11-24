@@ -1,0 +1,36 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:voice:contracts
+      - run: npm run audit:source
+      - run: npm run package
+      - name: Publish installer and checksum
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $installer = Get-ChildItem release -Filter '*Setup*.exe' | Select-Object -First 1
+          if (-not $installer) { throw 'Installer missing' }
+          # GitHub replaces spaces in asset names; hash the exact download filename.
+          $assetName = $installer.Name.Replace(' ', '.')
+          if ($assetName -ne $installer.Name) {
+            Rename-Item -LiteralPath $installer.FullName -NewName $assetName
+            $installer = Get-Item -LiteralPath (Join-Path release $assetName)
+          }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content -Encoding ascii release/SHA256SUMS.txt
+          gh release create $env:GITHUB_REF_NAME $installer.FullName release/SHA256SUMS.txt --verify-tag --title "Karen Desktop Pet $env:GITHUB_REF_NAME" --notes-file docs/RELEASE_NOTES.md

@@ -1,0 +1,32 @@
+services:
+  karen:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      KAREN_PUBLIC_ORIGIN: "${KAREN_PUBLIC_ORIGIN:?Define the HTTPS origin in .env}"
+      KAREN_GATEWAY_URL: "${KAREN_GATEWAY_URL:?Define your existing Gateway URL in .env}"
+      KAREN_AGENT_ID: "${KAREN_AGENT_ID:-main}"
+      KAREN_ACCESS_TOKEN_FILE: /run/secrets/karen_access_token
+      OPENCLAW_GATEWAY_TOKEN_FILE: /run/secrets/openclaw_gateway_token
+      KAREN_SECURE_COOKIES: "true"
+    secrets:
+      - karen_access_token
+      - openclaw_gateway_token
+    volumes:
+      - karen_data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+secrets:
+  karen_access_token:
+    file: ./secrets/karen_access_token
+  openclaw_gateway_token:
+    file: ./secrets/openclaw_gateway_token
+volumes:
+  karen_data:
