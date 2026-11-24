@@ -12,6 +12,7 @@ import requests
 
 from answers import final_answer
 from core_resources import ResourceBusy, microphone_guard, microphone_path
+from .resource_policy import ResourcePolicy
 
 KINDS = {'conversation', 'reasoning', 'coding', 'tools', 'vision', 'memory'}
 LIGHT_KINDS = {'conversation', 'memory'}
@@ -63,12 +64,13 @@ def resources():
 
 
 class LocalModels:
-    def __init__(self, endpoint='http://127.0.0.1:11434', *, transport=None, probe=resources, lease_path=None):
+    def __init__(self, endpoint='http://127.0.0.1:11434', *, transport=None, probe=resources, lease_path=None, policy=None):
         self.endpoint = local_endpoint(endpoint)
         self.http = transport or requests.Session()
         if transport is None:
             self.http.trust_env = False
         self.probe = probe
+        self.policy = policy or ResourcePolicy.from_environment()
         self.lease_path = lease_path or microphone_path().with_name('ollama-inference.lock')
         self.catalog = []
         self.catalog_at = 0
@@ -123,8 +125,8 @@ class LocalModels:
         free = budget.get('vram_available_bytes') or 0
         layers = model.get('layers')
         gpu_layers = 0
-        if kind not in LIGHT_KINDS and type(layers) is int and 1 <= layers <= 256:
-            room = max(0, free - GPU_RESERVE - 512 * 1024**2)
+        if self.policy.profile != 'economy' and kind not in LIGHT_KINDS and type(layers) is int and 1 <= layers <= 256:
+            room = max(0, free - self.policy.reserve_bytes - 512 * 1024**2)
             gpu_layers = min(layers, int(room / (size * 1.25 / layers)))
         host_needed = size * (1 - gpu_layers / layers) if gpu_layers else size
         host_needed += 384 * 1024**2
@@ -133,8 +135,8 @@ class LocalModels:
         if available is not None and host_needed + reserve > available:
             return None
         return {'device': 'gpu' if gpu_layers else 'cpu', 'gpu_layers': gpu_layers,
-                'context': 2048 if kind in LIGHT_KINDS else 4096,
-                'vram_reserve_bytes': GPU_RESERVE,
+                'context': self.policy.context(kind),
+                'vram_reserve_bytes': self.policy.reserve_bytes,
                 'estimated_vram_bytes': int(size * 1.25 * gpu_layers / layers + 512 * 1024**2) if gpu_layers else 0}
 
     def rank(self, kind='conversation', preferred=None, *, budget=None):
@@ -193,6 +195,7 @@ class LocalModels:
                 if stop.is_set():
                     raise InterruptedError('Inferencia cancelada.')
                 started = time.monotonic()
+                first_token_seconds = None
                 delivered = False
                 name = selected['name']
                 self.active = name
@@ -210,13 +213,13 @@ class LocalModels:
                         raise ValueError('El presupuesto de memoria cambió; no se carga este modelo.')
                     self.active_device = allocation['device']
                     context = allocation['context']
-                    if kind in LIGHT_KINDS and sum(len(str(m.get('content', ''))) for m in messages) > 4200:
+                    if self.policy.profile != 'economy' and kind in LIGHT_KINDS and sum(len(str(m.get('content', ''))) for m in messages) > 4200:
                         context = 4096  # Preserve the existing bounded conversation history.
                     payload = {'model': name, 'messages': messages, 'stream': bool(on_token),
                                'keep_alive': 0,
                                'options': {'num_ctx': context, 'num_batch': 64 if kind in LIGHT_KINDS else 128,
                                            'num_gpu': allocation['gpu_layers'],
-                                           'num_predict': 256 if kind == 'conversation' else 512 if kind in {'memory', 'vision'} else 1536}}
+                                           'num_predict': self.policy.output_tokens(kind)}}
                     if 'thinking' in selected['capabilities']:
                         payload['think'] = False
                     if tools:
@@ -240,6 +243,8 @@ class LocalModels:
                                     raise ValueError('El modelo local rechazó la generación.')
                                 fragment = event.get('message', {}).get('content', '')
                                 if fragment:
+                                    if first_token_seconds is None:
+                                        first_token_seconds = round(time.monotonic() - started, 3)
                                     delivered = True
                                     content.append(fragment)
                                     on_token(fragment)
@@ -260,6 +265,7 @@ class LocalModels:
                     if stop.is_set():
                         raise InterruptedError('Inferencia cancelada.')
                     self.metrics.append({'model': name, 'kind': kind, 'seconds': round(time.monotonic() - started, 3),
+                                         'first_token_seconds': first_token_seconds,
                                          'device': allocation['device'], 'gpu_layers': allocation['gpu_layers'], 'ok': True})
                     self.metrics[:] = self.metrics[-100:]
                     return result
@@ -276,5 +282,6 @@ class LocalModels:
 
     def status(self):
         return {'endpoint': self.endpoint, 'active_model': self.active, 'active_device': self.active_device,
-                'policy': {'light_tasks': 'cpu', 'gpu_reserve_bytes': GPU_RESERVE, 'keep_alive': 0}, 'hardware': self.probe(),
+                'policy': {'profile': self.policy.profile, 'light_tasks': 'cpu',
+                           'gpu_reserve_bytes': self.policy.reserve_bytes, 'keep_alive': 0}, 'hardware': self.probe(),
                 'models': list(self.catalog), 'latency': self.metrics[-10:], 'local_only': True}

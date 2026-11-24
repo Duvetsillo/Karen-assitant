@@ -14,7 +14,7 @@ Fecha de inicio: 24 de noviembre de 2026. Rama: `codex/personal-ai-upgrade`.
 
 ## Fase 0 — auditoría
 
-Completada. Línea base: `python -m unittest discover -s qa -p 'test_*.py'`: **305 pruebas, OK, 62.873 s** (Python predeterminado). Otra ejecución con Python 3.11 está en curso; resultados locales en `tmp/`, excluidos de Git.
+Completada. Línea base: `python -m unittest discover -s qa -p 'test_*.py'`: **305 pruebas, OK, 62.873 s** (Python predeterminado). Python 3.11 detectó una dependencia previa ausente (`PIL`); se añadió Pillow a requirements y se instaló Pillow 13.0.0 en ese intérprete. Resultados locales en `tmp/`, excluidos de Git.
 
 ## Decisiones
 
@@ -44,3 +44,9 @@ Archivos: `personal_profile.py`, `karen_personality.py`, `karen_core2/runtime.py
 ## Próxima tarea
 
 Turnos cancelables con seguimiento de audio realmente entregado al dispositivo y continuidad explícita tras una interrupción manual. Mantener la captura acústica simultánea pendiente hasta validar AEC.
+
+## Recursos — perfiles y medidas
+
+Implementados `economy`, `balanced` (predeterminado) y `quality`, con margen configurable de VRAM (1536 MiB por defecto, mínimo 1024). Economy no coloca pesos del LLM en GPU y limita salida a 192 tokens; los perfiles superiores conservan conversación/memoria en CPU. No se cargan varios modelos por esta configuración. Los márgenes son estimaciones, no reservas físicas. Las métricas registran tiempo real hasta el primer fragmento de texto, sin guardar preguntas.
+
+Pruebas específicas de políticas, conocimiento, turnos y GUI: 25 OK; posteriormente políticas, GUI con importación, conocimiento y conversaciones: 25 OK. Medición sintética de Core 2 con SQLite temporal: `gemma3:1b`, CPU, 2 fragmentos, primer token 4.685 s, total 4.753 s. RAM disponible antes/después: 6979002368 / 6062333952 bytes; VRAM disponible: 5186256896 / 5191499776 bytes. Instantáneas, no picos ni consumo atribuible solo a Karen. Sin micrófono, reproducción o síntesis en esa medición.
