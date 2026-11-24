@@ -7,6 +7,11 @@ su código, dependencias y base compartida estén preparados. La
 [guía de memoria personal del Pet](docs/PET_PERSONAL_MEMORY.md) explica cómo
 incorporar información sin abrir el cliente verde y qué sigue pendiente.
 
+El código de la mascota vive en [`pet/`](pet/). El lanzador prefiere esta copia
+del repositorio. Instala sus dependencias con `cd pet; npm ci` si aún no están
+preparadas. Apariencia permite elegir ocho estilos, tres ritmos de movimiento y
+probar su saludo sobre fondos claros y oscuros.
+
 La evolución Windows validada está en [`runtime/`](runtime/), integrada el 24 de
 noviembre de 2026 desde la instalación de trabajo `C:\karen`. Incluye identidad
 persistente, memoria SQLite, documentos revisados, conversación en streaming,

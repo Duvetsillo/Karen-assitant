@@ -69,3 +69,20 @@ persistidos en la base operativa desde otro proceso. Lanzador validado sin abrir
 la aplicación y con rechazo de base ausente. No hubo transmisión al Gateway,
 inferencia sobre rasgos sensibles ni entrenamiento de pesos. El informe de datos
 incorporados y su respaldo quedan en almacenamiento privado, no en esta guía.
+
+## Apariencia y animaciones de Pet
+
+Prioridad confirmada por el usuario: apariencia y animaciones de la mascota.
+El código completo de Desktop Pet está ahora en `pet/`, dentro de este
+repositorio. El lanzador de la raíz prefiere esta carpeta.
+
+Se conserva la identidad de cristal: contorno más definido, cara profunda,
+reflejos de ojos y corazón independiente. El movimiento tiene respiración,
+inclinación con resorte y saludo breve. Apariencia añade tres ritmos y una
+vista previa sobre fondo claro u oscuro. Se mantienen los límites de Gaming,
+reposo y movimiento reducido. El panel «Mis datos» sigue pendiente.
+
+Validación: 170 pruebas de Pet aprobadas, compilación TypeScript/Vite correcta
+y revisión visual en 1280×720 y 820×640, incluyendo saludo, reposo y ambos
+fondos. La advertencia de tamaño del paquete Pixi continúa sin impedir la
+compilación. Los datos personales y credenciales permanecen fuera de Git.

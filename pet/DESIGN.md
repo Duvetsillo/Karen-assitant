@@ -208,6 +208,23 @@ El movimiento usa amortiguación exponencial, flotación con ondas lentas superp
 
 Los controles usan transiciones de 150–180ms con `cubic-bezier(.23,1,.32,1)`. `prefers-reduced-motion` desactiva transiciones de controles y movimiento ornamental del personaje. La cara conserva la información de estado.
 
+## Presencia y materiales
+
+El cristal conserva azul frío y aletas lavanda, con borde de doble contraste,
+reflejo direccional y cara más profunda para distinguirse sobre fondos claros.
+El corazón es una textura independiente con respiración suave. La mirada tiene
+anillo y reflejo inferior; las aletas acompañan la inclinación con retraso.
+
+Las respuestas de cabeza y saludo usan un resorte analítico (masa 1, rigidez
+100, amortiguación 10), independiente de la cadencia. El saludo termina; no
+queda saltando en bucle. Ocultar la ventana no vuelve a reproducirlo. Los ritmos
+Serena, Equilibrada y Expresiva utilizan el ajuste existente de actividad.
+Movimiento reducido desactiva estos gestos ornamentales.
+
+En Apariencia, una vista previa fija permite probar el saludo, reposo y fondos
+claro/oscuro sin cambiar el fondo del escritorio. Los fondos son locales a la
+vista previa y no se guardan como preferencia de Windows.
+
 ## Do's and Don'ts
 
 ### Do:

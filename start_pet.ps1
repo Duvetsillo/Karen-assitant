@@ -6,7 +6,12 @@ param(
     [switch]$CheckOnly
 )
 $ErrorActionPreference = 'Stop'
-if (-not $PetRoot) { $PetRoot = Join-Path $PSScriptRoot 'runtime\desktop-pet' }
+if (-not $PetRoot) {
+    $PetRoot = Join-Path $PSScriptRoot 'pet'
+    if (-not (Test-Path -LiteralPath (Join-Path $PetRoot 'package.json') -PathType Leaf)) {
+        $PetRoot = Join-Path $PSScriptRoot 'runtime\desktop-pet'
+    }
+}
 if (-not $CoreDatabase) { $CoreDatabase = $env:KAREN_CORE_DB }
 if (-not $CoreDatabase) { $CoreDatabase = [Environment]::GetEnvironmentVariable('KAREN_CORE_DB', 'User') }
 if (-not $CoreDatabase) {
