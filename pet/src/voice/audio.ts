@@ -80,10 +80,16 @@ export class AudioDirector {
   }
   async configureWake(enabled: boolean, inputDevice: string, sensitivity: number) {
     this.detector?.stop(); this.detector = undefined;
-    if (!enabled) { useStore.setState({wakeStatus:'off'}); bridge.wakeStatus?.('off'); return; }
+    if (!enabled) { useStore.setState({wakeStatus:'off',wakeError:''}); bridge.wakeStatus?.('off'); return; }
     const detector = new TranscriptionWakeDetector(
       pcm => this.stt.transcribe(pcm, new AbortController().signal), inputDevice, sensitivity,
-      status => { useStore.setState({wakeStatus:status}); bridge.wakeStatus?.(status); }, report,
+      status => { useStore.getState().event({type:'wake-status',status}); bridge.wakeStatus?.(status); },
+      error => {
+        report(error);
+        const message = useStore.getState().error;
+        useStore.setState({wakeError:message});
+        bridge.wakeStatus?.('error', message);
+      },
     );
     await this.attachWakeWordDetector(detector);
     if (this.processing || this.audio || this.recording) detector.pause();

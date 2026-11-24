@@ -39,6 +39,6 @@ contextBridge.exposeInMainWorld('karen', {
   stopPointing: () => ipcRenderer.invoke('stop-pointing'),
   systemAudio: action => ipcRenderer.invoke('system-audio', action),
   captureStatus: status => ipcRenderer.send('capture-status', status),
-  wakeStatus: status => ipcRenderer.send('wake-status', status),
+  wakeStatus: (status, error) => ipcRenderer.send('wake-status', status, error),
   event: callback => { const listener = (_event, value) => callback(value); ipcRenderer.on('desktop-event', listener); return () => ipcRenderer.removeListener('desktop-event', listener); }
 });

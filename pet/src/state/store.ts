@@ -46,6 +46,7 @@ interface Store {
   capture: CaptureStatus;
   transcript: string;
   wakeStatus: WakeStatus;
+  wakeError: string;
   transition: (state: PetState, reason?: string) => void;
   event: (event: DesktopEvent) => void;
 }
@@ -69,6 +70,7 @@ export const useStore = create<Store>((set, get) => ({
   capture: { kind: "microphone", phase: "idle" },
   transcript: "",
   wakeStatus: 'off',
+  wakeError: '',
   transition: (state, reason = "") => {
     machine.transition(state);
     set({ state, reason });
@@ -79,7 +81,11 @@ export const useStore = create<Store>((set, get) => ({
     if (event.type === 'surface-visibility') { set({surfaceVisible:event.visible}); return; }
     if (event.type === 'core-activity') { set({ coreActivity: event.clients }); return; }
     if (event.type === 'models') set({models:event.selection});
-    else if (event.type === 'wake-status') set({wakeStatus:event.status});
+    else if (event.type === 'wake-status') set((s) => ({
+      wakeStatus:event.status,
+      wakeError:event.status === 'error' ? event.error || '' : '',
+      ...(event.status !== 'error' && s.wakeError && s.error === s.wakeError ? {error:''} : {}),
+    }));
     else if (event.type === "settings") { machine.touch(); set({ settings: event.settings }); }
     else if (event.type === "capture") set({ capture: event.status });
     else if (event.type === "transcript") set({ transcript: event.text, tab: "Percepción" });

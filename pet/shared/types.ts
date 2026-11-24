@@ -128,7 +128,7 @@ export type DesktopEvent =
   | { type: 'core-activity'; clients: { interface: string; state: string }[] }
   | { type: 'screen-action-proposal'; proposal: ScreenActionProposal | null }
   | { type: 'models'; selection: ModelSelection }
-  | { type: 'wake-status'; status: WakeStatus }
+  | { type: 'wake-status'; status: WakeStatus; error?: string }
   | { type: "connection"; info: ConnectionInfo }
   | { type: "pet"; state: PetState; reason?: string }
   | { type: "chat"; message: ChatMessage; final: boolean; speak?: boolean }
@@ -156,6 +156,7 @@ export interface Snapshot {
   version: string;
   capture?: CaptureStatus;
   wakeStatus?: WakeStatus;
+  wakeError?: string;
 }
 export interface DesktopBridge {
   interaction?(): void;
@@ -197,6 +198,6 @@ export interface DesktopBridge {
   stopPointing(): Promise<void>;
   systemAudio(action: "start" | "finish"): Promise<void>;
   captureStatus(status: CaptureStatus): void;
-  wakeStatus?(status: WakeStatus): void;
+  wakeStatus?(status: WakeStatus, error?: string): void;
   event(callback: (event: DesktopEvent) => void): () => void;
 }

@@ -122,8 +122,9 @@ function Status({ compact = false }: { compact?: boolean }) {
 }
 function ErrorBanner() {
   const error = useStore((s) => s.error);
+  const wakeError = useStore((s) => s.wakeError);
   const [expanded, setExpanded] = useState(false);
-  if (!error) return null;
+  if (!error || (isPet && error === wakeError)) return null;
   return (
     <>
       {isPet && expanded && <div className="error-detail" id="karen-error-detail" role="status">{error}</div>}
@@ -429,7 +430,7 @@ function Conversation() {
     <section className="conversation" data-has-suggestion={Boolean(latest)}>
       <div className="conversation-heading">
         <div className="companion-identity"><Logo/><div><h2>Karen</h2><span>{capture.phase==='recording'?'Te estoy escuchando':capture.phase==='speaking'?'Hablando contigo':capture.phase==='preparing'?'Preparando la voz':pending?'Pensando tu respuesta':'Tu asistente personal'}</span></div></div>
-        <button className="voice-pill" onClick={()=>useStore.setState({tab:'Voz'})}><i className={wakeStatus==='listening'?'listening':''}/>{wakeStatus==='listening'?'Escucha activada':settings.voiceEnabled?'Voz activada':'Voz silenciada'}</button>
+        <button className="voice-pill" onClick={()=>useStore.setState({tab:'Voz'})}><i className={wakeStatus==='listening'?'listening':''}/>{wakeStatus==='error'?'Escucha detenida':wakeStatus==='listening'?'Escucha activada':settings.voiceEnabled?'Voz activada':'Voz silenciada'}</button>
       </div>
       {latest&&<Notice notice={latest}/>}
       <ScreenActionApproval />
@@ -887,6 +888,7 @@ function OpenClaw() {
 }
 function Voice() {
   const s = useStore((x) => x.settings);
+  const wakeError = useStore((x) => x.wakeError);
   const runtime = useStore((x) => x.runtime);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]),
     [health, setHealth] = useState(
@@ -995,6 +997,13 @@ function Voice() {
         />
         <button disabled={runtime !== "desktop" || !s.sttEnabled} onClick={() => void action(() => bridge.listen())}>Iniciar o finalizar micrófono</button>
         <Toggle label="Activar al decir Karen o Caren" description="Escucha local continua mientras está activado. Solo una frase dirigida a Karen/Caren envía la orden; se pausa al hablar y al capturar el PC." value={s.wakeWordEnabled} disabled={runtime !== 'desktop' || !s.sttEnabled} onChange={wakeWordEnabled => void patch({wakeWordEnabled})} />
+        {wakeError && <div className="info-note" role="status">
+          <p>{wakeError}</p>
+          <button disabled={runtime !== 'desktop'} onClick={() => void action(async () => {
+            await bridge.settings({wakeWordEnabled:false});
+            await bridge.settings({wakeWordEnabled:true});
+          })}>Reintentar escucha</button>
+        </div>}
         <div className="input-field">
           <label htmlFor="input">Micrófono</label>
           <select
@@ -1003,6 +1012,8 @@ function Voice() {
             onChange={(e) => void patch({ inputDevice: e.target.value })}
           >
             <option value="">Predeterminado de Windows</option>
+            {s.inputDevice && !devices.some(d => d.kind === 'audioinput' && d.deviceId === s.inputDevice) &&
+              <option value={s.inputDevice}>Micrófono guardado · pendiente de verificar</option>}
             {devices
               .filter((d) => d.kind === "audioinput" && d.deviceId)
               .map((d, i) => (
@@ -1025,8 +1036,8 @@ function Voice() {
           finaliza la captura; Detener cancela la operación.
         </p>
         <p className="quiet-note">
-          Palabra clave: interfaz preparada para un detector externo. No hay
-          detector activado. No se usa cámara.
+          La activación usa transcripción local de fragmentos con voz. Puede
+          confundirse con ruido o voces de fondo; no identifica al hablante.
         </p>
       </Group>
       <Group title="Disponibilidad">
@@ -1431,11 +1442,13 @@ function Root() {
     let connectionSeen = false;
     let settingsSeen = false;
     let captureSeen = false;
+    let wakeSeen = false;
     let initiativeSeen = false;
     const off = bridge.event((e) => {
       if (e.type === "connection") connectionSeen = true;
       if (e.type === "settings") settingsSeen = true;
       if (e.type === "capture") captureSeen = true;
+      if (e.type === 'wake-status') wakeSeen = true;
       if (e.type === 'initiative') initiativeSeen = true;
       useStore.getState().event(e);
       if (e.type === 'capture' && e.status.kind === 'system') audio?.suspendWake(e.status.phase !== 'idle');
@@ -1474,7 +1487,8 @@ function Root() {
             ready: true,
             initiative: initiativeSeen ? useStore.getState().initiative : snapshot.initiative,
             capture: captureSeen ? useStore.getState().capture : snapshot.capture || { kind: "microphone", phase: "idle" },
-            wakeStatus: snapshot.wakeStatus || 'off',
+            wakeStatus: wakeSeen ? useStore.getState().wakeStatus : snapshot.wakeStatus || 'off',
+            wakeError: wakeSeen ? useStore.getState().wakeError : snapshot.wakeError || '',
           });
       })
       .catch(report);

@@ -470,6 +470,7 @@ code {
 .capture-copy { min-width: 0; flex: 1; }
 .capture-copy > span { overflow-wrap: anywhere; }
 .capture-copy small { display: block; margin-top: 3px; color: #cae7ed; font-size: 11px; }
+.desktop-pet .capture-copy small.wake-error-detail { display: block; max-height: 64px; overflow-y: auto; overflow-wrap: anywhere; line-height: 1.35; }
 .capture-clock { flex: none; color: #cae7ed; font-variant-numeric: tabular-nums; font-size: 11px; }
 .capture-status button { min-height: 30px; padding: 3px 10px; }
 .pet-dialogue { position: absolute; z-index: 5; top: 4%; left: 4%; right: 4%; display: flex; flex-direction: column; gap: 6px; max-height: 25%; pointer-events: none; }

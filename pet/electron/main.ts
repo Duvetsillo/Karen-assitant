@@ -82,6 +82,7 @@ const diagnostics: Diagnostic[] = [];
 const screenCapture = new ScreenCapture();
 let capture: CaptureStatus = { kind: "microphone", phase: "idle" };
 let wakeStatus: WakeStatus = 'off';
+let wakeError = '';
 let loopback: LoopbackRecorder;
 let captureOwner: number | undefined;
 let perceptionEpoch = 0;
@@ -645,6 +646,7 @@ async function ready() {
       version: app.getVersion(),
       capture,
       wakeStatus,
+      wakeError,
     }),
   );
   handle("settings", (patch) => {
@@ -808,13 +810,14 @@ async function ready() {
     capture = { kind: status.kind, phase: status.phase, startedAt: status.phase === "idle" ? undefined : unchanged ? capture.startedAt ?? Date.now() : Date.now() };
     emit({ type: "capture", status: capture });
   });
-  ipcMain.on('wake-status', (event, status: WakeStatus) => {
+  ipcMain.on('wake-status', (event, status: WakeStatus, error?: unknown) => {
     if (event.sender.id !== pet?.webContents.id || event.senderFrame !== event.sender.mainFrame ||
         !['off','listening','processing','recovering','paused','error'].includes(status)) return;
     wakeStatus = status;
+    wakeError = status === 'error' && typeof error === 'string' ? error.slice(0, 600) : '';
     // The renderer already suspends Pixi when hidden. Keep only wake timers alive.
     pet.webContents.setBackgroundThrottling(status === 'off' || status === 'error');
-    emit({type:'wake-status',status});
+    emit({type:'wake-status',status,error:wakeError});
   });
   handle("open-settings", openSettings);
   handle("hide", hidePet);

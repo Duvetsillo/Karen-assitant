@@ -8,6 +8,7 @@ export function CaptureIndicator() {
   const capture = useStore(state => state.capture);
   const localVoice = useStore(state => state.settings.ttsEngine === "local");
   const wake = useStore(state => state.wakeStatus);
+  const wakeError = useStore(state => state.wakeError);
   const wakeEnabled = useStore(state => state.settings.wakeWordEnabled);
   const canWake = useStore(state => state.native && state.settings.sttEnabled);
   const [now, setNow] = useState(Date.now);
@@ -21,7 +22,7 @@ export function CaptureIndicator() {
     if (!canWake) return null;
     const failed = wakeEnabled && wake === 'error';
     const label = !wakeEnabled ? 'Activación por voz pausada'
-      : failed ? 'Error de voz · revisa Voz'
+      : failed ? 'Escucha detenida'
       : wake === 'recovering' ? 'Recuperando escucha local'
       : wake === 'processing' ? 'Comprobando llamada local'
       : wake === 'listening' ? 'Di «Karen» para activarme'
@@ -31,7 +32,9 @@ export function CaptureIndicator() {
       await bridge.settings({wakeWordEnabled:failed || !wakeEnabled});
     };
     return <div className="capture-status" role="group" aria-label="Activación por voz">
-      <div className="capture-copy"><span role="status"><i />{label}</span></div>
+      <div className="capture-copy"><span role="status"><i />{label}</span>
+        {failed && wakeError && <small className="wake-error-detail" tabIndex={0}>{wakeError}</small>}
+      </div>
       <button onClick={() => void toggle().catch(report)}>{failed ? 'Reintentar escucha' : wakeEnabled ? 'Pausar escucha' : 'Activar escucha'}</button>
     </div>;
   }
