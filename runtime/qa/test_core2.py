@@ -233,7 +233,7 @@ class ModelPolicyTests(unittest.TestCase):
         result = effective_local_config(config)
         self.assertEqual(config.model, 'beam:cloud')
         self.assertEqual(result.server, 'http://127.0.0.1:11434')
-        self.assertEqual(result.tts_engine, 'kokoro')
+        self.assertEqual(result.tts_engine, 'qwen3')
         self.assertEqual(result.model, 'gemma3:1b')
 
 

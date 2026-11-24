@@ -18,7 +18,7 @@ def effective_local_config(config):
     """Runtime override only: never overwrites saved endpoints or credentials."""
     model = config.model if local_model(config.model) else 'gemma3:1b'
     return replace(config, server='http://127.0.0.1:11434', backend='ollama', api_key='', model=model,
-                   tts_engine='kokoro' if config.tts_engine == 'edge' else config.tts_engine)
+                   tts_engine='qwen3' if config.tts_engine == 'edge' else config.tts_engine)
 
 
 class LogicalAgents:

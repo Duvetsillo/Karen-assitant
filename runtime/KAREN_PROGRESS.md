@@ -33,6 +33,14 @@ Completada. Línea base: `python -m unittest discover -s qa -p 'test_*.py'`: **3
 - Calidad/latencia de TTS y límites de VRAM no se deducen del número de parámetros.
 - No activar herramientas externas, capturas ni automatizaciones existentes durante las pruebas.
 
+## Fase 1 — identidad y proveedor local
+
+Implementada la personalidad persistente con escritura atómica y validación estricta. `personal_profile.py show|init|set CAMPO VALOR` configura nombre, idioma, tono, humor, formalidad, detalle, iniciativa, expresividad e interrupciones. Ambos motores de conversación consumen el perfil; no se autoriza escritura desde el LLM. Las preferencias antiguas explícitas siguen restringiendo sugerencias y sarcasmo. El archivo no se crea al consultar y permanece en `.private/`.
+
+Core 2 convierte Edge a Qwen3 local, conservando los demás proveedores configurados y el perfil de voz existente. Sin perfil Qwen instalado, hace falta prepararlo; no se descarga ni se cambia la voz automáticamente. Kokoro conserva su selección explícita como respaldo heredado.
+
+Archivos: `personal_profile.py`, `karen_personality.py`, `karen_core2/runtime.py`, `.env.example`, pruebas de perfil y expectativa local en `qa/test_core2.py`. Pruebas: `python -m unittest qa.test_personal_profile qa.test_core2_models qa.test_core2`: OK (resultado detallado en registro local).
+
 ## Próxima tarea
 
-Perfil de identidad editable e independiente del LLM; pruebas de persistencia e integración en Core 2 y cliente clásico.
+Turnos cancelables con seguimiento de audio realmente entregado al dispositivo y continuidad explícita tras una interrupción manual. Mantener la captura acústica simultánea pendiente hasta validar AEC.
