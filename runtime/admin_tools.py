@@ -15,6 +15,21 @@ POLICY = ROOT / 'admin_policy.json'
 FLAGS = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
 
 
+def load_policy():
+    """A fresh checkout grants no SSH or network scope; never creates a policy."""
+    try:
+        data = json.loads(POLICY.read_text(encoding='utf-8'))
+    except FileNotFoundError:
+        return {'allowed_subnets': [], 'ssh_aliases': [], 'default_subnet': ''}
+    if (not isinstance(data, dict) or
+            any(not isinstance(data.get(key), list) or
+                any(not isinstance(value, str) for value in data[key])
+                for key in ('allowed_subnets', 'ssh_aliases')) or
+            not isinstance(data.get('default_subnet', ''), str)):
+        raise ValueError('Política administrativa inválida; revisa admin_policy.json.')
+    return {**data, 'default_subnet': data.get('default_subnet', '')}
+
+
 def run(args, timeout=20):
     result = subprocess.run(args, capture_output=True, text=True, encoding='utf-8',
                             errors='replace', timeout=timeout, creationflags=FLAGS)
@@ -29,7 +44,7 @@ def powershell(script, timeout=20):
 
 def checked_network(value):
     network = ipaddress.ip_network(value, strict=True)
-    allowed = [ipaddress.ip_network(x) for x in json.loads(POLICY.read_text())['allowed_subnets']]
+    allowed = [ipaddress.ip_network(x) for x in load_policy()['allowed_subnets']]
     if network.version != 4 or not network.is_private or network.num_addresses > 256:
         raise ValueError('Usa una subred IPv4 privada de hasta 256 direcciones.')
     if not any(network.subnet_of(item) for item in allowed):
@@ -82,7 +97,7 @@ def host_status():
 
 
 def ssh_status(alias):
-    allowed = json.loads(POLICY.read_text())['ssh_aliases']
+    allowed = load_policy()['ssh_aliases']
     if alias not in allowed:
         raise ValueError('Alias SSH fuera del alcance autorizado.')
     return run(['C:/Windows/System32/OpenSSH/ssh.exe', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5',
@@ -108,7 +123,7 @@ def route_local(prompt):
     try:
         if re.search(r'\b(escanear|escanea|escan[eé]a|escaneo)\b', text) and 'red' in text:
             supplied = re.search(r'\b\d{1,3}(?:\.\d{1,3}){3}/\d{1,2}\b', text)
-            subnet = supplied.group() if supplied else json.loads(POLICY.read_text())['default_subnet']
+            subnet = supplied.group() if supplied else load_policy()['default_subnet']
             result = scan(subnet)
             lines = [f"Encontré {len(result['devices'])} equipos que responden en {subnet}."]
             for device in result['devices']:

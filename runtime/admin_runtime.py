@@ -112,7 +112,7 @@ class AdminAudit:
 
 
 def policy():
-    return json.loads(admin_tools.POLICY.read_text(encoding='utf-8'))
+    return admin_tools.load_policy()
 
 
 def authorize(kind, value):
