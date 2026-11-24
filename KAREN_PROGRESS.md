@@ -111,3 +111,13 @@ Límites: el fallo físico original no se ha reproducido con el micrófono del
 usuario. Se observó poca RAM/VRAM libre; no se forzó una inferencia Qwen bajo
 esa carga ni se modificaron programas externos. Siguen pendientes AEC e
 interrupción vocal verificables, STT incremental y la sección de datos propios.
+
+Entrega local comprobada: instalador NSIS 1.8.1 terminó con código 0 y Pet se
+reinició desde su ruta instalada habitual. El paquete instalado, preload y
+worker coinciden con la compilación. `settings.json` y `vault.dpapi` conservaron
+sus hashes. Pasaron también 26 contratos Python de voz. El instalador local
+permanece en `pet/release/`, fuera de Git; no se publicó una release remota.
+
+Preferencia persistente del usuario: commits/push durante el trabajo y registro
+continuo en Obsidian. Se añadió `AGENTS.md`; la bitácora y el índice de la
+colección existente de Desktop Pet reflejan esta entrega y sus pendientes.
