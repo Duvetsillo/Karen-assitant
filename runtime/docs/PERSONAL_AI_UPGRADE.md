@@ -22,6 +22,10 @@ intérprete que usará el lanzador. La voz sigue necesitando sus entornos/modelo
 locales existentes y el repositorio separado `desktop-pet/python`; esta entrega
 no descarga pesos ni reconstruye esos entornos.
 
+Una instalación sin `admin_policy.json` inicia con SSH y subredes sin autorizar;
+consultar esa política vacía no crea archivos ni habilita destinos. Una política
+existente conserva sus autorizaciones y los formatos inválidos fallan cerrados.
+
 La identidad vive en `.private/personality.json`; `KAREN_PERSONALITY_FILE` permite
 elegir otro archivo privado absoluto. La consulta no crea el archivo. El perfil
 se valida y reemplaza atómicamente; datos corruptos producen un error explícito.
@@ -146,6 +150,10 @@ Alternativas examinadas sin instalar pesos:
 Línea base: 305 pruebas correctas en Python 3.14, 62.873 s. Regresión funcional
 final: 330 pruebas correctas en Python 3.14 (62.107 s) y Python 3.11 (61.485 s).
 La prueba inicial de 3.11 detectó Pillow ausente; se corrigió e instaló 13.0.0.
+La comprobación adicional del commit publicado, sin configuración privada,
+descubrió y corrigió la dependencia del archivo administrativo ignorado.
+**Resultado final limpio: 333 pruebas OK en Python 3.11, 61.450 s**, sobre
+`e4e73b7`, con dependencias de código existentes y sin ajustes personales.
 Incluye GUI Tk real, importación revisada, persistencia, exclusión sensible,
 versiones, índices, cancelación de audio anticipado y límites de recursos.
 
@@ -219,7 +227,7 @@ PASS indica únicamente el alcance comprobado, no equivalencia con ChatGPT Voice
 | 17 | No saturar GPU deliberadamente | PASS: inferencia medida CPU y pruebas del margen solicitado |
 | 18 | Degradación ante falta de VRAM | NOT TESTED físicamente; router CPU cubierto, Qwen TTS sin fallback CPU |
 | 19 | Datos privados fuera de Git | PASS: archivos privados ignorados y staging explícito |
-| 20 | Restauración de respaldo | PASS sintético de SQLite; restauración de producción no probada |
+| 20 | Restauración de respaldo | PASS sintético conjunto de perfil, memoria, documentos e índice; producción no probada |
 | 21 | Acciones sensibles autorizadas | PASS en regresiones de planes y documentos sensibles |
 | 22 | Ejecución documentada | PASS en GUI local; instalación nueva completa no ejercitada |
 

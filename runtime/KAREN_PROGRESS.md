@@ -54,10 +54,20 @@ Archivos principales: `conversation_turn.py`, `voice.py`, `karen_app.py`, `karen
 
 ## Próxima tarea
 
-Completar regresión final, documentar aceptación y realizar la integración en main autorizada por el usuario. Después, prioridad funcional: captura full-duplex con AEC verificable y STT incremental. No habilitar captura simultánea nativa basándose solo en RMS.
+Prioridad funcional: captura full-duplex con AEC verificable y STT incremental. No habilitar captura simultánea nativa basándose solo en RMS. Seguir los pasos concretos de `docs/PERSONAL_AI_UPGRADE.md`; no repetir la auditoría inicial.
 
 ## Recursos — perfiles y medidas
 
 Implementados `economy`, `balanced` (predeterminado) y `quality`, con margen configurable de VRAM (1536 MiB por defecto, mínimo 1024). Economy no coloca pesos del LLM en GPU y limita salida a 192 tokens; los perfiles superiores conservan conversación/memoria en CPU. No se cargan varios modelos por esta configuración. Los márgenes son estimaciones, no reservas físicas. Las métricas registran tiempo real hasta el primer fragmento de texto, sin guardar preguntas.
 
 Pruebas específicas de políticas, conocimiento, turnos y GUI: 25 OK; posteriormente políticas, GUI con importación, conocimiento y conversaciones: 25 OK. Medición sintética de Core 2 con SQLite temporal: `gemma3:1b`, CPU, 2 fragmentos, primer token 4.685 s, total 4.753 s. RAM disponible antes/después: 6979002368 / 6062333952 bytes; VRAM disponible: 5186256896 / 5191499776 bytes. Instantáneas, no picos ni consumo atribuible solo a Karen. Sin micrófono, reproducción o síntesis en esa medición.
+
+## Fase 7 — validación de la entrega parcial
+
+- Regresión sobre el workspace: 330 OK con Python 3.14 y 330 OK con Python 3.11. Respaldo ampliado: 3 OK, incluyendo recuperación conjunta de personalidad, memoria y documentos con su índice.
+- Se verificó también el commit publicado en un worktree separado, sin `settings.json`, política administrativa ni datos personales. Solo se enlazaron las dependencias de código existentes. Esa comprobación descubrió un defecto previo: inicio e inventario exigían `admin_policy.json`, excluido de Git. Primer intento: 331 pruebas, 2 fallos y 15 errores por esa ausencia.
+- Corregido mediante una política vacía en memoria cuando falta el archivo: no autoriza SSH ni subredes y no crea configuraciones. Las políticas existentes se conservan; formatos inválidos fallan sin conceder alcance. Pruebas específicas: 17 OK.
+- **Validación final del código publicado `e4e73b7`: 333 pruebas OK, Python 3.11, 61.450 s, checkout limpio con configuración inicial.** No incluye validación acústica, servicios externos reales ni instalación nueva de los modelos.
+- Comandos reproducibles: `python -m unittest discover -s qa -p 'test_*.py'` y `python qa/measure_personal_core.py`. El segundo omite cargas si Ollama ya tiene un modelo cargado. Métricas y capturas sintéticas permanecen en rutas ignoradas.
+- Git: commits funcionales publicados en `codex/personal-ai-upgrade`. El usuario autorizó integrar la rama en `main` después de las pruebas. Se usa avance normal sin reescribir historial. Los cuatro archivos HA modificados y dos archivos nuevos previos siguen fuera del staging de esta entrega.
+- **Entrega parcial**: identidad, continuidad manual, conocimiento textual revisado y perfiles de recursos integrados. Full-duplex/AEC, STT incremental, prueba física de voz, embeddings, aprendizaje autónomo, fotografías y PDF siguen pendientes. No se declara equivalencia con ChatGPT Voice.
