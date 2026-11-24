@@ -86,9 +86,9 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
   const body = paint(512, 512, (c) => {
     bodyPath(c, style);
     c.shadowColor = accent;
-    c.shadowBlur = 22;
+    c.shadowBlur = 14;
     const outer = c.createLinearGradient(125, 140, 370, 385);
-    const colors = style === 'cloud' ? ['#fff8ff', '#e9dff5', '#c1b8db', '#f0e2ef'] : style === 'orbit' ? ['#d9e7f5', '#9badc6', '#536780', '#abb7d4'] : style === 'sprite' ? ['#fff9e8', '#b8eaff', '#81c6e8', '#ae9de4'] : style === 'bloom' ? ['#fff2fa', '#ffd5ea', '#bcb6f3', '#f3d6f1'] : ['#edfaff', '#a7def6', '#77badb', '#c0b5ef'];
+    const colors = style === 'cloud' ? ['#fff8ff', '#e9dff5', '#c1b8db', '#f0e2ef'] : style === 'orbit' ? ['#d9e7f5', '#9badc6', '#536780', '#abb7d4'] : style === 'sprite' ? ['#fff9e8', '#b8eaff', '#81c6e8', '#ae9de4'] : style === 'bloom' ? ['#fff2fa', '#ffd5ea', '#bcb6f3', '#f3d6f1'] : ['#e1f8ff', '#93d6ef', '#4e91bd', '#a494d2'];
     const variant = finish === 'aurora' ? ['#effff6', '#b5f5df', '#68b9b9', '#b6d4f8']
       : finish === 'ember' ? ['#fff7df', '#ffe2ad', '#d59b7b', '#f3c6b8']
       : finish === 'midnight' ? ['#b9caed', '#7e88b9', '#3c4c78', '#a79fcd'] : colors;
@@ -100,9 +100,9 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     bodyPath(c, style);
     c.clip();
     const sheen = c.createRadialGradient(205, 173, 12, 256, 270, 180);
-    sheen.addColorStop(0, "#f5ffff");
-    sheen.addColorStop(0.45, "#c7f5ff99");
-    sheen.addColorStop(1, "#6d72d933");
+    sheen.addColorStop(0, "#e7fbffb3");
+    sheen.addColorStop(0.45, "#b4ecff66");
+    sheen.addColorStop(1, "#6d72d914");
     c.fillStyle = sheen;
     c.fillRect(90, 110, 340, 300);
     const belly = c.createRadialGradient(273, 338, 0, 270, 337, 100);
@@ -111,14 +111,21 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     belly.addColorStop(1, "#a59cff00");
     c.fillStyle = belly;
     c.fillRect(110, 270, 300, 145);
-    for (let y = 130; style === 'crystal' && y < 405; y += 6) {
+    const edge = c.createLinearGradient(310, 160, 391, 340);
+    edge.addColorStop(0, '#ffffff66'); edge.addColorStop(.5, '#c8efff22'); edge.addColorStop(1, '#efffff88');
+    c.beginPath(); c.moveTo(344, 165); c.bezierCurveTo(392, 196, 396, 272, 366, 318);
+    c.strokeStyle = edge; c.lineWidth = 12; c.lineCap = 'round'; c.stroke();
+    for (let y = 130; style === 'crystal' && y < 405; y += 12) {
       c.fillStyle = y % 12 === 0 ? "#ffffff09" : "#162a5906";
       c.fillRect(100, y, 320, 1);
     }
     c.restore();
     bodyPath(c, style);
-    c.strokeStyle = "#e1fbffc9";
-    c.lineWidth = 2.5;
+    c.strokeStyle = '#36709570';
+    c.lineWidth = 5;
+    c.stroke();
+    c.strokeStyle = "#d4f9ffbf";
+    c.lineWidth = 1.7;
     c.stroke();
     // Face is recessed into the living glass, with asymmetric reflective edges.
     c.beginPath();
@@ -130,9 +137,9 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.bezierCurveTo(146, 281, 141, 246, 159, 217);
     c.closePath();
     const face = c.createLinearGradient(170, 205, 345, 310);
-    face.addColorStop(0, "#273d66");
-    face.addColorStop(0.6, "#142a4b");
-    face.addColorStop(1, "#383961");
+    face.addColorStop(0, "#203c58");
+    face.addColorStop(0.6, "#10283e");
+    face.addColorStop(1, "#3a3e67");
     c.fillStyle = face;
     c.fill();
     c.strokeStyle = "#adf0ff9c";
@@ -161,12 +168,6 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
       c.fillRect(side * 10 - 2, -3, 4, 6);
       c.restore();
     }
-    c.beginPath();
-    c.moveTo(256, 340);
-    c.bezierCurveTo(240, 327, 238, 348, 256, 355);
-    c.bezierCurveTo(274, 345, 272, 328, 256, 340);
-    c.fillStyle = "#efffff9c";
-    c.fill();
     if (style === 'sprite') {
       c.beginPath(); c.moveTo(231, 128); c.lineTo(256, 105); c.lineTo(281, 128);
       c.strokeStyle = '#fff9d8'; c.lineWidth = 6; c.lineJoin = 'round'; c.stroke();
@@ -227,8 +228,9 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.fillStyle = g;
     c.fill();
     c.shadowBlur = 0;
+    c.strokeStyle = '#497fa082'; c.lineWidth = 4; c.stroke();
     c.strokeStyle = "#edffffad";
-    c.lineWidth = 2;
+    c.lineWidth = 1.5;
     c.stroke();
     if (style === 'orbit') {
       c.beginPath(); c.arc(74, 90, 25, 0, Math.PI * 2);
@@ -336,6 +338,9 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     gradient.addColorStop(1, "#4b79b6");
     c.fillStyle = gradient;
     c.fill();
+    c.strokeStyle = '#b7edff70'; c.lineWidth = 1.5; c.stroke();
+    c.beginPath(); c.ellipse(42, 62, 12, 6, -.1, 0, Math.PI);
+    c.strokeStyle = '#7dc9efaa'; c.lineWidth = 2; c.stroke();
     c.beginPath();
     c.ellipse(32, 29, 9, 12, 0.35, 0, Math.PI * 2);
     c.fillStyle = "#ffffff";
@@ -374,5 +379,16 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.fillStyle = g;
     c.fillRect(0, 0, 32, 32);
   });
-  return { body, fin, arm, hand, leg, eye, iris, glow, shadow, particle };
+  const heart = paint(64, 64, (c) => {
+    c.beginPath(); c.moveTo(32, 22);
+    c.bezierCurveTo(15, 5, 3, 29, 32, 49);
+    c.bezierCurveTo(61, 29, 49, 5, 32, 22); c.closePath();
+    const light = c.createLinearGradient(18, 12, 43, 48);
+    light.addColorStop(0, '#f4ffff'); light.addColorStop(.5, '#c7f5ff'); light.addColorStop(1, '#96c7e9');
+    c.shadowColor = accent; c.shadowBlur = 7; c.fillStyle = light; c.fill();
+    c.shadowBlur = 0; c.strokeStyle = '#4c89a9aa'; c.lineWidth = 1.5; c.stroke();
+    c.beginPath(); c.moveTo(19, 21); c.quadraticCurveTo(22, 16, 27, 22);
+    c.strokeStyle = '#ffffffc9'; c.lineWidth = 2; c.lineCap = 'round'; c.stroke();
+  });
+  return { body, fin, arm, hand, leg, eye, iris, glow, shadow, particle, heart };
 }
