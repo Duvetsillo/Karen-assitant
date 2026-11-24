@@ -1,0 +1,416 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T19:21:04.244Z",
+  "title": "Design System: Karen Desktop Pet",
+  "extensions": {
+    "colorMeta": {
+      "action-lavender": {
+        "role": "primary",
+        "displayName": "Lavanda de acción",
+        "tonalRamp": [
+          "oklch(15.00% 0.0944 287.45)",
+          "oklch(26.43% 0.0944 287.45)",
+          "oklch(37.86% 0.0944 287.45)",
+          "oklch(49.29% 0.0944 287.45)",
+          "oklch(60.71% 0.0944 287.45)",
+          "oklch(72.14% 0.0944 287.45)",
+          "oklch(83.57% 0.0944 287.45)",
+          "oklch(95.00% 0.0944 287.45)"
+        ]
+      },
+      "hologram-ice": {
+        "role": "primary",
+        "displayName": "Hielo holográfico",
+        "tonalRamp": [
+          "oklch(15.00% 0.0879 209.36)",
+          "oklch(26.43% 0.0879 209.36)",
+          "oklch(37.86% 0.0879 209.36)",
+          "oklch(49.29% 0.0879 209.36)",
+          "oklch(60.71% 0.0879 209.36)",
+          "oklch(72.14% 0.0879 209.36)",
+          "oklch(83.57% 0.0879 209.36)",
+          "oklch(95.00% 0.0879 209.36)"
+        ]
+      },
+      "connected-mint": {
+        "role": "secondary",
+        "displayName": "Menta conectada",
+        "tonalRamp": [
+          "oklch(15.00% 0.0746 171.92)",
+          "oklch(26.43% 0.0746 171.92)",
+          "oklch(37.86% 0.0746 171.92)",
+          "oklch(49.29% 0.0746 171.92)",
+          "oklch(60.71% 0.0746 171.92)",
+          "oklch(72.14% 0.0746 171.92)",
+          "oklch(83.57% 0.0746 171.92)",
+          "oklch(95.00% 0.0746 171.92)"
+        ]
+      },
+      "warning-peach": {
+        "role": "secondary",
+        "displayName": "Melocotón de aviso",
+        "tonalRamp": [
+          "oklch(15.00% 0.0789 63.30)",
+          "oklch(26.43% 0.0789 63.30)",
+          "oklch(37.86% 0.0789 63.30)",
+          "oklch(49.29% 0.0789 63.30)",
+          "oklch(60.71% 0.0789 63.30)",
+          "oklch(72.14% 0.0789 63.30)",
+          "oklch(83.57% 0.0789 63.30)",
+          "oklch(95.00% 0.0789 63.30)"
+        ]
+      },
+      "canvas-indigo": {
+        "role": "neutral",
+        "displayName": "Índigo de lienzo",
+        "tonalRamp": [
+          "oklch(15.00% 0.0209 271.42 / 0.9412)",
+          "oklch(26.43% 0.0209 271.42 / 0.9412)",
+          "oklch(37.86% 0.0209 271.42 / 0.9412)",
+          "oklch(49.29% 0.0209 271.42 / 0.9412)",
+          "oklch(60.71% 0.0209 271.42 / 0.9412)",
+          "oklch(72.14% 0.0209 271.42 / 0.9412)",
+          "oklch(83.57% 0.0209 271.42 / 0.9412)",
+          "oklch(95.00% 0.0209 271.42 / 0.9412)"
+        ]
+      },
+      "navigation-indigo": {
+        "role": "neutral",
+        "displayName": "Índigo de navegación",
+        "tonalRamp": [
+          "oklch(15.00% 0.0242 273.33 / 0.9098)",
+          "oklch(26.43% 0.0242 273.33 / 0.9098)",
+          "oklch(37.86% 0.0242 273.33 / 0.9098)",
+          "oklch(49.29% 0.0242 273.33 / 0.9098)",
+          "oklch(60.71% 0.0242 273.33 / 0.9098)",
+          "oklch(72.14% 0.0242 273.33 / 0.9098)",
+          "oklch(83.57% 0.0242 273.33 / 0.9098)",
+          "oklch(95.00% 0.0242 273.33 / 0.9098)"
+        ]
+      },
+      "field-indigo": {
+        "role": "neutral",
+        "displayName": "Índigo de campo",
+        "tonalRamp": [
+          "oklch(15.00% 0.0286 268.87)",
+          "oklch(26.43% 0.0286 268.87)",
+          "oklch(37.86% 0.0286 268.87)",
+          "oklch(49.29% 0.0286 268.87)",
+          "oklch(60.71% 0.0286 268.87)",
+          "oklch(72.14% 0.0286 268.87)",
+          "oklch(83.57% 0.0286 268.87)",
+          "oklch(95.00% 0.0286 268.87)"
+        ]
+      },
+      "control-indigo": {
+        "role": "neutral",
+        "displayName": "Índigo de control",
+        "tonalRamp": [
+          "oklch(15.00% 0.0347 269.81)",
+          "oklch(26.43% 0.0347 269.81)",
+          "oklch(37.86% 0.0347 269.81)",
+          "oklch(49.29% 0.0347 269.81)",
+          "oklch(60.71% 0.0347 269.81)",
+          "oklch(72.14% 0.0347 269.81)",
+          "oklch(83.57% 0.0347 269.81)",
+          "oklch(95.00% 0.0347 269.81)"
+        ]
+      },
+      "control-hover": {
+        "role": "neutral",
+        "displayName": "Control en hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.0419 269.34)",
+          "oklch(26.43% 0.0419 269.34)",
+          "oklch(37.86% 0.0419 269.34)",
+          "oklch(49.29% 0.0419 269.34)",
+          "oklch(60.71% 0.0419 269.34)",
+          "oklch(72.14% 0.0419 269.34)",
+          "oklch(83.57% 0.0419 269.34)",
+          "oklch(95.00% 0.0419 269.34)"
+        ]
+      },
+      "navigation-selected": {
+        "role": "neutral",
+        "displayName": "Navegación seleccionada",
+        "tonalRamp": [
+          "oklch(15.00% 0.0500 283.06)",
+          "oklch(26.43% 0.0500 283.06)",
+          "oklch(37.86% 0.0500 283.06)",
+          "oklch(49.29% 0.0500 283.06)",
+          "oklch(60.71% 0.0500 283.06)",
+          "oklch(72.14% 0.0500 283.06)",
+          "oklch(83.57% 0.0500 283.06)",
+          "oklch(95.00% 0.0500 283.06)"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Texto principal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0151 273.85)",
+          "oklch(26.43% 0.0151 273.85)",
+          "oklch(37.86% 0.0151 273.85)",
+          "oklch(49.29% 0.0151 273.85)",
+          "oklch(60.71% 0.0151 273.85)",
+          "oklch(72.14% 0.0151 273.85)",
+          "oklch(83.57% 0.0151 273.85)",
+          "oklch(95.00% 0.0151 273.85)"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Texto secundario",
+        "tonalRamp": [
+          "oklch(15.00% 0.0427 273.17)",
+          "oklch(26.43% 0.0427 273.17)",
+          "oklch(37.86% 0.0427 273.17)",
+          "oklch(49.29% 0.0427 273.17)",
+          "oklch(60.71% 0.0427 273.17)",
+          "oklch(72.14% 0.0427 273.17)",
+          "oklch(83.57% 0.0427 273.17)",
+          "oklch(95.00% 0.0427 273.17)"
+        ]
+      },
+      "text-control": {
+        "role": "neutral",
+        "displayName": "Texto de control",
+        "tonalRamp": [
+          "oklch(15.00% 0.0265 271.86)",
+          "oklch(26.43% 0.0265 271.86)",
+          "oklch(37.86% 0.0265 271.86)",
+          "oklch(49.29% 0.0265 271.86)",
+          "oklch(60.71% 0.0265 271.86)",
+          "oklch(72.14% 0.0265 271.86)",
+          "oklch(83.57% 0.0265 271.86)",
+          "oklch(95.00% 0.0265 271.86)"
+        ]
+      },
+      "text-selected": {
+        "role": "neutral",
+        "displayName": "Texto seleccionado",
+        "tonalRamp": [
+          "oklch(15.00% 0.0548 292.14)",
+          "oklch(26.43% 0.0548 292.14)",
+          "oklch(37.86% 0.0548 292.14)",
+          "oklch(49.29% 0.0548 292.14)",
+          "oklch(60.71% 0.0548 292.14)",
+          "oklch(72.14% 0.0548 292.14)",
+          "oklch(83.57% 0.0548 292.14)",
+          "oklch(95.00% 0.0548 292.14)"
+        ]
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "Separador",
+        "tonalRamp": [
+          "oklch(15.00% 0.0334 272.29)",
+          "oklch(26.43% 0.0334 272.29)",
+          "oklch(37.86% 0.0334 272.29)",
+          "oklch(49.29% 0.0334 272.29)",
+          "oklch(60.71% 0.0334 272.29)",
+          "oklch(72.14% 0.0334 272.29)",
+          "oklch(83.57% 0.0334 272.29)",
+          "oklch(95.00% 0.0334 272.29)"
+        ]
+      },
+      "focus-lavender": {
+        "role": "neutral",
+        "displayName": "Lavanda de foco",
+        "tonalRamp": [
+          "oklch(15.00% 0.0877 289.44)",
+          "oklch(26.43% 0.0877 289.44)",
+          "oklch(37.86% 0.0877 289.44)",
+          "oklch(49.29% 0.0877 289.44)",
+          "oklch(60.71% 0.0877 289.44)",
+          "oklch(72.14% 0.0877 289.44)",
+          "oklch(83.57% 0.0877 289.44)",
+          "oklch(95.00% 0.0877 289.44)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Título de página",
+        "purpose": "Encabezado principal de cada sección de ajustes."
+      },
+      "title": {
+        "displayName": "Título de conversación",
+        "purpose": "Estado vacío y mensajes de orientación."
+      },
+      "section": {
+        "displayName": "Sección",
+        "purpose": "Grupos de ajustes."
+      },
+      "body": {
+        "displayName": "Lectura",
+        "purpose": "Base tipográfica del panel."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Navegación, campos y conversación."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Ayuda y estados."
+      },
+      "diagnostic": {
+        "displayName": "Dato técnico",
+        "purpose": "Código y datos de diagnóstico."
+      }
+    },
+    "shadows": [
+      {
+        "name": "speech-bubble-ambient",
+        "value": "0 5px 18px #06112329",
+        "purpose": "Separación suave del globo sobre el escritorio."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(.23,1,.32,1)",
+        "purpose": "Transiciones de controles."
+      },
+      {
+        "name": "control-duration",
+        "value": "150ms",
+        "purpose": "Superficie y borde de botones."
+      },
+      {
+        "name": "switch-duration",
+        "value": "160ms",
+        "purpose": "Desplazamiento del pulgar."
+      },
+      {
+        "name": "toolbar-duration",
+        "value": "180ms",
+        "purpose": "Aparición de acciones de la mascota."
+      },
+      {
+        "name": "pet-damping",
+        "value": "value + (target - value) * (1 - exp(-rate * dt))",
+        "purpose": "Interpolación interrumpible del personaje; rate varía por parte."
+      },
+      {
+        "name": "pet-frame-caps",
+        "value": "60 / 30 / 15 FPS",
+        "purpose": "Mascota / vista previa / reposo o bajo consumo."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-desktop",
+        "value": "950px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción prioritaria en lavanda.",
+      "html": "<button class=\"ds-primary\">Conectar</button>",
+      "css": ".ds-primary{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:8px 13px;border:1px solid transparent;border-radius:8px;background:var(--accent,#b7b2f5);color:#202038;font-size:11px;font-weight:600;cursor:pointer;transition:background-color 150ms cubic-bezier(.23,1,.32,1),border-color 150ms cubic-bezier(.23,1,.32,1)}.ds-primary:hover{background:#cdc7ff}.ds-primary:disabled{opacity:.4;cursor:default}.ds-primary:focus-visible,.ds-secondary:focus-visible{outline:2px solid #c7c0ff;outline-offset:3px}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción discreta dentro del panel.",
+      "html": "<button class=\"ds-secondary\">Reconectar</button>",
+      "css": ".ds-secondary{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:8px 13px;border:1px solid #363d54;border-radius:8px;background:#202638;color:#e1e7fa;font-size:11px;cursor:pointer;transition:background-color 150ms cubic-bezier(.23,1,.32,1),border-color 150ms cubic-bezier(.23,1,.32,1)}.ds-secondary:hover{background:#30384f;border-color:#646789}.ds-secondary:active:not(:disabled){background:#3a415a}.ds-secondary:disabled{opacity:.4;cursor:default}.ds-primary:focus-visible,.ds-secondary:focus-visible{outline:2px solid #c7c0ff;outline-offset:3px}"
+    },
+    {
+      "name": "Campo de Gateway",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de configuración con etiqueta explícita.",
+      "html": "<label class=\"ds-field\">Gateway<input aria-label=\"Gateway\" value=\"ws://127.0.0.1:18789\"/></label>",
+      "css": ".ds-field{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;display:grid;gap:8px;color:#c0c7dc;font-size:11px;font-weight:500}.ds-field input{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;width:100%;padding:10px 12px;border:1px solid #3c435c;border-radius:7px;background:#151a28;color:#edf0fb;font-size:12px;caret-color:#b4edf8}.ds-field input:focus-visible{outline:2px solid #c7c0ff;outline-offset:3px}"
+    },
+    {
+      "name": "Navegación lateral",
+      "kind": "nav",
+      "refersTo": "navigation-selected",
+      "description": "Categoría activa con icono, nombre y avance.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Ajustes\"><button aria-current=\"page\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"/><path d=\"M20 2v4M22 4h-4\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/></svg>Apariencia<svg class=\"ds-chevron\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button></nav>",
+      "css": ".ds-nav{display:grid;gap:5px;width:166px}.ds-nav button{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;display:flex;align-items:center;justify-content:flex-start;gap:11px;min-height:43px;padding:11px 12px;border:0;border-radius:8px;background:transparent;color:#adb6d2;font-size:12px;cursor:pointer;transition:background-color 150ms cubic-bezier(.23,1,.32,1)}.ds-nav button:hover{background:#232839;color:#eef0ff}.ds-nav button[aria-current=page]{background:#2c2c48;color:#ddd7ff}.ds-nav button:focus-visible{outline:2px solid #c7c0ff;outline-offset:3px}.ds-chevron{margin-left:auto}"
+    },
+    {
+      "name": "Estado de conexión",
+      "kind": "custom",
+      "description": "Indicador y texto comunican conjuntamente una conexión real.",
+      "html": "<span class=\"ds-status\"><i aria-hidden=\"true\"></i>Conectada</span>",
+      "css": ".ds-status{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;display:inline-flex;align-items:center;gap:7px;font-size:11px;line-height:1.5;color:#b3dfd2}.ds-status i{width:6px;height:6px;border-radius:50%;background:#96d9c3}"
+    },
+    {
+      "name": "Interruptor",
+      "kind": "custom",
+      "description": "Control con estado accesible y desplazamiento de pulgar.",
+      "html": "<button class=\"ds-switch\" role=\"switch\" aria-label=\"Partículas de luz\" aria-checked=\"true\"><span></span></button>",
+      "css": ".ds-switch{display:inline-flex;align-items:center;justify-content:flex-start;min-height:21px;width:35px;height:21px;padding:3px;border:0;border-radius:20px;background:#353d53;cursor:pointer}.ds-switch span{width:15px;height:15px;border-radius:50%;background:#aab5cd;transition:transform 160ms cubic-bezier(.23,1,.32,1),background-color 160ms cubic-bezier(.23,1,.32,1)}.ds-switch[aria-checked=true]{background:#8b84c6}.ds-switch[aria-checked=true] span{transform:translateX(14px);background:#f6f2ff}.ds-switch:focus-visible{outline:2px solid #c7c0ff;outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-switch span{transition:none}}"
+    },
+    {
+      "name": "Mensaje de Karen",
+      "kind": "card",
+      "refersTo": "message-assistant",
+      "description": "Bloque de conversación con autor y texto legible.",
+      "html": "<article class=\"ds-message\"><span>Karen</span><p>Aquí contigo, a su ritmo.</p></article>",
+      "css": ".ds-message{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;padding:13px 14px;border-radius:9px;background:#1c2232;color:#edf0fb;max-width:360px}.ds-message>span{display:block;margin-bottom:6px;font-size:10px;color:#beb6ee}.ds-message p{margin:0;font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}"
+    },
+    {
+      "name": "Globo de escritorio",
+      "kind": "custom",
+      "refersTo": "speech-bubble",
+      "description": "Respuesta opcional legible sobre el escritorio.",
+      "html": "<div class=\"ds-bubble\" role=\"status\"><button aria-label=\"Cerrar globo\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"m18 6-12 12M6 6l12 12\"/></svg></button><p>Ya estoy aquí.</p></div>",
+      "css": ".ds-bubble{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;position:relative;max-width:300px;padding:13px 25px 13px 15px;border-radius:13px;background:#172136f5;color:#e9f3ff;box-shadow:0 5px 18px #06112329;user-select:text}.ds-bubble p{margin:0;font-size:11px;line-height:1.6;overflow-wrap:anywhere}.ds-bubble>button{position:absolute;right:7px;top:5px;display:inline-flex;min-height:18px;padding:0;border:0;background:transparent;color:#c8d8ef;cursor:pointer}.ds-bubble>button:focus-visible{outline:2px solid #c7c0ff;outline-offset:3px}"
+    },
+    {
+      "name": "Marca Karen",
+      "kind": "custom",
+      "description": "Marca vectorial original que conserva aletas y cara de la criatura.",
+      "html": "<span class=\"ds-brand\"><svg viewBox=\"0 0 40 44\" aria-hidden=\"true\"><path d=\"M10 17C4 12 7 3 10 3c6 3 7 8 6 11m14 3c6-5 3-14 0-14-6 3-7 8-6 11\" fill=\"#b7bef5\"/><path d=\"M20 12C6 11 2 22 5 32c1 6 6 10 11 7 4 4 7 1 9 0 7 4 13-4 11-14-1-8-6-13-16-13\" fill=\"#b4edf8\"/><path d=\"M9 24q11-6 22 0v7q-11 6-22 0\" fill=\"#263c59\"/><ellipse cx=\"15\" cy=\"27\" rx=\"2.6\" ry=\"3.6\" fill=\"#e6fdff\"/><ellipse cx=\"25\" cy=\"27\" rx=\"2.6\" ry=\"3.6\" fill=\"#e6fdff\"/></svg>Karen</span>",
+      "css": ".ds-brand{font-family:\"Segoe UI Variable\",\"Segoe UI\",sans-serif;display:inline-flex;gap:12px;align-items:center;color:#edf0fb;font-size:24px;letter-spacing:-.03em;font-weight:600}.ds-brand svg{width:36px;height:43px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Vidrio de estudio",
+    "overview": "Karen es una criatura pequeña de vidrio holográfico: volumen azul hielo, aletas laminadas lavanda, cara hundida índigo y ojos luminosos con iris y reflejos. Su corazón incrustado y sus bordes orgánicos le dan identidad incluso con las partículas apagadas. Es una criatura original, no humana; el personaje vive en la ventana transparente del escritorio.\n\nLa interfaz de ajustes es una herramienta nativa de Windows: sobria, oscura y ordenada, con navegación lateral y controles junto a una vista de Karen. El panel combina material acrílico nativo de Windows 11 con capas índigo semitransparentes y niveles tonales, mientras el vidrio, los gradientes y el resplandor del personaje conservan su propia profundidad. La dirección se implementó directamente desde el brief; semilla de dirección registrada: `3a07d84c`.",
+    "keyCharacteristics": [
+      "Criatura de vidrio con silueta orgánica, aletas expresivas y corazón incrustado.",
+      "Índigo oscuro para operar; hielo y lavanda para la presencia de Karen.",
+      "Jerarquía nativa de Windows con controles discretos y foco visible.",
+      "Movimiento suave, interrumpible y dependiente del estado real.",
+      "Recursos gráficos locales que mantienen la identidad sin efectos adicionales."
+    ],
+    "rules": [
+      {
+        "name": "The Estado Legible Rule",
+        "body": "Toda conexión o estado de Karen se acompaña de texto; el color nunca lleva por sí solo el significado.",
+        "section": "colors"
+      },
+      {
+        "name": "The Forma Antes de Efectos Rule",
+        "body": "La silueta, la cara y los ojos deben conservar la identidad de Karen con las partículas apagadas y con luminosidad reducida.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** conservar la silueta orgánica, la cara hundida, los ojos con reflejos y el corazón incrustado.",
+      "**Do** usar el índigo para operar y reservar la luz fría más intensa para Karen y los estados que la necesitan.",
+      "**Do** acompañar los estados con texto y mantener el foco de teclado visible.",
+      "**Do** reutilizar texturas locales y animar transformaciones suaves e interrumpibles.",
+      "**Do** respetar reducción de movimiento, reposo y bajo consumo."
+    ],
+    "donts": [
+      "**Don't** convertir a Karen en una persona, una mujer anime, un emoji o un círculo con dos puntos por ojos.",
+      "**Don't** añadir recursos gráficos remotos que puedan desaparecer.",
+      "**Don't** comunicar conexión, error o actividad únicamente mediante color.",
+      "**Don't** presentar movimiento labial sintético como prueba de audio real.",
+      "**Don't** sustituir la jerarquía operativa del panel por tarjetas anidadas y efectos ornamentales."
+    ]
+  }
+}

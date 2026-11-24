@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-electron
+release
+qa
+.qa-profile
+.cache
+.git
+.env
+.env.*
+data
+secrets
+*.key
+*.pem
+*.dpapi
+*.wav

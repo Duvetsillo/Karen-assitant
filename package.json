@@ -1,0 +1,95 @@
+{
+  "name": "karen-desktop-pet",
+  "version": "1.8.0",
+  "private": true,
+  "type": "module",
+  "description": "Mascota holográfica de escritorio para OpenClaw",
+  "author": "Karen Desktop Pet",
+  "license": "MIT",
+  "main": "dist-electron/electron/main.js",
+  "scripts": {
+    "dev": "npm run build && electron .",
+    "preview": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
+    "build": "npm run typecheck && vite build && tsc -p tsconfig.electron.json && node scripts/copy-preload.cjs",
+    "test": "vitest run",
+    "test:native": "node scripts/native-smoke.cjs",
+    "test:appearance": "node scripts/appearance-smoke.cjs",
+    "test:variants": "node scripts/pet-variants-smoke.cjs",
+    "test:initiative": "node scripts/interface-initiative-smoke.cjs",
+    "test:styles": "node scripts/styles-smoke.cjs",
+    "test:perception": "node scripts/perception-smoke.cjs",
+    "test:voice:contracts": "python -m unittest discover -s tests -p test_voice*.py",
+    "test:voice:native": "node scripts/shared-voice-smoke.cjs",
+    "test:voice:accelerated": "node scripts/accelerated-voice-smoke.cjs",
+    "test:voice:replies": "node scripts/voice-replies-smoke.cjs",
+    "test:voice:edge": "node scripts/edge-voice-smoke.cjs",
+    "test:pointing": "node scripts/pointing-smoke.cjs",
+    "test:wake:controls": "node scripts/wake-controls-smoke.cjs",
+    "probe": "tsx scripts/probe.ts",
+    "start:server": "node dist-electron/server/index.js",
+    "dev:server": "tsx server/index.ts",
+    "audit:source": "node scripts/audit-source.cjs",
+    "test:server:browser": "tsx scripts/server-browser-smoke.ts",
+    "package": "npm run build && electron-builder --win nsis --x64 --publish never --config.electronDist=node_modules/electron/dist"
+  },
+  "dependencies": {
+    "@openclaw/gateway-client": "2026.8.1",
+    "@openclaw/gateway-protocol": "2026.8.1",
+    "lucide-react": "^0.577.0",
+    "pixi.js": "^8.14.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "ws": "8.21.3",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "electron": "44.7.2",
+    "electron-builder": "26.15.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "build": {
+    "appId": "com.karen.desktoppet",
+    "productName": "Karen Desktop Pet",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "assets/**",
+      "python/**",
+      "!python/**/__pycache__/**",
+      "!python/**/*.pyc",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "python/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/karen.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true,
+      "installerLanguages": [
+        "es_ES",
+        "en_US"
+      ]
+    }
+  }
+}
