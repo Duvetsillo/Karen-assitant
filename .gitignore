@@ -23,6 +23,14 @@ ffprobe.exe
 
 # Entorno
 .env
+.private/
+settings.json
+admin_policy.json
+*.sqlite
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+.pytest_cache/
 
 # Sistema
 .DS_Store

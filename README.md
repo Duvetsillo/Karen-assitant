@@ -1,5 +1,32 @@
 # 🌸 KAREN Assistant: The Genesis of Local AI
 
+## Código actual de Karen
+
+La evolución Windows validada está en [`runtime/`](runtime/), integrada el 24 de
+noviembre de 2026 desde la instalación de trabajo `C:\karen`. Incluye identidad
+persistente, memoria SQLite, documentos revisados, conversación en streaming,
+cancelación y perfiles de recursos. El cliente histórico de esta carpeta raíz
+se conserva para documentar el origen del proyecto.
+
+Consulta la [guía operativa](runtime/docs/PERSONAL_AI_UPGRADE.md) y el
+[estado de esta integración](KAREN_PROGRESS.md). Full-duplex, AEC y STT
+incremental siguen pendientes; esta publicación no los presenta como terminados.
+
+Para ejecutar el código actual, con sus dependencias y modelos locales preparados:
+
+```powershell
+cd runtime
+.\start_karen.ps1
+```
+
+Los modelos, referencias de voz, credenciales y datos personales permanecen en
+la instalación local. La guía explica los requisitos de `desktop-pet/python` y
+los entornos de voz; el repositorio contiene el código, no esos datos.
+
+La CI portable de la raíz comprueba el cliente histórico en `tests/`. La suite
+Windows del runtime se ejecuta desde `runtime/` con
+`python -m unittest discover -s qa -p 'test_*.py'` y sus dependencias preparadas.
+
 ## 📜 Visión General
 KAREN no fue solo un asistente; fue la primera piedra angular de mi ecosistema de IA local. Representó el salto desde la computación reactiva hacia la asistencia proactiva, implementando la primera capa de procesamiento de lenguaje natural (NLP) ejecutada íntegramente en hardware propio.
 
