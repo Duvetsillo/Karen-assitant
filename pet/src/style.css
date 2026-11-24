@@ -33,6 +33,25 @@
 .model-error { color: #ffd0b1; margin-top: 8px; font-size: 12px; }
 .conversation .messages { min-height: 140px; }
 .conversation .empty-chat { min-height: 170px; padding: 20px 0; }
+.presence-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 16px; }
+.presence-presets > button { min-width: 0; flex-direction: column; gap: 10px; padding: 15px 6px 12px; font-size: 12px; }
+.presence-presets > button[aria-pressed="true"] { background: #213b48; border-color: #83bfce; color: #e5fbff; }
+.presence-mark { display: flex; height: 21px; gap: 4px; align-items: center; }
+.presence-mark i { width: 4px; height: 8px; border-radius: 3px; background: #a5e5ed; }
+.presence-mark i:nth-child(2) { height: 14px; }
+.presence-mark.balanced i { height: 12px; }
+.presence-mark.balanced i:nth-child(2) { height: 20px; }
+.presence-mark.lively i { height: 18px; }
+.presence-mark.lively i:nth-child(2) { height: 10px; }
+.preview-window[data-background] { border: 1px solid #354250; border-radius: 22px; overflow: hidden; background: radial-gradient(ellipse at 50% 44%, #263746 0%, #18222d 65%); }
+.preview-window[data-background="light"] { background: #e8edf1; border-color: #b8c7d2; }
+.preview-window[data-background="light"] .preview-state { color: #21394a; background: #f5f8facf; border-radius: 12px; padding: 5px 10px; }
+.preview-window[data-background="light"] .preview-state i { background: #2d7185; }
+.preview-background { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 12px 0 0; }
+.preview-background > span { color: var(--muted); font-size: 11px; margin-right: 5px; }
+.preview-background > button { font-size: 11px; min-height: 30px; padding: 4px 9px; background: transparent; border-color: transparent; }
+.preview-background > button[aria-pressed="true"] { background: #263544; border-color: #486577; color: #d5f4fa; }
+.appearance-page .preview-pane { position: sticky; top: 0; align-self: flex-start; }
 @media (max-width: 580px) { .pet-styles { grid-template-columns: 1fr; } .pet-style-card svg { height: 90px; } }
 @media (prefers-reduced-motion: reduce) { .pet-style-card { transition: none; } .pet-style-card:active { transform: none; } }
 * {

@@ -10,9 +10,10 @@ declare global {
 const unavailable = async () => {
   throw new Error("Esta función necesita la aplicación de Windows.");
 };
+let previewSettings = { ...defaults };
 const preview: DesktopBridge = {
   snapshot: async (): Promise<Snapshot> => ({
-    settings: defaults,
+    settings: { ...previewSettings },
     connection: {
       state: "disconnected",
       message: "Vista de navegador · sin conexión nativa",
@@ -23,7 +24,10 @@ const preview: DesktopBridge = {
     native: false,
     version: APP_VERSION,
   }),
-  settings: async (patch) => ({ ...defaults, ...patch }),
+  settings: async (patch) => {
+    previewSettings = { ...previewSettings, ...patch };
+    return { ...previewSettings };
+  },
   credential: unavailable,
   connect: unavailable,
   models: unavailable,

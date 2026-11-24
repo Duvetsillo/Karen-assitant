@@ -46,6 +46,8 @@ import { ModelPicker } from './ModelPicker';
 import { StylePicker } from './pet/StylePicker';
 import {InitiativePanel,Notice} from './InitiativePanel';
 import { ScreenActionApproval } from './ScreenActionApproval';
+import { PRESENCE_PRESETS } from './pet/presence-motion';
+import { petStyles } from '../shared/pet-styles';
 
 const isPet = new URLSearchParams(location.search).get("view") === "pet";
 document.documentElement.dataset.view = isPet ? "pet" : "settings";
@@ -228,37 +230,42 @@ function Group({
   );
 }
 function PetPreview() {
+  const [background, setBackground] = useState<'dark' | 'light'>('dark');
   const coreActivity = useStore(s => s.coreActivity);
+  const style = useStore(s => s.settings.petStyle);
   const state = useStore((s) => s.state),
     reason = useStore((s) => s.reason),
     scale = useStore((s) => s.settings.scale);
+  const gesture = (next: PetState) => {
+    useStore.getState().transition(next, 'Demostración visual local');
+    void action(() => bridge.demo(next));
+  };
   return (
     <aside className="preview-pane">
-      <div className="preview-window">
-        <div className="orbit orbit-one" />
-        <div className="orbit orbit-two" />
+      <div className="preview-window" data-background={background}>
         <PetRenderer preview />
         <div className="preview-state">
           <i />
           {labels[state]}
         </div>
       </div>
+      <div className="preview-background" role="group" aria-label="Fondo de la vista previa">
+        <span>Ver sobre</span>
+        <button aria-pressed={background === 'dark'} onClick={() => setBackground('dark')}>Oscuro</button>
+        <button aria-pressed={background === 'light'} onClick={() => setBackground('light')}>Claro</button>
+      </div>
       <div className="preview-caption">
-        <span>Karen</span><span className="preview-scale">Tamaño · {Math.round(scale * 100)} %</span>
+        <span>Karen</span><span className="preview-scale">{petStyles[style].name} · {Math.round(scale * 100)} %</span>
         <small>{reason || "Aquí contigo, a su ritmo."}</small>
         {coreActivity.map(client => <small key={client.interface}>Otra interfaz · {client.interface}: {client.state}</small>)}
       </div>
       <div className="preview-commands">
-        <button onClick={() => void action(() => bridge.demo("HAPPY"))}>
+        <button onClick={() => gesture('HAPPY')}>
           <Sparkles size={16} />
-          Hacer un gesto
+          Saludar
         </button>
         <button
-          onClick={() =>
-            void action(() =>
-              bridge.demo(state === "SLEEPING" ? "HAPPY" : "SLEEPING"),
-            )
-          }
+          onClick={() => gesture(state === 'SLEEPING' ? 'HAPPY' : 'SLEEPING')}
         >
           <Moon size={16} />
           {state === "SLEEPING" ? "Despertar" : "Reposar"}
@@ -363,7 +370,7 @@ function SettingsApp() {
         <ErrorBanner />
         <CaptureIndicator />
         <div
-          className={`page-body ${tab === "Diagnóstico" ? "diagnostics-page" : ""} ${tab==='Conversación'?'conversation-page':''} ${tab==='Iniciativa'?'initiative-layout':''}`}
+          className={`page-body ${tab === "Diagnóstico" ? "diagnostics-page" : ""} ${tab==='Conversación'?'conversation-page':''} ${tab==='Iniciativa'?'initiative-layout':''} ${tab==='Apariencia'?'appearance-page':''}`}
         >
           <div className="settings-content">
             {tab === "Conversación" ? (
@@ -542,8 +549,19 @@ function Appearance() {
   const s = useStore((x) => x.settings);
   return (
     <>
-      <Group title="Ocho estilos, la misma Karen" description="Elige su apariencia. Cambia al instante y se conserva al reiniciar.">
+      <Group title="Elige su forma" description="Ocho estilos, la misma Karen. Los cambios se guardan al elegir.">
         <StylePicker value={s.petStyle} arms={s.showArms} legs={s.showLegs} onChange={petStyle => void patch({petStyle})}/>
+      </Group>
+      <Group title="Su manera de moverse" description="Elige un ritmo y prueba el saludo en la vista previa.">
+        <div className="presence-presets" role="group" aria-label="Ritmo de la mascota">
+          {PRESENCE_PRESETS.map(preset => <button key={preset.name}
+            aria-pressed={s.animations && Math.abs(s.activity - preset.activity) < .05}
+            title={preset.description} onClick={() => void patch({activity: preset.activity, animations: true})}>
+            <span className={`presence-mark ${preset.name === 'Serena' ? 'calm' : preset.name === 'Expresiva' ? 'lively' : 'balanced'}`} aria-hidden="true"><i/><i/><i/></span>
+            {preset.name}
+          </button>)}
+        </div>
+        <p className="quiet-note">Gaming, No molestar y movimiento reducido mantienen sus límites.</p>
       </Group>
       <Group title="Su silueta" description="Cada estilo puede tener brazos, piernas o flotar libremente.">
         <div className="size-presets" role="group" aria-label="Versiones de cuerpo">
