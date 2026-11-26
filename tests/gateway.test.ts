@@ -197,6 +197,21 @@ async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: stri
   };
 }
 describe("adaptador contra servidor de contrato WebSocket", () => {
+  it('shows schedules and development offline without gateway requests or write actions', async () => {
+    const core = {appendOpenClawTurn: vi.fn(),
+      listSchedules: vi.fn(() => [{id:'a'.repeat(32),name:'Routine',next_run:'2100-01-01',interval_seconds:null,retries:0,enabled:1,last_status:null}]),
+      listHandoffs: vi.fn(() => [{id:'b'.repeat(32),project:'Karen',status:'pending',priority:'normal',updated_at:'2026-11-26'}])};
+    const t = await setup(core);
+    t.adapter.disconnect();
+    await t.adapter.send('/automatizaciones listar');
+    await t.adapter.send('/desarrollo listar');
+    await t.adapter.send('/automatizaciones ejecutar ' + 'a'.repeat(32));
+    expect(core.listSchedules).toHaveBeenCalledOnce();
+    expect(core.listHandoffs).toHaveBeenCalledOnce();
+    expect(t.events.some(event => event.type === 'chat' && event.final && event.speak === false && event.message.text.includes('Routine'))).toBe(true);
+    expect(t.requests.filter(request => request.method === 'chat.send')).toHaveLength(0);
+    expect(core.appendOpenClawTurn).not.toHaveBeenCalled();
+  });
   it('consulta el ID de una tarea local sin Gateway, TTS, argumentos ni ejecución', async () => {
     const taskId = 'a'.repeat(32);
     const readTask = vi.fn(() => ({ id: taskId, status: 'running', cursor: 0,

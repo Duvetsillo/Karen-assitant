@@ -1,0 +1,37 @@
+{
+  "syntheticData": true,
+  "variants": 6,
+  "multiline": true,
+  "localSend": true,
+  "draftRemainsOpen": true,
+  "persistence": true,
+  "moreOptions": true,
+  "awakeningQuality": {
+    "resolution": {
+      "body": 4,
+      "face": 8,
+      "details": 3
+    },
+    "bytes": 24803832
+  },
+  "farewell": true,
+  "quitMs": 961,
+  "errors": [],
+  "date": "2026-11-26",
+  "unitTests": 197,
+  "introRuns": 54,
+  "realTimeRuns": 6,
+  "acceleratedVisualRuns": 48,
+  "realTimeFPS": [
+    "58",
+    "59",
+    "58",
+    "58",
+    "58",
+    "59"
+  ],
+  "introErrors": [],
+  "physicalHiDPI": "pending",
+  "humanAudioAcceptance": "pending",
+  "installedPackageReplaced": false
+}

@@ -3,8 +3,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import type { CoreTurnSink } from './gateway.js';
+import type { CoreHandoffSummary } from '../shared/core-tasks.js';
+import { publicCoreLabel } from '../shared/core-tasks.js';
 import { VOICE_STYLES, type VoiceStyle, type Settings } from '../shared/types.js';
 import { CoreTaskReader } from './core-tasks.js';
+import { MusicMemory } from './music-memory.js';
 
 type AssistantMode = Settings['mode'];
 const MODES: AssistantMode[] = ['normal', 'gaming', 'do_not_disturb'];
@@ -15,6 +18,8 @@ export interface CoreActivity { client_id: string; interface: 'classic' | 'pet';
 export class CoreStore implements CoreTurnSink {
   private db: DatabaseSync;
   private tasks: CoreTaskReader;
+  private musicStore?: MusicMemory;
+  musicMemory() { return this.musicStore ??= new MusicMemory(this.db); }
 
   constructor(path: string, taskPath?: string) {
     this.tasks = new CoreTaskReader(taskPath);
@@ -134,6 +139,14 @@ export class CoreStore implements CoreTurnSink {
   readTask(id: string) { return this.tasks.get(id); }
   listPlans() { return this.tasks.plans(); }
   readPlan(id: string) { return this.tasks.plan(id); }
+  listSchedules() { return this.tasks.schedules(); }
+  listHandoffs(): CoreHandoffSummary[] {
+    const version = this.db.prepare("SELECT value FROM core_meta WHERE key='handoff_version'").get() as {value: string} | undefined;
+    if (version?.value !== '1') throw new Error('Versión de desarrollo incompatible o no inicializada.');
+    const rows = this.db.prepare(`SELECT id,substr(project,1,64) AS project,status,priority,updated_at
+      FROM core2_handoffs ORDER BY updated_at DESC LIMIT 50`).all() as unknown as CoreHandoffSummary[];
+    return rows.map(row => ({...row, project: publicCoreLabel(row.project)}));
+  }
 
   setActivity(clientId: string, state: CoreState): void {
     if (!/^[0-9a-f]{32}$/.test(clientId) || !['IDLE','LISTENING','TRANSCRIBING','THINKING','SPEAKING','ERROR'].includes(state))

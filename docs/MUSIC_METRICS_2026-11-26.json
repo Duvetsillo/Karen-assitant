@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-26",
+  "validation": {
+    "realProviderCompatibility": "Spotify Desktop: lectura y renderizado reales verificados. Controles reales, Spotify Web, Apple Music y YouTube pendientes.",
+    "pregeneratedComments": 6,
+    "pythonTests": 416,
+    "petTests": 190,
+    "UI": "Electron y HTTP reales, metadatos y controles de navegador simulados",
+    "rendererErrors": 0,
+    "nativeGSMTC": "Windows MediaPlayer sintético silenciado: play/pause/next/previous, rechazo de volumen no soportado y eliminación de sesión",
+    "nodePythonInterop": true
+  },
+  "measurements": {
+    "gpuMemoryMaxMiB": 1031.0,
+    "workingSetMinMiB": 619.9,
+    "samples": 13,
+    "electronScope": "Suma de métricas de todos los procesos Electron de QA: panel, Pet y reproductor. Working sets comparten páginas; no equivalen a RAM física exclusiva del módulo.",
+    "workingSetMaxMiB": 624.86,
+    "gpuScope": "Adaptador completo con otros procesos/modelos del equipo, no atribuible exclusivamente a Karen.",
+    "cpuMeanPercent": 3.024,
+    "gpuMemoryMinMiB": 1026.0,
+    "gpuSamples": 4,
+    "nativeHelper": {
+      "source": "Owned GSMTC helper, idle subscription for five seconds; context probes included",
+      "elapsedSeconds": 5.034,
+      "cpuOneCorePercent": 0.31038935240365517,
+      "workingSetBeforeMiB": 39.0625,
+      "workingSetAfterMiB": 40.74609375
+    },
+    "gpuPercentMax": 38.0,
+    "cpuPeakPercent": 7.836,
+    "gpuPercentMin": 32.0
+  },
+  "limitations": [
+    "Muestras cortas, sin perfil de heap o prueba prolongada de fugas.",
+    "No se midió consumo exclusivo de GPU del módulo.",
+    "Llamadas: bloqueo conservador por apps y uso de micrófono; sin aceptación humana de todas las apps.",
+    "No se instaló la extensión ni se reemplazó el ejecutable del usuario."
+  ],
+  "rawEvidence": "qa/music/ui-metrics.json y native-metrics.json, locales e ignorados por Git"
+}

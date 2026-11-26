@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-26",
+  "platform": "Windows 11, Electron 44.7.2, monitor 1920x1080",
+  "validation": {
+    "unitTests": 179,
+    "nativeRealTimeRuns": 6,
+    "nativeAcceleratedMatrixRuns": 48,
+    "rendererErrors": 0,
+    "restoredAll": true,
+    "greetingFiles": 40,
+    "loadedGreetingsAll": true,
+    "escape": "Evento de teclado entregado por Playwright; tecla física pendiente",
+    "persistenceAfterRestart": true,
+    "gamingModeSuppression": true,
+    "ipcIsolation": true
+  },
+  "measurements": {
+    "sampleCount": 218,
+    "scope": "Suma de procesos Electron de la instancia QA, incluyendo panel y mascota. No es consumo aislado de la intro.",
+    "cpuMeanPercent": 3.996,
+    "cpuPeakPercent": 9.071,
+    "workingSetMinMiB": 305.39,
+    "workingSetMaxMiB": 812.44,
+    "settledWorkingSetMiB": 635.08,
+    "fpsRealTime": [
+      {
+        "id": "breakthrough",
+        "measuredFPS": "59"
+      },
+      {
+        "id": "glass",
+        "measuredFPS": "58"
+      },
+      {
+        "id": "awakening",
+        "measuredFPS": "58"
+      },
+      {
+        "id": "materialization",
+        "measuredFPS": "58"
+      },
+      {
+        "id": "sleepy",
+        "measuredFPS": "58"
+      },
+      {
+        "id": "surprise",
+        "measuredFPS": "58"
+      }
+    ],
+    "gpuScope": "Adaptador completo compartido; incluye otros procesos y servicios. No atribuible a Karen.",
+    "gpuSamples": 75,
+    "gpuUtilMinPercent": 4.0,
+    "gpuUtilMaxPercent": 44.0,
+    "gpuMemoryMinMiB": 648.0,
+    "gpuMemoryMaxMiB": 913.0
+  },
+  "limitations": [
+    "Escape físico y audición humana pendientes.",
+    "No se probaron juegos o presentaciones reales ni múltiples monitores/DPI físicos.",
+    "No es un perfil de heap ni prueba de ausencia de fugas a largo plazo.",
+    "No se reemplazó el ejecutable instalado."
+  ],
+  "rawEvidence": "qa/startup-intros/metrics.json (local, ignorado por Git)"
+}
