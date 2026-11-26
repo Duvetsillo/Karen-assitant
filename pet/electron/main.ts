@@ -10,6 +10,7 @@ import {
   session,
   powerMonitor,
   dialog,
+  clipboard,
 } from "electron";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -689,6 +690,10 @@ async function ready() {
       (permission === "speaker-selection" || (permission === "media" && details.mediaType === "audio")),
   );
   session.defaultSession.setDisplayMediaRequestHandler((_request, callback) => callback(null as never));
+  handle('copy-text', value => {
+    if (typeof value !== 'string' || value.length > 65536) throw new Error('El texto supera el límite de copia.');
+    return clipboard.writeText(value);
+  });
   handle(
     "snapshot",
     (): Snapshot => ({

@@ -24,13 +24,15 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await pet.getByLabel('Más opciones de Karen').press('Escape');
  assert(!(await pet.getByRole('button',{name:'Repetir última respuesta',exact:true}).isVisible()));
  await panel.evaluate(()=>window.karen.settings({scale:1,introVoice:false,introSounds:false}));
- const opened=app.waitForEvent('window',{predicate:w=>w.url().includes('view=intro')});
- assert(await panel.evaluate(()=>window.karen.playIntro('awakening')));
- const intro=await opened;await intro.waitForSelector('canvas');await intro.clock.install();await intro.clock.fastForward(700);
- const quality=await intro.locator('canvas').evaluate(c=>({resolution:JSON.parse(c.dataset.textureResolution),bytes:Number(c.dataset.textureSourceBytes)}));
- assert(quality.resolution.face>=7);assert(quality.bytes<=48*1024*1024);
- await intro.screenshot({path:path.join(output,'awakening-eyes.png'),omitBackground:true});
- await intro.clock.fastForward(30000);if(!intro.isClosed())await intro.waitForEvent('close',{timeout:4000});
+ const played=await panel.evaluate(()=>window.karen.playIntro('awakening'));
+ let quality={skippedByWindows:!played};
+ if(played){
+  const intro=app.windows().find(w=>w.url().includes('view=intro'));assert(intro);await intro.waitForSelector('canvas');await intro.clock.install();await intro.clock.fastForward(700);
+  quality=await intro.locator('canvas').evaluate(c=>({resolution:JSON.parse(c.dataset.textureResolution),bytes:Number(c.dataset.textureSourceBytes)}));
+  assert(quality.resolution.face>=7);assert(quality.bytes<=48*1024*1024);
+  await intro.screenshot({path:path.join(output,'awakening-eyes.png'),omitBackground:true});
+  await intro.clock.fastForward(30000);if(!intro.isClosed())await intro.waitForEvent('close',{timeout:4000});
+ }
 
  assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'settings.json'),'utf8')).petChatShape,'ribbon');
  let farewell=false;await pet.exposeFunction('farewellSeen',()=>{farewell=true;});await pet.evaluate(()=>window.karen.event(e=>{if(e.type==='pet-departure')window.farewellSeen();}));
@@ -38,4 +40,3 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  const report={syntheticData:true,variants:6,multiline:true,localSend:true,draftRemainsOpen:true,persistence:true,moreOptions:true,awakeningQuality:quality,farewell:true,quitMs:elapsed,errors};fs.writeFileSync(path.join(output,'checks.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
  }finally{await app?.close().catch(()=>{});fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
-

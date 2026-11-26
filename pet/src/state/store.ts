@@ -47,6 +47,7 @@ interface Store {
   error: string;
   tab: string;
   conversationDraft: string;
+  chatDraft: string;
   capture: CaptureStatus;
   transcript: string;
   wakeStatus: WakeStatus;
@@ -71,6 +72,7 @@ export const useStore = create<Store>((set, get) => ({
   error: "",
   tab: "Conversación",
   conversationDraft: '',
+  chatDraft: '',
   capture: { kind: "microphone", phase: "idle" },
   transcript: "",
   wakeStatus: 'off',

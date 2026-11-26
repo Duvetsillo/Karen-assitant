@@ -251,3 +251,20 @@ panel de 9 px y cinta de 5/18 px. Usan la paleta indigo existente del pet
 (#172136, #172238, #263a50), texto #e9f3ff y metadatos #aebfdc a 10 px
 para conservar legibilidad en la ventana mínima de 190 px. Entrada de 180 ms
 por opacidad y transform; sin movimiento con prefers-reduced-motion.
+
+
+## Panel unificado — 2026-11-26
+
+Modo Operate sobre la identidad existente: navegación de 216 px (196 px en ventanas
+compactas), búsqueda Ctrl+K y tres grupos: Tu espacio, Personaliza, Conexiones y
+sistema. Material oscuro azul existente y selección de hielo; se conservan Segoe,
+ocho personajes y vista previa claro/oscuro. La navegación desplaza sus enlaces y
+mantiene visibles búsqueda/estado. Sin tarjetas nuevas alrededor de cada ajuste.
+
+Conversación: lectura de 76ch máximo, mensajes de usuario azul #182d3a, código
+#09121c, bordes #30404e y texto secundario #aebfd0. Pagina 40 mensajes, conserva
+el punto de lectura y muestra una salida explícita al final. La copia tiene gesto
+propio; todo HTML de la respuesta permanece texto. Tres puntos de actividad con
+opacidad y desplazamiento de 2 px; estáticos con movimiento reducido. Intro usa
+fieldset de audio y detalles para opciones avanzadas; Música usa dos columnas de
+plataformas. Vistas verificadas de Windows: 1120×800 y mínimo 820×640.

@@ -4,6 +4,9 @@ import { canSendMessage } from '../shared/local-commands';
 import {
   MessageCircle,
   MoreHorizontal,
+  Search,
+  Music2,
+  Keyboard,
   Sparkles,
   SlidersHorizontal,
   Radio,
@@ -38,6 +41,7 @@ import { PetRenderer } from "./pet/Renderer";
 import { AudioDirector } from "./voice/audio";
 import { VoiceReplies } from "./voice/replies";
 import "./style.css";
+import "./settings-surface.css";
 import { APP_VERSION } from "../shared/version";
 import { mergeMessages } from "../shared/protocol";
 import { PET_SCALE } from "../shared/pet-layout";
@@ -50,7 +54,7 @@ import { IntroPreferencesPanel } from './intros/IntroPreferencesPanel';
 import { MusicSettings, MusicPlayer } from './music/MusicPanel';
 import { chooseMusicSession } from '../shared/music';
 import {InitiativePanel,Notice} from './InitiativePanel';
-import { ScreenActionApproval } from './ScreenActionApproval';
+import { ConversationPanel } from './chat/ConversationPanel';
 import { PRESENCE_PRESETS } from './pet/presence-motion';
 import { petStyles } from '../shared/pet-styles';
 
@@ -289,17 +293,17 @@ function PetPreview() {
     </aside>
   );
 }
-const tabs: { name: string; icon: LucideIcon }[] = [
-  { name: "Conversación", icon: MessageCircle },
-  { name: "Iniciativa", icon: Bell },
-  { name: "Apariencia", icon: Sparkles },
-  { name: "Comportamiento", icon: SlidersHorizontal },
-  { name: "OpenClaw", icon: Radio },
-  { name: "Voz", icon: AudioLines },
-  { name: 'Música', icon: AudioLines },
-  { name: "Percepción", icon: Monitor },
-  { name: "Sistema", icon: Monitor },
-  { name: "Diagnóstico", icon: Activity },
+const tabs: { name: string; icon: LucideIcon; group: string }[] = [
+  { name: "Conversación", icon: MessageCircle, group: "TU ESPACIO" },
+  { name: "Iniciativa", icon: Bell, group: "TU ESPACIO" },
+  { name: "Música", icon: Music2, group: "TU ESPACIO" },
+  { name: "Apariencia", icon: Sparkles, group: "PERSONALIZA" },
+  { name: "Comportamiento", icon: SlidersHorizontal, group: "PERSONALIZA" },
+  { name: "Voz", icon: AudioLines, group: "PERSONALIZA" },
+  { name: "OpenClaw", icon: Radio, group: "CONEXIONES Y SISTEMA" },
+  { name: "Percepción", icon: Monitor, group: "CONEXIONES Y SISTEMA" },
+  { name: "Sistema", icon: SettingsIcon, group: "CONEXIONES Y SISTEMA" },
+  { name: "Diagnóstico", icon: Activity, group: "CONEXIONES Y SISTEMA" },
 ];
 const subtitles: Record<string, string> = {
   Conversación: "Aquí para escucharte, pensar contigo y ayudarte.",
@@ -314,6 +318,17 @@ const subtitles: Record<string, string> = {
   Diagnóstico: "Lo que está ocurriendo, sin secretos.",
 };
 function SettingsApp() {
+  const [query, setQuery] = useState('');
+  const search = useRef<HTMLInputElement>(null);
+  const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const matching = tabs.filter(item => normalize(item.name + ' ' + subtitles[item.name]).includes(normalize(query.trim())));
+  useEffect(() => {
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); search.current?.focus(); search.current?.select(); }
+    };
+    document.addEventListener('keydown',shortcut);
+    return () => document.removeEventListener('keydown',shortcut);
+  }, []);
   const tab = useStore((s) => s.tab),
     native = useStore((s) => s.native),
     runtime = useStore((s) => s.runtime),
@@ -328,39 +343,33 @@ function SettingsApp() {
             Karen<small>ASISTENTE PERSONAL</small>
           </div>
         </div>
+        <div className="nav-search"><Search size={14}/><input ref={search} type="search" aria-label="Buscar sección" placeholder="Buscar sección" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{
+          if(e.key==='Escape'){setQuery('');e.currentTarget.blur();}
+          if(e.key==='Enter'&&matching.length){useStore.setState({tab:matching[0].name});setQuery('');}
+        }}/><kbd>Ctrl K</kbd></div>
         <div className="nav-links">
-          {tabs.map(({ name, icon: Icon }) => (
-            <React.Fragment key={name}>
-            {['Conversación','Apariencia','OpenClaw'].includes(name)&&<span className="nav-section">{name==='Conversación'?'TU ESPACIO':name==='Apariencia'?'PERSONALIZA':'CONEXIONES Y SISTEMA'}</span>}
-            <button
-              key={name}
-              className={tab === name ? "active" : ""}
-              aria-current={tab === name ? "page" : undefined}
-              onClick={() => useStore.setState({ tab: name })}
-            >
-              <Icon size={18} />
-              {name}
-              {tab === name && <ChevronRight size={14} />}
+          {matching.map(({name,icon:Icon,group},index) => <React.Fragment key={name}>
+            {(index===0||matching[index-1].group!==group)&&<span className="nav-section">{group}</span>}
+            <button className={tab===name?'active':''} aria-label={name} title={name} aria-current={tab===name?'page':undefined} onClick={()=>{useStore.setState({tab:name});setQuery('');}}>
+              <Icon size={18}/><span>{name}</span>{tab===name&&<ChevronRight size={14}/>}
             </button>
-            </React.Fragment>
-          ))}
+          </React.Fragment>)}
+          {!matching.length&&<p className="nav-empty">No hay secciones con ese nombre.<button onClick={()=>setQuery('')}>Ver todas</button></p>}
         </div>
         <div className="sidebar-foot">
           <Status compact />
           <span>Agente · {agent}</span>
-          <small>
-            Versión {APP_VERSION}
-          </small>
+          <small>Versión {APP_VERSION}<span className="sidebar-shortcut"><Keyboard size={12}/> Ctrl+K para buscar</span></small>
         </div>
       </nav>
       <main className="workspace">
         <header className="page-header">
           <div>
             <span className="eyebrow">KAREN / {tab==='Conversación'?'CONTIGO':tab==='Iniciativa'?'COMPAÑÍA':'TU ASISTENTE'}</span>
-            <h1>{tab}</h1>
+            <h1 tabIndex={-1}>{tab}</h1>
             <p>{subtitles[tab]}</p>
           </div>
-          <div className="header-actions"><select aria-label="Modo de Karen" value={mode} onChange={e=>void patch({mode:e.target.value as Settings['mode']})}>
+          <div className="header-actions"><span className="settings-save-hint"><Check size={13}/> Guardado automático</span><select aria-label="Modo de Karen" value={mode} onChange={e=>void patch({mode:e.target.value as Settings['mode']})}>
             <option value="normal">Normal</option><option value="gaming">Gaming</option><option value="do_not_disturb">No molestar</option>
           </select><button
             className="icon-button"
@@ -384,7 +393,7 @@ function SettingsApp() {
         <div
           className={`page-body ${tab === "Diagnóstico" ? "diagnostics-page" : ""} ${tab==='Conversación'?'conversation-page':''} ${tab==='Iniciativa'?'initiative-layout':''} ${tab==='Apariencia'?'appearance-page':''}`}
         >
-          <div className="settings-content">
+          <div className="settings-content" data-section={tab}>
             {tab === "Conversación" ? (
               <Conversation />
             ) : tab === 'Iniciativa' ? (
@@ -414,151 +423,7 @@ function SettingsApp() {
   );
 }
 function Conversation() {
-  const messages = useStore((s) => s.messages),
-    connection = useStore((s) => s.connection),
-    settings=useStore(s=>s.settings),
-    capture=useStore(s=>s.capture),
-    wakeStatus=useStore(s=>s.wakeStatus),
-    initiative=useStore(s=>s.initiative),
-    native=useStore(s=>s.native),
-    draft=useStore(s=>s.conversationDraft);
-  const [text, setText] = useState("");
-  const editor=useRef<HTMLTextAreaElement>(null);
-  const [sending,setSending]=useState(false);
-  const latest=initiative?.notices.filter(n=>!n.dismissed).at(-1);
-  const pending=messages.some(m=>m.pending);
-  useEffect(()=>{if(draft){setText(draft);useStore.setState({conversationDraft:''});editor.current?.focus();}},[draft]);
-  const follow = useRef(true);
-  const end = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if(messages.length && follow.current)end.current?.scrollIntoView({ block: "nearest" });
-  }, [messages]);
-  const send = async () => {
-    const message = text;
-    if (!canSendMessage(message,connection.state)||sending||pending) return;
-    setSending(true);
-    try {await bridge.send(message);setText(current=>current===message?'':current);}
-    finally{setSending(false);}
-  };
-  return (
-    <section className="conversation" data-has-suggestion={Boolean(latest)}>
-      <div className="conversation-heading">
-        <div className="companion-identity"><Logo/><div><h2>Karen</h2><span>{capture.phase==='recording'?'Te estoy escuchando':capture.phase==='speaking'?'Hablando contigo':capture.phase==='preparing'?'Preparando la voz':pending?'Pensando tu respuesta':'Tu asistente personal'}</span></div></div>
-        <button className="voice-pill" onClick={()=>useStore.setState({tab:'Voz'})}><i className={wakeStatus==='listening'?'listening':''}/>{wakeStatus==='error'?'Escucha detenida':wakeStatus==='listening'?'Escucha activada':settings.voiceEnabled?'Voz activada':'Voz silenciada'}</button>
-      </div>
-      {latest&&<Notice notice={latest}/>}
-      <ScreenActionApproval />
-      <details className="conversation-model"><summary><span><Status compact/></span><span>Modelo y conexión</span></summary><ModelPicker/></details>
-      <div className="messages" role="log" aria-label="Conversación con Karen" onScroll={e=>{const v=e.currentTarget;follow.current=v.scrollHeight-v.scrollTop-v.clientHeight<70;}}>
-        {messages.length === 0 ? (
-          <div className="empty-chat">
-            <div className="empty-symbol">
-              <Logo/>
-            </div>
-            <span className="eyebrow">UN ESPACIO PARA PENSAR JUNTOS</span><h3>¿Qué hacemos hoy?</h3>
-            <p>
-              {connection.state === "connected"
-                ? "Escribe una idea, una pregunta o una tarea para tu asistente."
-                : "Conecta tu Gateway de OpenClaw para empezar a conversar con Karen."}
-            </p>
-            {connection.state !== "connected" && (
-              <button
-                className="text-button"
-                onClick={() => useStore.setState({ tab: "OpenClaw" })}
-              >
-                Revisar conexión
-                <ChevronRight size={15} />
-              </button>
-            )}
-            <div className="chat-starters" aria-label="Comenzar conversación">
-              {[
-                {label:'Ver mis tareas',text:'/tareas'},
-                {label:'Retomar un chat',text:'/historial'},
-                {label:'Que Karen tome la iniciativa',tab:'Iniciativa'},
-              ].map(item=><button key={item.label} onClick={()=>{if(item.tab)useStore.setState({tab:item.tab});else{setText(item.text!);editor.current?.focus();}}}>{item.label}<ChevronRight size={14}/></button>)}
-            </div>
-          </div>
-        ) : (
-          messages.map((m) => (
-            <article key={m.id} className={`message ${m.role}`}>
-              <span>
-                {m.role === "user" ? "Tú" : "Karen"}
-                {m.pending ? " · respondiendo" : ""}
-              </span>
-              <p>{m.text || (m.pending?'Preparando respuesta…':'')}</p>
-            </article>
-          ))
-        )}
-        <div ref={end} />
-      </div>
-      <form
-        className="composer"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void action(send);
-        }}
-      >
-        <label className="sr-only" htmlFor="message">
-          Mensaje para Karen
-        </label>
-        <textarea
-          id="message"
-          ref={editor}
-          rows={2}
-          maxLength={16000}
-          value={text}
-          placeholder={
-            connection.state === "connected"
-              ? "Habla con Karen…"
-              : "Comandos Core disponibles; conecta OpenClaw para conversar…"
-          }
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (
-              e.key === "Enter" &&
-              !e.shiftKey &&
-              !e.nativeEvent.isComposing
-            ) {
-              e.preventDefault();
-              void action(send);
-            }
-          }}
-        />
-        <div className="composer-actions">
-          <button
-            type="button"
-            className="icon-button"
-            title="Iniciar o terminar captura de voz"
-            aria-label="Capturar voz"
-            disabled={!native||!settings.sttEnabled}
-            onClick={() => void action(() => bridge.listen())}
-          >
-            <Mic size={17} />
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            title="Detener respuesta y voz"
-            aria-label="Detener"
-            onClick={() => void action(() => bridge.abort())}
-          >
-            <Square size={15} />
-          </button>
-          <small>Enter para enviar</small>
-          <button
-            className="send-button"
-            aria-label="Enviar mensaje"
-            disabled={sending||pending||!canSendMessage(text, connection.state)}
-          >
-            <ArrowUp size={19} />
-          </button>
-        </div>
-      </form>
-      <p className="quiet-note">
-        Los comandos Core se consultan localmente. Las demás órdenes usan los permisos de OpenClaw.
-      </p>
-    </section>
-  );
+  return <ConversationPanel logo={<Logo/>} status={<Status compact/>}/>;
 }
 function Appearance() {
   const s = useStore((x) => x.settings);

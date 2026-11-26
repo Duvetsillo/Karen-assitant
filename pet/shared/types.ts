@@ -185,6 +185,7 @@ export interface DesktopBridge {
   disconnect(): Promise<void>;
   send(text: string, images?: ImageAttachment[]): Promise<void>;
   abort(): Promise<void>;
+  copyText?(text: string): Promise<void>;
   openSettings(): Promise<void>;
   hide(): Promise<void>;
   show(): Promise<void>;

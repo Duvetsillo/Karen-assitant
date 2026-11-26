@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-26T20:53:35.957Z",
+  "isolatedProfile": true,
+  "syntheticChat": true,
+  "sections": [
+    {
+      "width": 1120,
+      "height": 800,
+      "navigated": 10,
+      "noWindowOverflow": true
+    },
+    {
+      "width": 820,
+      "height": 640,
+      "navigated": 10,
+      "noWindowOverflow": true
+    }
+  ],
+  "keyboardSearch": true,
+  "accentInsensitiveSearch": true,
+  "emptySearchRecovery": true,
+  "draftAcrossTabs": true,
+  "paginatedMessages": true,
+  "noForcedScroll": true,
+  "copyPlainText": true,
+  "safeModelOutput": true,
+  "reducedMotion": true,
+  "advancedDisclosures": true,
+  "errors": [],
+  "petTests": 210,
+  "runtimeTests": 425,
+  "nativePet": {
+    "syntheticData": true,
+    "variants": 6,
+    "multiline": true,
+    "localSend": true,
+    "draftRemainsOpen": true,
+    "persistence": true,
+    "moreOptions": true,
+    "awakeningQuality": {
+      "resolution": {
+        "body": 4,
+        "face": 8,
+        "details": 3
+      },
+      "bytes": 24951288
+    },
+    "farewell": true,
+    "quitMs": 1060,
+    "errors": []
+  },
+  "physicalAudioAcceptance": "pending",
+  "installedPackageReplaced": false
+}

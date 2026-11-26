@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('karen', {
   disconnect: () => ipcRenderer.invoke('disconnect'),
   send: (text, images) => ipcRenderer.invoke('send', text, images),
   abort: () => ipcRenderer.invoke('abort'),
+  copyText: text => ipcRenderer.invoke('copy-text', text),
   openSettings: () => ipcRenderer.invoke('open-settings'),
   hide: () => ipcRenderer.invoke('hide'),
   show: () => ipcRenderer.invoke('show'),

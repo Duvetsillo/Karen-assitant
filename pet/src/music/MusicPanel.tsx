@@ -65,16 +65,18 @@ export function MusicSettings() {
   const save = async (patch: Partial<Settings>) => { try { useStore.setState({ settings: await bridge.settings(patch) }); } catch (e) { report(e); } };
   const toggle = (label: string, key: keyof Settings, description: string) => <div className="setting-row"><div><label>{label}</label><p>{description}</p></div>
     <button className="toggle" role="switch" aria-label={label} aria-checked={Boolean(s[key])} disabled={!bridge.music} onClick={() => void save({ [key]: !s[key] })}><span/></button></div>;
-  return <div className="music-settings"><section className="group">
+  return <div className="music-settings"><section className="group"><h2>Escuchar tu música</h2><p className="group-description">Conecta su presencia con lo que ya estás escuchando.</p>
     {toggle('Percepción musical', 'musicEnabled', 'Lee metadatos de Windows o del complemento emparejado. No captura audio.')}
     {toggle('Minirreproductor', 'musicPlayer', 'Una ventana independiente, movible y con controles de la sesión.')}
     <button disabled={!bridge.music || !s.musicPlayer} onClick={() => void act({ action: 'open' })}>Abrir reproductor</button>
-    <fieldset><legend>Plataformas habilitadas</legend>{MUSIC_PLATFORMS.map(p => <label className="music-check" key={p}><input type="checkbox" checked={s.musicPlatforms.includes(p)} onChange={e => void save({ musicPlatforms: e.target.checked ? [...s.musicPlatforms,p] : s.musicPlatforms.filter(x => x !== p) })}/>{platformNames[p]}</label>)}</fieldset>
+    <fieldset className="music-platforms"><legend>Plataformas habilitadas</legend>{MUSIC_PLATFORMS.map(p => <label className="music-check" key={p}><input type="checkbox" checked={s.musicPlatforms.includes(p)} onChange={e => void save({ musicPlatforms: e.target.checked ? [...s.musicPlatforms,p] : s.musicPlatforms.filter(x => x !== p) })}/>{platformNames[p]}</label>)}</fieldset>
     {toggle('Filtrado estricto de YouTube', 'musicStrictYouTube', 'Exige evidencia de categoría musical; un título o canal no bastan.')}
+    <details className="settings-disclosure"><summary>Conectar música del navegador</summary><div>
     <p className="quiet-note">GSMTC no identifica dominios de pestañas. Para música web usa el complemento opcional de Chrome/Edge, restringido a los cinco sitios multimedia indicados. Compatibilidad real por plataforma pendiente de validación.</p>
     <div className="button-row"><button onClick={() => { void act({ action: 'pair-browser' }).then(value => { if (typeof value === 'string') setToken(value); }); }}>Generar código del complemento</button>
       <button onClick={() => { setToken(''); void act({ action: 'revoke-browser' }); }}>Revocar complemento</button></div>
     {token && <label>Código privado de emparejamiento<input readOnly type="password" value={token} aria-label="Código privado de emparejamiento" onFocus={e => e.currentTarget.select()}/><small>Cópialo a las opciones del complemento. No lo compartas.</small></label>}
+    </div></details>
   </section><section className="group"><h2>Su presencia musical</h2>
     {toggle('Animaciones musicales', 'musicAnimations', 'Balanceos y notas discretas con las apariencias actuales. No infiere BPM ni emociones.')}
     {toggle('Reacciones durante juegos', 'musicGamingReactions', 'Solo reacciones visuales suaves al usar el modo Gaming; nunca comentarios.')}
