@@ -153,3 +153,45 @@ Python 3.11 existente sin copiarlo. Las tres pruebas de interoperabilidad Core/P
 metadatos sin payload y música Node/Python pasan con bases temporales. No se
 modificaron datos reales ni se ejecutaron planes. Los 210 tests Pet y su build
 completo pasaron en la integración anterior. El cliente histórico permanece intacto.
+
+
+## Interfaz integrada — 26 de noviembre de 2026
+
+Navegación agrupada por uso, búsqueda con Ctrl+K y acentos ignorados, recuperación
+cuando no hay resultados, iconos propios y panel lateral con navegación desplazable
+independiente. Conserva identidad, ocho formas, presets y vista sobre claro/oscuro.
+Conversación extraída a componentes: borrador retenido entre pestañas, mensajes
+largos y código legibles, copia explícita y acotada en Windows (sin lector de
+portapapeles expuesto), paginación, lectura sin saltos y regreso al final. Accesos
+rápidos solo rellenan el editor; no ejecutan órdenes ni transmiten datos.
+
+Introducciones separa escena, audio y opciones avanzadas; Música agrupa plataformas
+y oculta el emparejamiento avanzado hasta solicitarlo. Todos los controles conservan
+su funcionalidad. Movimiento reducido y salida de errores existentes preservados.
+
+Verificación: 210 pruebas Pet, typecheck/Vite/Electron, auditoría de fuentes y QA
+nativa de diez secciones en 1120×800 y 820×640. Se probaron búsqueda con teclado,
+borrador, 65+ mensajes sintéticos, paginación, scroll, copia real con API asíncrona,
+salida HTML tratada como texto, código largo, movimiento reducido y secciones
+avanzadas. QA Pet: seis variantes, Awakening 8× (~24,95 MB RGBA fuente), despedida
+1060 ms y cero errores. Los resultados de UI usan datos sintéticos y no certifican
+voz física. Se añade CI del Pet en la raíz: GitHub no ejecuta workflows anidados.
+
+El código se publica en `Duvetsillo/Karen-assitant`, rama `main`. Los checkouts
+antiguos quedan conservados. No se cambian modelos, datos privados ni instalación.
+
+
+Entregas publicadas en main: `65f9c28` (integración Pet), `8dfa530` (runtime) y
+`d1ee1c3` (interfaz). Se confirma igualdad de HEAD remoto con `git ls-remote` tras
+cada publicación; ya aparecen en el repositorio que utiliza el usuario.
+El cierre documental añade CI operativo del Pet y guía de revisión. Pruebas
+adicionales: 26 contratos Python de voz y cuatro tests del cliente histórico OK;
+YAML de CI parseado. La ejecución de GitHub Actions se distingue de estas pruebas
+locales: no se declara aprobada por haber añadido el workflow.
+
+Quedó abierta `Karen · Revisión de interfaz`, ejecutada desde `pet/` con un perfil
+temporal sin datos, historial musical ni conexión al modelo. La instancia del
+usuario se conserva; no se instaló ni reinició su ejecutable. Para revisar de nuevo:
+`cd pet; node scripts/open-interface-review.cjs`. El inicio normal sigue disponible
+en `start_pet.ps1` con la base y recursos locales existentes. La revisión no genera
+saludos ni copia modelos o credenciales. La aceptación física de voz sigue pendiente.

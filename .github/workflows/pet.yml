@@ -1,0 +1,42 @@
+name: Desktop Pet
+
+on:
+  push:
+    paths: ['pet/**', '.github/workflows/pet.yml']
+  pull_request:
+    paths: ['pet/**', '.github/workflows/pet.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pet-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: pet
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pet/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:voice:contracts
+      - run: npm run build
+      - run: npm run audit:source

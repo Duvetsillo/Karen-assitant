@@ -17,7 +17,11 @@ const os = require('node:os');
   try {
     app = await electron.launch({ args: [path.resolve('.'), '--qa'], env });
     await app.firstWindow();
-    const panel = app.windows().find(window => window.url().includes('view=settings'));
+    let panel;
+    for (let attempt = 0; attempt < 100 && !panel; attempt++) {
+      panel = app.windows().find(window => window.url().includes('view=settings'));
+      if (!panel) await new Promise(resolve => setTimeout(resolve, 100));
+    }
     if (!panel) throw new Error('No se abrió el panel de revisión.');
     await panel.waitForSelector('h1');
     await app.evaluate(({ BrowserWindow }) => {

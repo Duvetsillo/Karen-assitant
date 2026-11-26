@@ -1,5 +1,18 @@
 # Estado comprobado — 2026-11-26
 
+
+## Destino canónico e interfaz — 2026-11-26
+
+Trabajar y publicar en `C:/Users/Dayve/Documents/GitHub/Karen-assitant`, rama main.
+Core está en runtime/ y Pet en pet/. Integraciones `65f9c28` y `8dfa530` publicadas;
+se conservaron voz/presets propios de Pet y personal_learning.py del runtime.
+425 pruebas Python y tres interoperabilidades reales con datos temporales correctas.
+Interfaz: navegación/búsqueda, conversación completa y opciones de inicio/música
+organizadas; 210 pruebas Pet, build y QA de diez secciones en dos tamaños correctos.
+Ver ../../KAREN_PROGRESS.md y ../../pet/docs/INTERFACE_ACCEPTANCE_2026-11-26.json.
+C:/karen y su Pet separado son fuentes históricas, no destinos de nuevas entregas.
+La instalación y los datos privados permanecen intactos. Audición/HiDPI físico pendiente.
+
 ## Introducciones y chat — 2026-11-26
 
 Pet: nitidez adaptada a pantalla/DPI, ojos de Awakening a 8× en 1080p,

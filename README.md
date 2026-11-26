@@ -2,6 +2,16 @@
 
 ## Código actual de Karen
 
+**Repositorio unificado y actualizado el 26/11/2026:** los avances de Core y Pet
+están aquí, en `main`, bajo `runtime/` y `pet/`. Los repositorios separados fueron
+fuentes de integración. La [bitácora de integración](KAREN_PROGRESS.md) documenta
+los commits, las pruebas y los límites.
+
+El panel incorpora búsqueda con **Ctrl+K**, conversación con borradores, código y
+copia de respuestas, tres formas de chat, introducciones y despedida, y controles
+musicales locales. La configuración musical sigue siendo optativa.
+
+
 **La interfaz principal es Desktop Pet.** Iníciala con `start_pet.ps1` cuando
 su código, dependencias y base compartida estén preparados. La
 [guía de memoria personal del Pet](docs/PET_PERSONAL_MEMORY.md) explica cómo
