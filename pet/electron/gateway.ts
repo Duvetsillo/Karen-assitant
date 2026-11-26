@@ -14,7 +14,7 @@ import type {
 import { validateImages } from "../shared/attachments.js";
 import { isCoreCommand } from '../shared/local-commands.js';
 import { assertLoopbackGateway, isLocalInferenceModel } from '../shared/local-inference.js';
-import type { CoreTaskSummary, CoreTaskDetail, CorePlanSummary, CorePlanDetail } from '../shared/core-tasks.js';
+import type { CoreTaskSummary, CoreTaskDetail, CorePlanSummary, CorePlanDetail, CoreScheduleSummary, CoreHandoffSummary } from '../shared/core-tasks.js';
 import {
   extractText,
   routeGatewayEvent,
@@ -37,6 +37,8 @@ export interface CoreTurnSink {
   readTask?(id: string): CoreTaskDetail | null;
   listPlans?(): CorePlanSummary[];
   readPlan?(id: string): CorePlanDetail | null;
+  listSchedules?(): CoreScheduleSummary[];
+  listHandoffs?(): CoreHandoffSummary[];
 }
 export class OpenClawAdapter {
   client?: GatewayClient;
@@ -372,6 +374,7 @@ export class OpenClawAdapter {
       if (images.length) throw new Error('Los comandos locales de Core no admiten capturas.');
       if (this.pending) throw new Error('Espera a que termine la respuesta actual.');
       const reply = /^\/planes(?:\s|$)/i.test(text) ? this.planReply(text)
+        : /^\/(?:automatizaciones|desarrollo)(?:\s|$)/i.test(text) ? this.developmentReply(text)
         : /^\/memoria(?:\s|$)/i.test(text) ? this.memoryReply(text)
         : /^\/historial(?:\s|$)/i.test(text) ? this.historyReply(text)
         : /^\/tareas(?:\s|$)/i.test(text) ? this.taskReply(text) : this.coreReply(text);
@@ -523,6 +526,21 @@ export class OpenClawAdapter {
       const activity = this.core.activities?.().map(client => `${client.interface}: ${client.state}`).join('; ');
       return `Karen Core v${state.version}: activo; ${state.chats} chats, ${state.memories} recuerdos no sensibles vigentes; estilo de voz ${state.voiceStyle ?? 'local'}.${activity ? ` Actividad: ${activity}.` : ''}`;
     } catch { return 'Karen Core: no se pudo consultar la base compartida.'; }
+  }
+  private developmentReply(text: string): string {
+    try {
+      if (/^\/automatizaciones(?:\s+listar)?$/i.test(text)) {
+        if (!this.core?.listSchedules) return 'Automatizaciones no configuradas. Comparte KAREN_TASKS_DB con clásica.';
+        const rows = this.core.listSchedules();
+        return rows.length ? rows.map(row => `${row.id}: ${row.name} · ${row.enabled ? 'programada' : 'detenida'} · ${row.event_topic ? `evento ${row.event_topic}; disponible desde ` : ''}${row.next_run} · ${row.last_status ?? 'pendiente'}`).join('\n') : 'No hay automatizaciones guardadas.';
+      }
+      if (/^\/desarrollo(?:\s+listar)?$/i.test(text)) {
+        if (!this.core?.listHandoffs) return 'Solicitudes de desarrollo no configuradas. Comparte KAREN_CORE_DB con clásica.';
+        const rows = this.core.listHandoffs();
+        return rows.length ? rows.map(row => `${row.id}: ${row.project} · ${row.status} · ${row.priority}`).join('\n') : 'No hay solicitudes de desarrollo guardadas.';
+      }
+      return 'Usa /automatizaciones listar o /desarrollo listar. Las modificaciones se revisan en clásica.';
+    } catch { return 'Metadatos de Core no disponibles. Revisa las bases compartidas y sus versiones.'; }
   }
   private planReply(text: string): string {
     if (!this.core?.listPlans || !this.core.readPlan) return 'Planes Core 2 no configurados. Comparte KAREN_TASKS_DB con clásica.';

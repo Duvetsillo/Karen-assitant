@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import {
   createHash,
+  randomBytes,
   generateKeyPairSync,
   createPublicKey,
   sign,
@@ -63,6 +64,14 @@ export class Storage {
       safeStorage.encryptString(JSON.stringify(this.vault)),
     );
   }
+  musicToken(create = false) {
+    const key = 'music:browser';
+    if (!this.vault.credentials[key] && create) {
+      this.vault.credentials[key] = randomBytes(32).toString('base64url'); this.saveVault();
+    }
+    return this.vault.credentials[key];
+  }
+  revokeMusicToken() { delete this.vault.credentials['music:browser']; this.saveVault(); }
   setCredential(value: string) {
     if (value.length > 8192) throw new Error("Credencial demasiado larga.");
     if (value) this.vault.credentials[this.origin] = value;

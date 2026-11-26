@@ -162,14 +162,15 @@ export class AudioDirector {
     if (resumeListening) this.resumeWake();
     useStore.getState().transition("IDLE");
   }
-  async speak(text: string) {
+  async speak(text: string, prerecorded?: { bytes: ArrayBuffer; volume: number }) {
     this.cancel(false);
     const generation = this.generation;
-    const settings = effectiveSettings(useStore.getState().settings);
+    const settings = { ...effectiveSettings(useStore.getState().settings) };
+    if (prerecorded) settings.volume = Math.min(1, Math.max(0, prerecorded.volume));
     if (!settings.voiceEnabled) { this.resumeWake(); return; }
     // Local cloning has a substantial per-clip cost. Use complete sentences and
     // the existing one-clip prefetch, instead of buffering a whole long reply.
-    const phrases = settings.ttsEngine === 'local' ? speechPhrases(text, 240, 70, 40) : speechPhrases(text);
+    const phrases = prerecorded ? [text] : settings.ttsEngine === 'local' ? speechPhrases(text, 240, 70, 40) : speechPhrases(text);
     if (!phrases.length) { this.resumeWake(); return; }
     useStore.setState({ expression: expressionForReply(text) });
     this.kind = "voice";
@@ -180,7 +181,7 @@ export class AudioDirector {
     try {
       useStore.getState().transition("THINKING", settings.ttsEngine==='local'?"Preparando voz original":"Preparando voz");
       this.status("preparing");
-      for await (const bytes of speechAudio(phrases, (phrase, signal) => this.tts.synthesize(phrase, signal), controller.signal)) {
+      for await (const bytes of speechAudio(phrases, (phrase, signal) => prerecorded ? Promise.resolve(prerecorded.bytes) : this.tts.synthesize(phrase, signal), controller.signal)) {
         if (generation !== this.generation) return;
         this.context = new AudioContext();
         const outputContext = this.context as AudioContext & { setSinkId?: (id: string) => Promise<void> };

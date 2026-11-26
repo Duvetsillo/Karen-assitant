@@ -29,6 +29,19 @@ function legacyArchive() {
 }
 
 describe('Karen Core SQLite v1', () => {
+  it('lists handoff metadata while keeping context, criteria, payload and hashes private', () => {
+    const path = legacyArchive();
+    const core = new CoreStore(path);
+    try {
+      const db = new DatabaseSync(path);
+      db.exec(`INSERT INTO core_meta VALUES('handoff_version','1');
+        CREATE TABLE core2_handoffs(id TEXT,project TEXT,status TEXT,priority TEXT,updated_at TEXT,hash TEXT,payload TEXT);`);
+      db.prepare('INSERT INTO core2_handoffs VALUES(?,?,?,?,?,?,?)').run('a'.repeat(32),'Karen','pending','normal','2026-11-26','PRIVATE_HASH','PRIVATE_CONTEXT');
+      db.close();
+      expect(core.listHandoffs()).toEqual([{id:'a'.repeat(32),project:'Karen',status:'pending',priority:'normal',updated_at:'2026-11-26'}]);
+      expect(JSON.stringify(core.listHandoffs())).not.toContain('PRIVATE_');
+    } finally { core.close(); }
+  });
   it('persiste eventos sin contenido y elimina la actividad al cerrar ordenadamente', () => {
     const path = legacyArchive();
     const core = new CoreStore(path);

@@ -10,6 +10,43 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   color-scheme: dark;
 }
+html[data-view="intro"], html[data-view="intro"] body, html[data-view="intro"] #root { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+html[data-view="intro"] .intro-canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+.intro-preferences { display: grid; gap: 14px; }
+.intro-preferences label { display: grid; gap: 7px; }
+.intro-preferences .intro-option { display: flex; justify-content: space-between; align-items: center; }
+.intro-option input { width: 18px; height: 18px; accent-color: var(--accent); }
+.desktop-pet[data-landing="true"] > :not(.pet-renderer) { opacity: 0; pointer-events: none; }
+.desktop-pet[data-departing="true"] > :not(.pet-renderer) { opacity: 0; pointer-events: none; transition: opacity 120ms var(--ease-out); }
+html[data-view="music"] body { background: #101925; color: #e9f2f7; }
+.music-player { border: 1px solid var(--line); border-radius: 14px; background: #141e2b; padding: 18px; display: grid; gap: 14px; }
+.music-mini { min-height: 100vh; border-radius: 0; align-content: start; }
+.music-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; -webkit-app-region: drag; }
+.music-header span,.music-header>div { display: flex; align-items: center; gap: 8px; }
+.music-header span { font-size: 11px; letter-spacing: .12em; color: var(--muted); }
+.music-header button { padding: 7px; -webkit-app-region: no-drag; }
+.music-track { display: grid; grid-template-columns: 85px minmax(0,1fr); gap: 15px; align-items: center; }
+.music-track h2 { font-size: 18px; line-height: 1.3; margin: 5px 0; overflow-wrap: anywhere; }
+.music-track p { margin: 4px 0; overflow-wrap: anywhere; }
+.music-track small,.music-album,.music-times { color: var(--muted); font-size: 12px; }
+.music-art { width: 85px; height: 85px; display: grid; place-items: center; background: #233344; color: var(--accent); border-radius: 10px; overflow: hidden; }
+.music-art img { width: 100%; height: 100%; object-fit: cover; }
+.music-player label,.music-fields label { display: grid; gap: 7px; }
+.music-progress { font-size: 0; }
+.music-progress input { width: 100%; accent-color: var(--accent); }
+.music-times { display: flex; justify-content: space-between; margin-top: -12px; }
+.music-controls { display: flex; justify-content: center; gap: 12px; align-items: center; }
+.music-controls button { display: grid; place-items: center; padding: 12px; }
+.music-controls .music-play { background: #b6e9ec; color: #14222c; border-radius: 50%; }
+.music-empty { text-align: center; padding: 30px 6px; color: var(--muted); }
+.music-empty>svg { color: var(--accent); }
+.music-empty h2 { font-size: 19px; color: #e9f2f7; }
+.music-error { color: #ffcfad; }
+.music-notice { border-left: 2px solid var(--accent); padding-left: 12px; color: #d1e9ef; }
+.music-settings { display: grid; gap: 18px; }
+.music-check { display: flex; align-items: center; gap: 9px; margin: 9px 0; }
+.music-check input { width: 18px; height: 18px; }
+.music-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 12px; }
 .pet-styles { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .pet-style-card { position: relative; display: flex; flex-direction: column; padding: 10px; border: 1px solid #394259; border-radius: 14px; background: #161d2b; cursor: pointer; transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 160ms var(--ease-out); }
 .pet-style-card:hover { border-color: #8794b7; background: #202a3b; }
@@ -1276,3 +1313,30 @@ kbd {
   .conversation[data-has-suggestion="true"] .empty-chat .chat-starters,
   .conversation[data-has-suggestion="true"] .empty-chat .text-button { display:none; }
 }
+
+/* Desktop conversation: three readable silhouettes, shared controls. */
+.pet-bubble { height: auto; min-height: 58px; max-height: 108px; align-items: flex-start; padding: 10px; border-radius: 18px 18px 6px 18px; animation: dialogue-arrive 180ms ease-out; }
+.pet-bubble-open { white-space: normal; line-height: 1.45; overflow-wrap: anywhere; }
+.pet-bubble-open small { display: block; font-size: 10px; color: #aebfdc; margin-bottom: 4px; }
+.pet-bubble-open span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.desktop-pet[data-chat-shape="panel"] .pet-bubble { border-radius: 9px; border-top: 2px solid #8be4f3; }
+.desktop-pet[data-chat-shape="panel"] .pet-bubble-open span { -webkit-line-clamp: 4; }
+.desktop-pet[data-chat-shape="ribbon"] .pet-bubble { border-radius: 5px 18px 18px 5px; min-height: 42px; }
+.desktop-pet[data-chat-shape="ribbon"] .pet-bubble-open small { display: none; }
+.desktop-pet[data-chat-shape="ribbon"] .pet-bubble-open span { -webkit-line-clamp: 2; }
+.desktop-pet[data-has-dock="true"] .pet-toolbar { bottom: 36%; }
+.pet-toolbar { max-width: 94%; flex-wrap: wrap; justify-content: center; }
+.pet-composer { z-index: 8; animation: dialogue-arrive 180ms ease-out; }
+.pet-composer textarea { resize: none; border: 0; background: transparent; padding: 5px; font: inherit; font-size: 12px; color: #e9f3ff; min-width: 0; width: 100%; max-height: 80px; }
+.chat-shapes { display: flex; gap: 8px; flex-wrap: wrap; }
+.chat-shapes button[aria-pressed="true"] { border-color: #8be4f3; background: #263a50; }
+.message p { overflow-wrap: anywhere; }
+@keyframes dialogue-arrive { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pet-bubble,.pet-composer { animation: none; } }
+
+.pet-more { position: relative; }
+.pet-more summary { list-style: none; display: grid; place-items: center; width: 29px; height: 28px; cursor: pointer; color: #dceafb; border-radius: 6px; }
+.pet-more summary::-webkit-details-marker { display: none; }
+.pet-more summary:hover,.pet-more[open] summary { background: #344462; }
+.pet-more-actions { position: absolute; bottom: 36px; right: 0; display: flex; padding: 5px; border-radius: 12px; background: #172238; box-shadow: 0 4px 18px #06112340; }
+.pet-toolbar:has(.pet-more[open]) { opacity: 1; pointer-events: auto; }

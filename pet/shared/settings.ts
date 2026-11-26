@@ -1,7 +1,11 @@
 import type { Settings } from "./types.js";
+import { introDefaults, INTRO_IDS } from './startup-intros.js';
+import { musicDefaults, MUSIC_PLATFORMS } from './music.js';
 import { PET_STYLES, VOICE_STYLES } from './types.js';
 import { PET_SCALE } from "./pet-layout.js";
 export const defaults: Settings = {
+  ...introDefaults,
+  ...musicDefaults,
   initiativeEnabled: false,
   initiativeSpeak: false,
   initiativeInterval: 45,
@@ -27,6 +31,7 @@ export const defaults: Settings = {
   agentId: "main",
   authSource: "local",
   bubbles: true,
+  petChatShape: "bubble",
   voiceEnabled: false,
   ttsEngine: "system",
   voiceStyle: 'serene',
@@ -80,6 +85,26 @@ export function validateSettings(
   current: Settings = defaults,
 ): Settings {
   const s = { ...current };
+  if (raw.musicPlatforms !== undefined) {
+    if (!Array.isArray(raw.musicPlatforms) || raw.musicPlatforms.some(p => !MUSIC_PLATFORMS.includes(p))) throw new Error('Plataforma musical inválida.');
+    s.musicPlatforms = [...new Set(raw.musicPlatforms)];
+  }
+  if (raw.introSelection !== undefined) {
+    if (!['random', 'fixed', 'contextual'].includes(raw.introSelection)) throw new Error('Selección de introducción inválida.');
+    s.introSelection = raw.introSelection;
+  }
+  if (raw.introFixed !== undefined) {
+    if (!INTRO_IDS.includes(raw.introFixed)) throw new Error('Introducción desconocida.');
+    s.introFixed = raw.introFixed;
+  }
+  if (raw.introFPS !== undefined) {
+    if (![30, 60].includes(raw.introFPS)) throw new Error('Frecuencia de introducción inválida.');
+    s.introFPS = raw.introFPS;
+  }
+  if (raw.introMonitor !== undefined) {
+    if (typeof raw.introMonitor !== 'string' || !/^(?:-?\d{1,16})?$/.test(raw.introMonitor)) throw new Error('Monitor inválido.');
+    s.introMonitor = raw.introMonitor;
+  }
   if (raw.mode !== undefined) {
     if (!['normal', 'gaming', 'do_not_disturb'].includes(raw.mode))
       throw new Error('Modo desconocido.');
@@ -95,6 +120,8 @@ export function validateSettings(
     s.idleActivity = raw.idleActivity;
   }
   for (const key of [
+    'musicEnabled', 'musicPlayer', 'musicPlayerPinned', 'musicStrictYouTube', 'musicComments', 'musicAnimations', 'musicGamingReactions', 'musicHistory', 'musicObsidian',
+    'introEnabled', 'introVoice', 'introSounds', 'introReducedMotion', 'introEscape', 'farewellEnabled',
     "particles",
     "initiativeEnabled",
     "initiativeSpeak",
@@ -119,6 +146,8 @@ export function validateSettings(
     }
   }
   const ranges = {
+    musicCommentProbability: [0, 1], musicCommentVolume: [0, 1], musicCooldownMinutes: [1, 240], musicMaxComments: [1, 10],
+    introVolume: [0, 1],
     initiativeInterval: [15, 240],
     initiativeDailyLimit: [1, 12],
     initiativeQuietStart: [0, 23],
@@ -137,7 +166,7 @@ export function validateSettings(
     if (n !== undefined) {
       if (!Number.isFinite(n)) throw new Error("Número inválido.");
       const value = Math.min(ranges[key][1], Math.max(ranges[key][0], n));
-      s[key] = key.startsWith('initiative') ? Math.round(value) : value;
+      s[key] = key.startsWith('initiative') || key === 'musicMaxComments' ? Math.round(value) : value;
     }
   }
   if (raw.gatewayUrl !== undefined)
@@ -164,6 +193,10 @@ export function validateSettings(
   if (raw.voiceStyle !== undefined) {
     if (!VOICE_STYLES.includes(raw.voiceStyle)) throw new Error('Estilo de voz desconocido.');
     s.voiceStyle = raw.voiceStyle;
+  }
+  if (raw.petChatShape !== undefined) {
+    if (!['bubble','panel','ribbon'].includes(raw.petChatShape)) throw new Error('Forma de chat desconocida.');
+    s.petChatShape = raw.petChatShape;
   }
   return s;
 }

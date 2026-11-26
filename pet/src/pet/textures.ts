@@ -1,13 +1,15 @@
 import { Texture } from "pixi.js";
 import type { PetStyle } from '../../shared/types';
+import { DESKTOP_RESOLUTION, type AvatarResolution } from '../../shared/avatar-resolution';
 type Painter = (ctx: CanvasRenderingContext2D) => void;
-function paint(w: number, h: number, draw: Painter): Texture {
+function paint(w: number, h: number, draw: Painter, resolution = 1): Texture {
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = w * resolution;
+  canvas.height = h * resolution;
   const ctx = canvas.getContext("2d")!;
+  ctx.scale(resolution, resolution);
   draw(ctx);
-  return Texture.from(canvas);
+  return Texture.from({ resource: canvas, resolution, autoGenerateMipmaps: resolution > 1 });
 }
 function bodyPath(c: CanvasRenderingContext2D, style: PetStyle) {
   c.beginPath();
@@ -80,13 +82,16 @@ function bodyPath(c: CanvasRenderingContext2D, style: PetStyle) {
   c.bezierCurveTo(140, 146, 184, 120, 256, 126);
   c.closePath();
 }
-export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
+export function createPetTextures(accent: string, style: PetStyle = 'crystal', resolution: AvatarResolution = DESKTOP_RESOLUTION) {
+  const bodyPaint = (w: number, h: number, draw: Painter) => paint(w, h, draw, resolution.body);
+  const facePaint = (w: number, h: number, draw: Painter) => paint(w, h, draw, resolution.face);
+  const detailPaint = (w: number, h: number, draw: Painter) => paint(w, h, draw, resolution.details);
   const finish = style;
   if (style === 'midnight') style = 'orbit';
-  const body = paint(512, 512, (c) => {
+  const body = bodyPaint(512, 512, (c) => {
     bodyPath(c, style);
     c.shadowColor = accent;
-    c.shadowBlur = 14;
+    c.shadowBlur = 14 * resolution.body;
     const outer = c.createLinearGradient(125, 140, 370, 385);
     const colors = style === 'cloud' ? ['#fff8ff', '#e9dff5', '#c1b8db', '#f0e2ef'] : style === 'orbit' ? ['#d9e7f5', '#9badc6', '#536780', '#abb7d4'] : style === 'sprite' ? ['#fff9e8', '#b8eaff', '#81c6e8', '#ae9de4'] : style === 'bloom' ? ['#fff2fa', '#ffd5ea', '#bcb6f3', '#f3d6f1'] : ['#e1f8ff', '#93d6ef', '#4e91bd', '#a494d2'];
     const variant = finish === 'aurora' ? ['#effff6', '#b5f5df', '#68b9b9', '#b6d4f8']
@@ -196,7 +201,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
       }
     }
   });
-  const fin = paint(150, 260, (c) => {
+  const fin = detailPaint(150, 260, (c) => {
     c.beginPath();
     if (style === 'bloom') {
       c.ellipse(76, 146, 45, 91, -0.17, 0, Math.PI * 2);
@@ -224,7 +229,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     g.addColorStop(0.65, accent);
     g.addColorStop(1, "#a0d2ec");
     c.shadowColor = accent;
-    c.shadowBlur = 12;
+    c.shadowBlur = 12 * resolution.details;
     c.fillStyle = g;
     c.fill();
     c.shadowBlur = 0;
@@ -234,7 +239,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.stroke();
     if (style === 'orbit') {
       c.beginPath(); c.arc(74, 90, 25, 0, Math.PI * 2);
-      c.fillStyle = '#e6ffff'; c.shadowColor = accent; c.shadowBlur = 16;
+      c.fillStyle = '#e6ffff'; c.shadowColor = accent; c.shadowBlur = 16 * resolution.details;
       c.fill(); c.shadowBlur = 0;
       c.beginPath(); c.arc(74, 90, 13, 0, Math.PI * 2);
       c.fillStyle = accent; c.fill();
@@ -253,7 +258,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.lineWidth = 2;
     c.stroke();
   });
-  const arm = paint(140, 130, (c) => {
+  const arm = detailPaint(140, 130, (c) => {
     c.beginPath();
     if (style === 'sprite' || style === 'bloom') {
       c.moveTo(121, 43);
@@ -282,7 +287,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.lineWidth = 2;
     c.stroke();
   });
-  const hand = paint(90, 95, (c) => {
+  const hand = detailPaint(90, 95, (c) => {
     const g = c.createLinearGradient(20, 16, 70, 82);
     g.addColorStop(0, '#ffffff');
     g.addColorStop(0.65, style === 'bloom' ? '#f3bfe2' : style === 'sprite' ? '#c5f5ff' : '#c7e8f6');
@@ -298,7 +303,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.beginPath(); c.ellipse(40, 57, 12, 7, -0.2, 0, Math.PI * 2);
     c.fillStyle = '#ffffff88'; c.fill();
   });
-  const leg = paint(90, 140, (c) => {
+  const leg = detailPaint(90, 140, (c) => {
     const g = c.createLinearGradient(38, 18, 53, 121);
     g.addColorStop(0, style === 'bloom' ? '#ffd9f0' : '#d4f5ff');
     g.addColorStop(1, style === 'orbit' ? '#7997bf' : '#a6b4e8');
@@ -308,7 +313,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.beginPath(); c.ellipse(55, 111, style === 'sprite' ? 31 : 35, 18, -0.12, 0, Math.PI * 2);
     c.fillStyle = g; c.fill(); c.strokeStyle = '#f3ffffbb'; c.lineWidth = 2; c.stroke();
   });
-  const eye = paint(100, 120, (c) => {
+  const eye = facePaint(100, 120, (c) => {
     c.beginPath();
     c.moveTo(16, 58);
     c.bezierCurveTo(15, 18, 72, 11, 82, 46);
@@ -320,7 +325,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     g.addColorStop(0.48, "#a2f6ff");
     g.addColorStop(1, accent);
     c.shadowColor = accent;
-    c.shadowBlur = 10;
+    c.shadowBlur = 10 * resolution.face;
     c.fillStyle = g;
     c.fill();
     c.shadowBlur = 0;
@@ -330,7 +335,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.fill();
   });
   // Iris and highlights travel independently from the eye silhouette.
-  const iris = paint(80, 96, (c) => {
+  const iris = facePaint(80, 96, (c) => {
     c.beginPath();
     c.ellipse(40, 48, 20, 28, -0.08, 0, Math.PI * 2);
     const gradient = c.createLinearGradient(27, 20, 52, 72);
@@ -379,7 +384,7 @@ export function createPetTextures(accent: string, style: PetStyle = 'crystal') {
     c.fillStyle = g;
     c.fillRect(0, 0, 32, 32);
   });
-  const heart = paint(64, 64, (c) => {
+  const heart = detailPaint(64, 64, (c) => {
     c.beginPath(); c.moveTo(32, 22);
     c.bezierCurveTo(15, 5, 3, 29, 32, 49);
     c.bezierCurveTo(61, 29, 49, 5, 32, 22); c.closePath();

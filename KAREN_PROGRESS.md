@@ -121,3 +121,17 @@ permanece en `pet/release/`, fuera de Git; no se publicó una release remota.
 Preferencia persistente del usuario: commits/push durante el trabajo y registro
 continuo en Obsidian. Se añadió `AGENTS.md`; la bitácora y el índice de la
 colección existente de Desktop Pet reflejan esta entrega y sus pendientes.
+
+
+## Integración de Pet — 26 de noviembre de 2026
+
+Por indicación del usuario, este vuelve a ser el repositorio canónico. Se incorporó
+el subtree Pet desde `karen-desktop-pet/codex/karen-core-2` (`f9d0f24`), manteniendo
+los cambios propios de 1.8.1: recuperación de voz, presets, corazón y movimiento.
+Se integran introducciones, música, metadatos Core y chat. Los conflictos de
+Renderer, texturas y Apariencia se resolvieron conservando ambos comportamientos;
+el corazón participa ahora en el ocultado inicial y la resolución adaptativa.
+
+Verificación combinada: 210 pruebas Pet; typecheck y build completo, incluido
+helper musical C#, correctos. Datos locales y modelos no se incorporan. El trabajo
+de interfaz y la integración actual del runtime continúan en esta carpeta.

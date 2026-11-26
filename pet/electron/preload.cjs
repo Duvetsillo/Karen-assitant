@@ -1,5 +1,23 @@
 const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('karenIntro', {
+  payload: () => ipcRenderer.invoke('intro-payload'),
+  ready: () => ipcRenderer.invoke('intro-ready'),
+  finish: () => ipcRenderer.invoke('intro-finished'),
+  prepareLanding: () => ipcRenderer.invoke('intro-prepare-landing'),
+  revealPet: () => ipcRenderer.invoke('intro-reveal-pet'),
+});
 contextBridge.exposeInMainWorld('karen', {
+  departureComplete: token => ipcRenderer.invoke('pet-departure-complete', token),
+  introPetRendered: token => ipcRenderer.invoke('intro-pet-rendered', token),
+  music: {
+    snapshot: () => ipcRenderer.invoke('music-snapshot'),
+    action: request => ipcRenderer.invoke('music-action', request),
+    history: () => ipcRenderer.invoke('music-history'),
+    comment: id => ipcRenderer.invoke('music-comment', id),
+  },
+  playIntro: id => ipcRenderer.invoke('play-intro', id),
+  introGreetingStatus: () => ipcRenderer.invoke('intro-greeting-status'),
+  introMonitors: () => ipcRenderer.invoke('intro-monitors'),
   interaction: () => ipcRenderer.send('user-activity'),
   initiative: (action,id) => ipcRenderer.invoke('initiative',action,id),
   claimMicrophone: () => ipcRenderer.invoke('claim-microphone'),

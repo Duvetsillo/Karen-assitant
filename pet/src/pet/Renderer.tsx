@@ -9,6 +9,11 @@ import { machine, signals, useStore } from "../state/store";
 import { effectiveSettings } from '../../shared/settings';
 import { IdleActivities } from './idle-activities';
 import { PresenceMotion, PresenceSpring } from './presence-motion';
+import type { IntroRenderer } from '../intros/IntroRenderer';
+import { chooseMusicSession } from '../../shared/music';
+import { DESKTOP_RESOLUTION, introAvatarResolution, avatarSourceBytes } from '../../shared/avatar-resolution';
+import { bridge } from '../native';
+import { DepartureTimeline } from '../../shared/departure';
 
 function damp(value: number, target: number, dt: number, rate = 9) {
   return value + (target - value) * (1 - Math.exp(-rate * dt));
@@ -20,9 +25,11 @@ function dampTint(current: number, target: number, dt: number, rate: number) {
 export function PetRenderer({
   className = "",
   preview = false,
+  intro,
 }: {
   className?: string;
   preview?: boolean;
+  intro?: IntroRenderer;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const ready = useStore(s=>s.ready);
@@ -55,7 +62,10 @@ export function PetRenderer({
       }
       host.current!.appendChild(app.canvas);
       app.canvas.setAttribute("aria-hidden", "true");
-      let tex = createPetTextures(useStore.getState().settings.accent, useStore.getState().settings.petStyle);
+      const textureResolution = intro ? introAvatarResolution(innerWidth, innerHeight, Math.min(devicePixelRatio, 2), intro.payload.id) : DESKTOP_RESOLUTION;
+      app.canvas.dataset.textureResolution = JSON.stringify(textureResolution);
+      app.canvas.dataset.textureSourceBytes = String(avatarSourceBytes(textureResolution));
+      let tex = createPetTextures(useStore.getState().settings.accent, useStore.getState().settings.petStyle, textureResolution);
       const scene = new Container();
       app.stage.addChild(scene);
       const make = (
@@ -128,8 +138,9 @@ export function PetRenderer({
               .getImageData(0, 0, canvas.width, canvas.height).data,
           };
         });
-      let masks = preview ? [] : readMasks();
-      if (!preview) {
+      const interactive = !preview && !intro;
+      let masks = interactive ? readMasks() : [];
+      if (interactive) {
         signals.hitTest = (x, y) =>
           masks.some((m) => {
             if (!m.sprite.visible || !m.sprite.parent?.visible) return false;
@@ -180,7 +191,7 @@ export function PetRenderer({
       const offStyle=useStore.subscribe((next,previous)=>{
         if(next.settings.accent===previous.settings.accent && next.settings.petStyle===previous.settings.petStyle)return;
         const old=tex;
-        tex=createPetTextures(next.settings.accent,next.settings.petStyle);
+        tex=createPetTextures(next.settings.accent,next.settings.petStyle,textureResolution);
         body.texture=tex.body;heart.texture=tex.heart;shadow.texture=tex.shadow;halo.texture=tex.glow;
         finL.texture=finR.texture=tex.fin;legL.texture=legR.texture=tex.leg;
         armLSprite.texture=armRSprite.texture=tex.arm;handL.texture=handR.texture=tex.hand;
@@ -188,7 +199,7 @@ export function PetRenderer({
         eyeR.children[0] && ((eyeR.children[0] as Sprite).texture=tex.eye);
         irisL.texture=irisR.texture=tex.iris;
         sparkles.forEach(p=>p.sprite.texture=tex.particle);
-        masks=preview?[]:readMasks();
+        masks=interactive?readMasks():[];
         Object.values(old).forEach(t=>t.destroy(true));
       });
       const resize = () => {
@@ -224,7 +235,12 @@ export function PetRenderer({
       const presenceMotion = new PresenceMotion();
       const headSpring = new PresenceSpring();
       const idleActivities = new IdleActivities();
+      const avatar = { scene, root, eyes, eyeL, eyeR, irisL, irisR, finL, finR, facial, shadow, halo, bodyParts: [...maskSprites,heart] };
+      intro?.attach(app);
       let lastIdleKind = '';
+      let landingSent = '';
+      let departureToken = '', departureStart = 0, departureDone = false;
+      const departureTimeline = new DepartureTimeline(reduced.matches || !useStore.getState().settings.animations || useStore.getState().settings.introReducedMotion);
       const visibility = () => {
         presenceMotion.reset();
         headSpring.reset();
@@ -243,7 +259,10 @@ export function PetRenderer({
       app.ticker.add((ticker) => {
         const dt = Math.min(ticker.deltaMS / 1000, 0.06);
         t += dt;
-        const { settings, state, expression: spokenExpression, capture, coreActivity, wakeStatus, messages, surfaceVisible } = useStore.getState();
+        const { settings, state, expression: spokenExpression, capture, coreActivity, wakeStatus, messages, surfaceVisible, music, introLanding, departure } = useStore.getState();
+        const song = music && chooseMusicSession(music.sessions, music.activeId);
+        const musicMotion = !intro && !introLanding && settings.musicAnimations && song?.status === 'playing' && state === 'IDLE' && capture.phase === 'idle' &&
+          (settings.mode === 'normal' || (settings.mode === 'gaming' && settings.musicGamingReactions)) && !reduced.matches;
         const s = effectiveSettings(settings);
         const sleeping = state === "SLEEPING";
         app!.ticker.maxFPS = s.lowPower || sleeping || !s.animations || reduced.matches ? 12 : state === 'IDLE' ? 24 : preview ? 30 : 60;
@@ -262,7 +281,7 @@ export function PetRenderer({
         if (host.current!.dataset.arms !== String(s.showArms)) host.current!.dataset.arms = String(s.showArms);
         if (host.current!.dataset.legs !== String(s.showLegs)) host.current!.dataset.legs = String(s.showLegs);
         const idle = idleActivities.update({ settings: s, state, lastActivity: machine.snapshot.lastActivity,
-          blocked: document.hidden || !surfaceVisible || capture.phase !== 'idle' || signals.pointingSide !== 0 ||
+          blocked: Boolean(musicMotion) || document.hidden || !surfaceVisible || capture.phase !== 'idle' || signals.pointingSide !== 0 ||
             wakeStatus === 'processing' || wakeStatus === 'recovering' || Boolean(messages.at(-1)?.pending) ||
             coreActivity.some(client => client.state !== 'IDLE'),
           reducedMotion: reduced.matches });
@@ -300,6 +319,12 @@ export function PetRenderer({
         const voiceEnergy = speaking ? Math.sqrt(Math.max(0, Math.min(1, signals.energy))) : 0;
         const speech = speechMotion.update(voiceEnergy, dt, speaking, motion);
         const presence = presenceMotion.update(expression, dt, motion, s.activity);
+        if (!preview && !intro && !introLanding && !departure) {
+          const docked = useStore.getState().petDock;
+          const fit = Math.min(app!.screen.width / 380, app!.screen.height / 440);
+          scene.scale.set(damp(scene.scale.x, fit * (docked ? .66 : .8), dt, 11));
+          scene.y = damp(scene.y, app!.screen.height * (docked ? .43 : .54), dt, 11);
+        }
         if (preview) scene.scale.set(Math.min(app!.screen.width / 380, app!.screen.height / 440) * 0.72 * Math.sqrt(s.scale));
         const activity = motion ? s.activity : 0;
         let targetTilt =
@@ -508,6 +533,49 @@ export function PetRenderer({
             (0.18 + 0.5 * (0.5 + 0.5 * Math.sin(t * 1.4 + p.phase))) *
             s.brightness;
         });
+        if (musicMotion) {
+          // A quiet listening gesture, not a guessed beat or emotional classification.
+          const sway = Math.sin(t * 1.8);
+          root.rotation += sway * .035;
+          root.y += Math.sin(t * 3.6) * 2;
+          finL.rotation += sway * .08; finR.rotation -= sway * .08;
+          if (t % 12 < 3) for (let i = 0; i < 2; i++) {
+            const x = 115 + i * 21, y = -70 - (t % 12) * 16 - i * 16;
+            pastime.ellipse(x,y,4,2.5).fill({ color: 0xc9f4ff, alpha: .45 });
+            pastime.moveTo(x+3,y).lineTo(x+3,y-13).stroke({ color: 0xc9f4ff, alpha: .45, width: 1.5 });
+          }
+          if (t % 15 < 2) {
+            facial.moveTo(-12,36).quadraticCurveTo(0,53,12,36).stroke({color:0xcdfaff,width:3,cap:'round'});
+          }
+        }
+        if (intro) {
+          app!.ticker.maxFPS = s.introFPS;
+          intro.update(app!, avatar);
+        }
+        if (!intro && introLanding) {
+          app!.ticker.maxFPS = 60;
+          root.position.set(0,0); root.rotation = 0; root.scale.set(1);
+          root.alpha = s.opacity * (s.nightMode ? .7 : 1); body.tint = 0xffffff;
+          finL.rotation = -.35; finR.rotation = .35;
+          eyes.position.set(0,-7); eyeL.scale.y = eyeR.scale.y = .7;
+          irisL.position.set(3,6); irisR.position.set(3,6);
+          shadow.scale.set(.85); shadow.alpha = .65;
+          if (landingSent !== introLanding) {
+            landingSent = introLanding;
+            const token = introLanding;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              if (!disposed && useStore.getState().introLanding === token) void bridge.introPetRendered?.(token).catch(() => {});
+            }));
+          }
+        } else landingSent = '';
+        if (!intro && departure) {
+          if (departureToken !== departure) { departureToken = departure; departureStart = performance.now(); }
+          const exit = departureTimeline.sample((performance.now() - departureStart) / 1000);
+          app!.ticker.maxFPS = s.lowPower ? 30 : 60;
+          scene.alpha = exit.alpha; root.y += exit.y; root.rotation += exit.tilt; root.scale.set(exit.scale);
+          armR.rotation -= exit.wave; finR.rotation += exit.wave * .3; eyeR.scale.y *= exit.wink;
+          if (exit.done && !departureDone) { departureDone = true; void bridge.departureComplete?.(departure).catch(() => {}); }
+        }
       });
       const oldCleanup = cleanup;
       const pointer = (event: PointerEvent) => {
@@ -539,6 +607,7 @@ export function PetRenderer({
       }
     };
     void initialize().catch((error) => {
+      if (intro) void window.karenIntro?.finish().catch(() => {});
       if (!disposed)
         useStore.setState({
           error: `No se pudo iniciar el renderizador: ${String(error)}`,
@@ -548,7 +617,7 @@ export function PetRenderer({
       disposed = true;
       cleanup();
     };
-  }, [ready, preview]);
+  }, [ready, preview, intro]);
   return (
     <div
       ref={host}

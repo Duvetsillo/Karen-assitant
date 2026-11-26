@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { canSendMessage } from '../shared/local-commands';
 import {
   MessageCircle,
+  MoreHorizontal,
   Sparkles,
   SlidersHorizontal,
   Radio,
@@ -44,14 +45,20 @@ import { effectiveSettings } from '../shared/settings';
 import { Perception, CaptureIndicator } from "./Perception";
 import { ModelPicker } from './ModelPicker';
 import { StylePicker } from './pet/StylePicker';
+import { StartupIntro } from './intros/StartupIntro';
+import { IntroPreferencesPanel } from './intros/IntroPreferencesPanel';
+import { MusicSettings, MusicPlayer } from './music/MusicPanel';
+import { chooseMusicSession } from '../shared/music';
 import {InitiativePanel,Notice} from './InitiativePanel';
 import { ScreenActionApproval } from './ScreenActionApproval';
 import { PRESENCE_PRESETS } from './pet/presence-motion';
 import { petStyles } from '../shared/pet-styles';
 
 const isPet = new URLSearchParams(location.search).get("view") === "pet";
-document.documentElement.dataset.view = isPet ? "pet" : "settings";
-document.title = isPet ? "Karen Desktop Pet" : "Karen · Ajustes";
+const isIntro = new URLSearchParams(location.search).get('view') === 'intro';
+const isMusic = new URLSearchParams(location.search).get('view') === 'music';
+document.documentElement.dataset.view = isMusic ? 'music' : isIntro ? 'intro' : isPet ? "pet" : "settings";
+document.title = isMusic ? 'Karen · Música' : isIntro ? 'Karen · Introducción' : isPet ? "Karen Desktop Pet" : "Karen · Ajustes";
 const labels: Record<PetState, string> = {
   IDLE: "En calma",
   LISTENING: "Escuchando",
@@ -71,6 +78,8 @@ const labels: Record<PetState, string> = {
 };
 const audio = isPet ? new AudioDirector() : undefined;
 const replies = audio ? new VoiceReplies(text => audio.speak(text), () => ({ enabled: effectiveSettings(useStore.getState().settings).voiceEnabled, capture: useStore.getState().capture })) : undefined;
+let musicCommentTrack: string | undefined;
+let lastMusicComment = '';
 async function action(operation: () => Promise<unknown>) {
   try {
     useStore.setState({ error: "" });
@@ -287,6 +296,7 @@ const tabs: { name: string; icon: LucideIcon }[] = [
   { name: "Comportamiento", icon: SlidersHorizontal },
   { name: "OpenClaw", icon: Radio },
   { name: "Voz", icon: AudioLines },
+  { name: 'Música', icon: AudioLines },
   { name: "Percepción", icon: Monitor },
   { name: "Sistema", icon: Monitor },
   { name: "Diagnóstico", icon: Activity },
@@ -298,6 +308,7 @@ const subtitles: Record<string, string> = {
   Comportamiento: "Encuentra su ritmo en tu escritorio.",
   OpenClaw: "Tu asistente existente, conectado de forma segura.",
   Voz: "Escuchar, responder y dar vida a cada palabra.",
+  Música: 'Tu música, una presencia discreta y controles locales.',
   Percepción: "Audio y pantalla, cuando tú decidas compartirlos.",
   Sistema: "Un pequeño espacio en Windows.",
   Diagnóstico: "Lo que está ocurriendo, sin secretos.",
@@ -386,6 +397,8 @@ function SettingsApp() {
               <OpenClaw />
             ) : tab === "Voz" ? (
               <Voice />
+            ) : tab === 'Música' ? (
+              <MusicSettings />
             ) : tab === "Percepción" ? (
               <Perception />
             ) : tab === "Sistema" ? (
@@ -415,9 +428,10 @@ function Conversation() {
   const latest=initiative?.notices.filter(n=>!n.dismissed).at(-1);
   const pending=messages.some(m=>m.pending);
   useEffect(()=>{if(draft){setText(draft);useStore.setState({conversationDraft:''});editor.current?.focus();}},[draft]);
+  const follow = useRef(true);
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if(messages.length)end.current?.scrollIntoView({ block: "nearest" });
+    if(messages.length && follow.current)end.current?.scrollIntoView({ block: "nearest" });
   }, [messages]);
   const send = async () => {
     const message = text;
@@ -435,7 +449,7 @@ function Conversation() {
       {latest&&<Notice notice={latest}/>}
       <ScreenActionApproval />
       <details className="conversation-model"><summary><span><Status compact/></span><span>Modelo y conexión</span></summary><ModelPicker/></details>
-      <div className="messages" role="log" aria-label="Conversación con Karen">
+      <div className="messages" role="log" aria-label="Conversación con Karen" onScroll={e=>{const v=e.currentTarget;follow.current=v.scrollHeight-v.scrollTop-v.clientHeight<70;}}>
         {messages.length === 0 ? (
           <div className="empty-chat">
             <div className="empty-symbol">
@@ -563,6 +577,12 @@ function Appearance() {
           </button>)}
         </div>
         <p className="quiet-note">Gaming, No molestar y movimiento reducido mantienen sus límites.</p>
+      </Group>
+      <Group title="Introducciones de inicio" description="Una entrada animada al abrir Karen. Se omite durante juegos, presentaciones y No molestar.">
+        <IntroPreferencesPanel settings={s} patch={patch} report={report} />
+      </Group>
+      <Group title="Chat de escritorio" description="Elige cómo aparecen sus respuestas junto a la mascota.">
+        <div className="chat-shapes">{(['bubble','panel','ribbon'] as const).map((shape,i) => <button key={shape} aria-pressed={s.petChatShape===shape} onClick={()=>void patch({petChatShape:shape})}>{['Globo','Panel','Cinta'][i]}</button>)}</div>
       </Group>
       <Group title="Su silueta" description="Cada estilo puede tener brazos, piernas o flotar libremente.">
         <div className="size-presets" role="group" aria-label="Versiones de cuerpo">
@@ -1213,6 +1233,14 @@ function Diagnostics() {
   );
 }
 function PetApp() {
+  const introLanding = useStore(s => Boolean(s.introLanding));
+  const departure = useStore(s => s.departure);
+  useEffect(() => {
+    if (!departure) return;
+    const skip = (event: KeyboardEvent) => { if (event.key === 'Escape') void bridge.departureComplete?.(departure); };
+    document.addEventListener('keydown',skip);
+    return () => document.removeEventListener('keydown',skip);
+  }, [departure]);
   const s = useStore((x) => x.settings),
     state = useStore((x) => x.state),
     messages = useStore((x) => x.messages),
@@ -1224,6 +1252,7 @@ function PetApp() {
   const [bubble, setBubble] = useState(false),
     [compose, setCompose] = useState(false),
     [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; started: boolean } | null>(null);
   const last = messages.filter((m) => m.role === "assistant").at(-1);
@@ -1231,6 +1260,7 @@ function PetApp() {
   const voiceActive = capture.kind === 'voice' && capture.phase !== 'idle';
   const latestNotice=initiative?.notices.filter(n=>!n.dismissed).at(-1);
   const showInitiative=Boolean(latestNotice && Date.now()-latestNotice.at<120000 && !showReply && !compose && !error && s.mode==='normal');
+  useEffect(() => { useStore.setState({petDock: Boolean(compose || showReply || showInitiative || error)}); }, [compose,showReply,showInitiative,error]);
   useEffect(() => {
     if (last) setBubble(true);
   }, [last?.text]);
@@ -1268,8 +1298,11 @@ function PetApp() {
     <div
       ref={root}
       className="desktop-pet"
+      data-landing={introLanding}
+      data-departing={Boolean(departure)}
       data-capturing={capture.phase !== "idle"}
-      data-has-dock={showReply || showInitiative || Boolean(error)}
+      data-chat-shape={s.petChatShape}
+      data-has-dock={compose || showReply || showInitiative || Boolean(error)}
       onContextMenu={(e) => {
         e.preventDefault();
         void action(() => bridge.contextMenu());
@@ -1286,7 +1319,7 @@ function PetApp() {
           role="status"
         >
           <button className="pet-bubble-open" aria-label="Abrir respuesta completa en Conversación" onClick={() => void bridge.openSettings()}>
-            <span>{last.text.slice(0, 240)}{last.text.length > 240 ? "…" : ""}</span>
+            <small>{last.pending ? "Karen está pensando…" : "Karen · abrir conversación"}</small><span>{last.text.slice(0, 500)}{last.text.length > 500 ? "…" : ""}</span>
           </button>
           <button aria-label="Cerrar globo" onClick={() => setBubble(false)}>
             <X size={12} />
@@ -1329,11 +1362,6 @@ function PetApp() {
         }}
       />
       <div className="pet-toolbar">
-        <button title="Mostrar u ocultar brazos y piernas" aria-label="Mostrar brazos y piernas"
-          aria-pressed={s.showArms && s.showLegs}
-          onClick={() => void patch({showArms:!(s.showArms && s.showLegs),showLegs:!(s.showArms && s.showLegs)})}>
-          <PersonStanding size={16}/>
-        </button>
         <button
           title="Conversar"
           aria-label="Abrir mensaje"
@@ -1349,6 +1377,21 @@ function PetApp() {
           onClick={() => void action(() => bridge.listen())}
         >
           <Mic size={16} />
+        </button>
+        <button
+          title="Ajustes"
+          aria-label="Abrir ajustes"
+          onClick={() => void action(() => bridge.openSettings())}
+        >
+          <SettingsIcon size={16} />
+        </button>
+        <details className="pet-more" onKeyDown={e=>{if(e.key==='Escape'){e.currentTarget.open=false;e.currentTarget.querySelector('summary')?.focus();}}}>
+          <summary aria-label="Más opciones de Karen" title="Más opciones"><MoreHorizontal size={16}/></summary>
+          <div className="pet-more-actions">
+        <button title="Mostrar u ocultar brazos y piernas" aria-label="Mostrar brazos y piernas"
+          aria-pressed={s.showArms && s.showLegs}
+          onClick={() => void patch({showArms:!(s.showArms && s.showLegs),showLegs:!(s.showArms && s.showLegs)})}>
+          <PersonStanding size={16}/>
         </button>
         <button
           title={s.voiceEnabled ? "Silenciar respuestas habladas" : "Activar respuestas habladas"}
@@ -1374,13 +1417,8 @@ function PetApp() {
         >
           <Square size={13} />
         </button>
-        <button
-          title="Ajustes"
-          aria-label="Abrir ajustes"
-          onClick={() => void action(() => bridge.openSettings())}
-        >
-          <SettingsIcon size={16} />
-        </button>
+          </div>
+        </details>
       </div>
       <div className="pet-caption">
         <span>{state === "IDLE" ? "Karen" : labels[state]}</span>
@@ -1392,14 +1430,18 @@ function PetApp() {
           onSubmit={(e) => {
             e.preventDefault();
             void action(async () => {
-              await bridge.send(text);
-              setText("");
-              setCompose(false);
+              const message = text;
+              if (sending || messages.some(m=>m.pending) || !canSendMessage(message,connection.state)) return;
+              setSending(true);
+              try { await bridge.send(message); setText(current => current === message ? "" : current); }
+              finally { setSending(false); }
             });
           }}
         >
-          <input
+          <textarea
             autoFocus
+            rows={2}
+            onKeyDown={e=>{if(e.key==='Escape')setCompose(false);if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();e.currentTarget.form?.requestSubmit();}}}
             aria-label="Mensaje para Karen"
             value={text}
             maxLength={16000}
@@ -1408,7 +1450,7 @@ function PetApp() {
           />
           <button
             aria-label="Enviar"
-            disabled={!canSendMessage(text, connection.state)}
+            disabled={sending || messages.some(m=>m.pending) || !canSendMessage(text, connection.state)}
           >
             <ArrowUp size={18} />
           </button>
@@ -1444,25 +1486,45 @@ function Root() {
     let captureSeen = false;
     let wakeSeen = false;
     let initiativeSeen = false;
+    let musicSeen = false;
     const off = bridge.event((e) => {
+      if (e.type === 'music') {
+        musicSeen = true;
+        const song = chooseMusicSession(e.snapshot.sessions, e.snapshot.activeId);
+        if (musicCommentTrack && (song?.trackId !== musicCommentTrack || song?.status !== 'playing' || !e.snapshot.comment)) { audio?.cancel(); musicCommentTrack = undefined; }
+        const notice = e.snapshot.comment;
+        if (audio && notice && notice.id !== lastMusicComment) {
+          lastMusicComment = notice.id;
+          void bridge.music?.comment(notice.id).then(clip => {
+            const current = useStore.getState(), active = current.music && chooseMusicSession(current.music.sessions, current.music.activeId);
+            if (!clip || active?.trackId !== clip.trackId || active.status !== 'playing' || current.capture.phase !== 'idle' || current.settings.mode !== 'normal') return;
+            musicCommentTrack = clip.trackId;
+            const bytes = new Uint8Array(clip.audio).buffer;
+            void audio.speak(clip.text, { bytes, volume: clip.volume }).catch(report).finally(() => { if (musicCommentTrack === clip.trackId) musicCommentTrack = undefined; });
+          }).catch(report);
+        }
+      }
       if (e.type === "connection") connectionSeen = true;
       if (e.type === "settings") settingsSeen = true;
       if (e.type === "capture") captureSeen = true;
       if (e.type === 'wake-status') wakeSeen = true;
       if (e.type === 'initiative') initiativeSeen = true;
       useStore.getState().event(e);
+      if (musicCommentTrack && ((e.type === 'pet' && !['IDLE','SPEAKING'].includes(e.state)) || (e.type === 'capture' && e.status.kind !== 'voice' && e.status.phase !== 'idle'))) { audio?.cancel(); musicCommentTrack = undefined; }
       if (e.type === 'capture' && e.status.kind === 'system') audio?.suspendWake(e.status.phase !== 'idle');
       if (
         e.type === "chat" &&
         e.final && e.speak !== false
       ) {
+        musicCommentTrack = undefined;
         replies?.enqueue(e.message);
       }
       if (e.type === "capture" && e.status.phase === "idle") replies?.resume();
       if (e.type === "voice-cancel") { replies?.clear(); audio?.cancel(); }
       if (e.type === "voice-listen") void audio?.toggleListening();
-      if (e.type === "voice-speak") void audio?.speak(e.text);
+      if (e.type === "voice-speak") { musicCommentTrack = undefined; void audio?.speak(e.text); }
       if (e.type === "settings" && !effectiveSettings(e.settings).voiceEnabled) { replies?.clear(); audio?.cancel(); }
+      if (e.type === 'settings' && musicCommentTrack && (!e.settings.musicComments || e.settings.mode !== 'normal')) { audio?.cancel(); musicCommentTrack = undefined; }
     });
     void bridge
       .snapshot()
@@ -1472,6 +1534,7 @@ function Root() {
             settings: settingsSeen
               ? useStore.getState().settings
               : snapshot.settings,
+            music: musicSeen ? useStore.getState().music : snapshot.music,
             connection: connectionSeen
               ? useStore.getState().connection
               : snapshot.connection,
@@ -1517,4 +1580,4 @@ function Root() {
   }, []);
   return isPet ? <PetApp /> : <SettingsApp />;
 }
-createRoot(document.getElementById("root")!).render(<Root />);
+createRoot(document.getElementById("root")!).render(isMusic ? <MusicPlayer mini /> : isIntro ? <StartupIntro /> : <Root />);

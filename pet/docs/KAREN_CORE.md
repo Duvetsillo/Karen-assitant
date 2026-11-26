@@ -54,6 +54,29 @@ Escribe `/core estado` en Pet para consultar si el puente está activo. Muestra 
 
 El contrato v1 incorpora el SQL compartido `shared/core-events.sql`: registro acotado a 2.000 eventos sin contenido de conversaciones, y actividad con heartbeat de cinco segundos y expiración de 15 segundos. El panel muestra actividad de otras interfaces; `/core estado` también la consulta. No unifica la sesión interna OpenClaw ni sus permisos con Karen clásica.
 
+## Metadatos de automatización y desarrollo — 2026-11-26
+
+Con automation_policy_version=1, el lector incluye event_topic y Pet identifica
+el evento y la próxima fecha de aceptación. Se mantiene compatibilidad con bases
+anteriores sin esa extensión; una versión desconocida se rechaza. No ejecuta triggers.
+
+`/automatizaciones listar` consulta hasta 50 schedules de KAREN_TASKS_DB;
+`/desarrollo listar` consulta hasta 50 handoffs de KAREN_CORE_DB. Requieren las
+versiones automation_version=1 y handoff_version=1 creadas por el runtime clásico.
+Sin tablas compatibles se informa indisponibilidad y no se crean ni migran esas tablas.
+
+Funcionan sin Gateway y muestran solo IDs, nombres/proyectos, fechas y estados.
+No incluyen recetas, contexto, criterios, resultados ni hashes privados. Los
+comandos no se transfieren a OpenClaw, no usan TTS y no permiten ejecutar ni
+aprobar tareas. El lector de schedules abre SQLite en readOnly; el CoreStore
+conserva su circuito anterior de historial. No se cambiaron los permisos del vault.
+
+Verificación: 166 pruebas Vitest, typecheck y build correctos. La prueba cruzada
+`python qa/verify_metadata_interop.py` del checkout clásico crea SQLite con Python
+y lo consulta con estos adaptadores compilados; confirma archivo de tareas intacto,
+payloads privados ausentes y cero planes ejecutados. No usa Gateway ni datos reales.
+El ejecutable instalado del usuario no fue reemplazado por esta modificación.
+
 Micrófono: `electron/core-resource.ts` obtiene un lock OS mediante `python/core_resource.py` antes de abrir hardware. Se usan tickets ligados al renderer autorizado, se liberan al cerrar los tracks y se limpian al cerrar el renderer/aplicación. La clásica importa esa misma implementación. La ubicación predeterminada es `%LOCALAPPDATA%/KarenCore/locks/microphone.lock`; `KAREN_RESOURCE_DIR`, si se define, debe ser absoluto e idéntico en los clientes. No borrar el lock con clientes activos. El navegador remoto no participa en este lock local.
 
 Se necesita la carpeta de voz configurada con `voice-runtime/Scripts/python.exe`. Fallar el worker impide abrir el micrófono; no se salta el arbitraje. El worker se distribuye fuera de ASAR y no recibe audio ni carga modelos. Esto evita competencia entre capturas cooperantes; no implementa barge-in ni sustituye permisos de micrófono de Windows.

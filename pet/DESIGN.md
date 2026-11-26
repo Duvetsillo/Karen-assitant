@@ -242,3 +242,12 @@ vista previa y no se guardan como preferencia de Windows.
 - **Don't** comunicar conexión, error o actividad únicamente mediante color.
 - **Don't** presentar movimiento labial sintético como prueba de audio real.
 - **Don't** sustituir la jerarquía operativa del panel por tarjetas anidadas y efectos ornamentales.
+
+
+## Conversación de escritorio
+
+Globo, Panel y Cinta son siluetas intencionales: radios asimétricos 18/6 px,
+panel de 9 px y cinta de 5/18 px. Usan la paleta indigo existente del pet
+(#172136, #172238, #263a50), texto #e9f3ff y metadatos #aebfdc a 10 px
+para conservar legibilidad en la ventana mínima de 190 px. Entrada de 180 ms
+por opacidad y transform; sin movimiento con prefers-reduced-motion.
