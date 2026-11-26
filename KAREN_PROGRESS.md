@@ -135,3 +135,21 @@ el corazón participa ahora en el ocultado inicial y la resolución adaptativa.
 Verificación combinada: 210 pruebas Pet; typecheck y build completo, incluido
 helper musical C#, correctos. Datos locales y modelos no se incorporan. El trabajo
 de interfaz y la integración actual del runtime continúan en esta carpeta.
+
+
+## Runtime consolidado — 26 de noviembre de 2026
+
+Se incorporó el delta de Core `e7a1f1b..876024c` bajo `runtime/` mediante aplicación
+tridireccional. Se conserva personal_learning.py y sus nueve pruebas propias.
+Incluye memoria/importación portable, Obsidian acotado, scheduler READ optativo,
+eventos/handoff, política de recursos, MusicMemory y trabajo Home Assistant ya
+versionado. No se desplegó ni activó ningún servicio, runner o integración.
+
+Los verificadores buscan `../pet` en esta distribución y siguen admitiendo la
+estructura histórica. AGENTS de raíz/runtime identifica este repositorio canónico.
+
+Validación ejecutada aquí: **425 pruebas Python OK**, 87,304 s, usando el entorno
+Python 3.11 existente sin copiarlo. Las tres pruebas de interoperabilidad Core/Pet,
+metadatos sin payload y música Node/Python pasan con bases temporales. No se
+modificaron datos reales ni se ejecutaron planes. Los 210 tests Pet y su build
+completo pasaron en la integración anterior. El cliente histórico permanece intacto.

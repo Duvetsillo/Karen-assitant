@@ -34,6 +34,7 @@ async def main():
    return {'answer':'Respuesta sintetica verificada'}
  entry=SimpleNamespace(entry_id='qa-entry',runtime_data=FakeClient())
  agent=KarenConversation(entry)
+ agent.hass=None
  received=[]
  log=SimpleNamespace(conversation_id='qa-conversation',async_add_assistant_content_without_tools=received.append)
  user=SimpleNamespace(language='es',text='Hola de QA',context=Context(user_id='qa-user'),agent_id='conversation.karen')
@@ -42,6 +43,16 @@ async def main():
  assert 'Respuesta sintetica verificada' in str(result.as_dict())
  assert received[0].content=='Respuesta sintetica verificada'
  assert not agent.supported_features & conversation.ConversationEntityFeature.CONTROL
+ from homeassistant.core import State
+ from unittest.mock import AsyncMock
+ permission=SimpleNamespace(check_entity=lambda entity,policy: entity=='light.allowed')
+ agent.hass=SimpleNamespace(auth=SimpleNamespace(async_get_user=AsyncMock(return_value=SimpleNamespace(permissions=permission))),
+     states=SimpleNamespace(async_all=lambda:[State('light.allowed','on',{'friendly_name':'Luz accesible'}),State('light.denied','on',{'friendly_name':'Luz privada'})]))
+ user.text='¿Qué luces están encendidas?'
+ result=await agent._async_handle_message(user,log)
+ assert 'Luz accesible' in str(result.as_dict()) and 'Luz privada' not in str(result.as_dict())
+ print('Actual HA user read permissions and deterministic home query: OK')
+
  class FakeStore:
   def async_delay_save(self,callback,delay):self.saved=callback()
  store=FakeStore();reports={}

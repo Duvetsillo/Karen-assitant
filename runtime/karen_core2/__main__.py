@@ -11,6 +11,15 @@ def main():
     sub.add_parser('status')
     sub.add_parser('models')
     sub.add_parser('plans')
+    obsidian = sub.add_parser('obsidian')
+    obsidian.add_argument('operation', nargs='?', default='status')
+    obsidian.add_argument('--args', default='{}', help='Objeto JSON; update/append requieren expected_hash.')
+    handoff = sub.add_parser('handoff')
+    handoff.add_argument('operation', nargs='?', default='list')
+    handoff.add_argument('--args', default='{}', help='Objeto JSON del protocolo de handoff.')
+    automation = sub.add_parser('automation')
+    automation.add_argument('operation', nargs='?', default='list')
+    automation.add_argument('--args', default='{}', help='Objeto JSON de planificación local.')
     plan = sub.add_parser('plan'); plan.add_argument('goal')
     for action in ('run', 'resume', 'cancel', 'inspect', 'remember'):
         command = sub.add_parser(action); command.add_argument('id')
@@ -19,7 +28,17 @@ def main():
     runtime = CoreRuntime()
     def approve(request):
         print(json.dumps(request, ensure_ascii=False, indent=2))
-        return input('Autoriza esta operación concreta escribiendo APROBAR: ') == 'APROBAR'
+        accepted = input('Autoriza esta operación concreta escribiendo APROBAR: ') == 'APROBAR'
+        if accepted and request.get('permission') == 'destructive':
+            return {'confirmed_plan': request['plan_id'], 'confirmed_step': request['step_id']}
+        return accepted
+    if args.action in {'obsidian', 'handoff', 'automation'}:
+        runtime.approve = approve
+        try:
+            print(runtime.command('/' + args.action + ' ' + args.operation + ' ' + args.args))
+        finally:
+            runtime.close()
+        return
     if args.action == 'models': result = runtime.models.discover(force=True)
     elif args.action == 'status': result = runtime.status()
     elif args.action == 'plans': result = runtime.plans.list()
@@ -33,6 +52,7 @@ def main():
         try: result = runtime.vision.analyze(scope=args.scope)
         finally: runtime.vision.pause()
     print(json.dumps(result, ensure_ascii=False, indent=2))
+    runtime.close()
 
 
 if __name__ == '__main__':

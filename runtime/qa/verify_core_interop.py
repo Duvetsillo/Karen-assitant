@@ -18,7 +18,7 @@ from contextlib import closing
 import sqlite3
 
 
-PET = ROOT / 'desktop-pet'
+PET = ROOT.parent / 'pet' if (ROOT.parent / 'pet/package.json').is_file() else ROOT / 'desktop-pet'
 TSX = PET / 'node_modules' / '.bin' / ('tsx.cmd' if os.name == 'nt' else 'tsx')
 
 

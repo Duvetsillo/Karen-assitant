@@ -1,0 +1,30 @@
+{
+  "before": {
+    "ram_available_bytes": 8299450368,
+    "vram_available_bytes": 5278531584,
+    "vram_total_bytes": 6442450944
+  },
+  "local_models": [
+    "gemma3:4b",
+    "qwen3.5:2b",
+    "qwen3.5:4b",
+    "gemma3:1b",
+    "llama3.2:3b",
+    "qwen2.5-coder:3b",
+    "qwen3:4b",
+    "qwen2:0.5b"
+  ],
+  "conversation_seconds": 4.348,
+  "first_token_seconds": 4.086,
+  "gaming_gpu_layers": 0,
+  "stream_cancel_after_first_fragment": true,
+  "cancelled_request_seconds": 3.706,
+  "temporary_obsidian_plan": true,
+  "event_journal": true,
+  "models_loaded_after": [],
+  "after": {
+    "ram_available_bytes": 8285884416,
+    "vram_available_bytes": 5278531584,
+    "vram_total_bytes": 6442450944
+  }
+}

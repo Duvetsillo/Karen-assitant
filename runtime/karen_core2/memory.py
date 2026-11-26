@@ -8,7 +8,8 @@ import unicodedata
 from karen_memory import MemoryStore
 from .privacy import ASSIGNMENT, SECRET
 
-KINDS = {'episodic', 'semantic', 'procedural', 'contextual', 'temporal', 'relational', 'project'}
+KINDS = {'episodic', 'semantic', 'procedural', 'contextual', 'temporal', 'relational', 'project',
+         'user', 'autobiographical', 'prospective'}
 STATES = {'VERIFICADO', 'INFERIDO', 'PENDIENTE', 'DESACTUALIZADO'}
 
 
@@ -21,6 +22,9 @@ class ContextMemory:
     def __init__(self, path=None):
         self.base = MemoryStore(path)
         self.path = self.base.path
+        self.events = None
+        from .music import MusicMemory
+        self.music = MusicMemory(self.base)
         with self.base.connect() as db:
             version = db.execute("SELECT value FROM core_meta WHERE key='memory2_version'").fetchone()
             if version and version[0] != '1':
@@ -46,6 +50,40 @@ class ContextMemory:
                 DELETE FROM core2_procedure_runs WHERE memory_id=OLD.id;
               END;
             ''')
+        self._retrieval_schema()
+        from .memory_portability import MemoryPortability
+        self.portability = MemoryPortability(self)
+
+    def _retrieval_schema(self):
+        """Additive migration; legacy writers keep the rebuildable index in sync."""
+        with self.base.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            version = db.execute("SELECT value FROM core_meta WHERE key='memory_retrieval_version'").fetchone()
+            if version:
+                if version[0] != '1':
+                    raise ValueError('Versión de recuperación de memoria incompatible.')
+                return
+            db.execute('''CREATE VIRTUAL TABLE core2_memory_search USING fts5(
+                memory_id UNINDEXED,body,tokenize='unicode61 remove_diacritics 2')''')
+            db.execute('''CREATE TABLE core2_memory_access (
+                memory_id TEXT PRIMARY KEY,last_access_at TEXT NOT NULL,access_count INTEGER NOT NULL)''')
+            db.execute('INSERT INTO core2_memory_search SELECT id,content FROM core_memories WHERE sensitive=0')
+            db.execute('''CREATE TRIGGER core2_memory_search_insert AFTER INSERT ON core_memories WHEN NEW.sensitive=0 BEGIN
+                INSERT INTO core2_memory_search VALUES(NEW.id,NEW.content); END''')
+            db.execute('''CREATE TRIGGER core2_memory_search_update AFTER UPDATE ON core_memories BEGIN
+                DELETE FROM core2_memory_search WHERE memory_id=OLD.id;
+                INSERT INTO core2_memory_search SELECT NEW.id,NEW.content WHERE NEW.sensitive=0; END''')
+            db.execute('''CREATE TRIGGER core2_memory_search_delete AFTER DELETE ON core_memories BEGIN
+                DELETE FROM core2_memory_search WHERE memory_id=OLD.id;
+                DELETE FROM core2_memory_access WHERE memory_id=OLD.id; END''')
+            db.execute("INSERT INTO core_meta VALUES('memory_retrieval_version','1')")
+
+    def reindex(self):
+        with self.base.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('DELETE FROM core2_memory_search')
+            db.execute('INSERT INTO core2_memory_search SELECT id,content FROM core_memories WHERE sensitive=0')
+            return {'indexed': db.execute('SELECT count(*) FROM core2_memory_search').fetchone()[0]}
 
     def add(self, project, content, *, kind='semantic', status='confirmed', temporary_days=None,
             priority=0, source='user', supersedes=None, state=None, confidence=None,
@@ -93,6 +131,7 @@ class ContextMemory:
                        (saved['id'], kind, priority, source))
             db.execute('INSERT OR IGNORE INTO core2_memory_details VALUES (?,?,?,?,?,?)',
                        (saved['id'], state, confidence, json.dumps(tags), fact_key, json.dumps(details or {}, ensure_ascii=False)))
+            conflicts = []
             if fact_key:
                 conflicts = db.execute('''SELECT d.memory_id FROM core2_memory_details d
                     JOIN core_memories m ON m.id=d.memory_id JOIN core2_memory c ON c.memory_id=m.id
@@ -108,6 +147,10 @@ class ContextMemory:
                 db.execute("UPDATE core2_memory_details SET state='DESACTUALIZADO' WHERE memory_id=?", (old['id'],))
                 stamp = datetime.now(timezone.utc).isoformat()
                 db.execute('UPDATE core_memories SET expires_at=?,updated_at=? WHERE id=?', (stamp, stamp, old['id']))
+        if self.events:
+            self.events.emit('memory.updated' if duplicate else 'memory.created', entity_id=saved['id'])
+            if conflicts:
+                self.events.emit('memory.conflict', entity_id=saved['id'])
         return {**saved, 'kind': kind, 'state': state}
 
     def relate(self, source, target, relation='related'):
@@ -120,22 +163,42 @@ class ContextMemory:
             db.execute('INSERT OR IGNORE INTO core2_memory_links VALUES (?,?,?)', (source, target, relation))
 
     def retrieve(self, project, query='', *, limit=8, confirmed_only=False):
-        if type(limit) is not int or not 1 <= limit <= 20 or not isinstance(query, str) or len(query) > 400:
+        if (type(limit) is not int or not 1 <= limit <= 20 or not isinstance(query, str)
+                or len(query) > 400 or type(confirmed_only) is not bool):
             raise ValueError('Consulta contextual inválida.')
-        rows = self.base.list(project, limit=200)
+        project = self.base._project(project)
+        terms = sorted(words(query))[:16]
+        if query.strip() and not terms:
+            return []
+        expression = ' OR '.join('"' + term.replace('"', '""') + '"' for term in terms)
         with self.base.connect() as db:
-            metadata = {row['memory_id']: dict(row) for row in db.execute('''SELECT m.* FROM core2_memory m
-                JOIN core_memories c ON c.id=m.memory_id WHERE c.project=? ORDER BY c.updated_at DESC LIMIT 200''', (project,))}
-            details = {r['memory_id']: dict(r) for r in db.execute('''SELECT d.* FROM core2_memory_details d
-                JOIN core_memories m ON m.id=d.memory_id WHERE m.project=?''', (project,))}
+            joins = ' JOIN core2_memory_search ON core2_memory_search.memory_id=m.id' if terms else ''
+            match = ' AND core2_memory_search MATCH ?' if terms else ''
+            order = 'bm25(core2_memory_search),' if terms else ''
+            params = [project, datetime.now(timezone.utc).isoformat(), int(confirmed_only)] + ([expression] if terms else [])
+            rows = [self.base._row(row) for row in db.execute('''SELECT m.* FROM core_memories m
+                LEFT JOIN core2_memory c ON c.memory_id=m.id LEFT JOIN core2_memory_details d ON d.memory_id=m.id'''
+                + joins + ''' WHERE m.project=? AND m.sensitive=0 AND (m.expires_at IS NULL OR m.expires_at>?)
+                AND COALESCE(c.retired,0)=0 AND COALESCE(d.state,'')!='DESACTUALIZADO'
+                AND (?=0 OR m.status='confirmed' AND COALESCE(d.state,'VERIFICADO')='VERIFICADO')'''
+                + match + ' ORDER BY ' + order + 'm.updated_at DESC,m.id DESC LIMIT 200', params)]
+            if not rows:
+                return []
+            ids = [row['id'] for row in rows]
+            placeholders = ','.join('?' for _ in ids)
+            metadata = {row['memory_id']: dict(row) for row in db.execute(
+                'SELECT * FROM core2_memory WHERE memory_id IN (' + placeholders + ')', ids)}
+            details = {row['memory_id']: dict(row) for row in db.execute(
+                'SELECT * FROM core2_memory_details WHERE memory_id IN (' + placeholders + ')', ids)}
             conflicts = set()
             for link in db.execute('''SELECT l.source_id,l.target_id FROM core2_memory_links l
                 JOIN core_memories a ON a.id=l.source_id JOIN core_memories b ON b.id=l.target_id
-                WHERE a.project=? AND l.relation='contradicts' AND a.sensitive=0 AND b.sensitive=0
-                AND (a.expires_at IS NULL OR a.expires_at>?) AND (b.expires_at IS NULL OR b.expires_at>?)''',
-                (project, datetime.now(timezone.utc).isoformat(), datetime.now(timezone.utc).isoformat())):
+                WHERE a.project=? AND b.project=a.project AND l.relation='contradicts' AND a.sensitive=0 AND b.sensitive=0
+                AND (a.expires_at IS NULL OR a.expires_at>?) AND (b.expires_at IS NULL OR b.expires_at>?)
+                AND (l.source_id IN (''' + placeholders + ') OR l.target_id IN (' + placeholders + '))',
+                [project, datetime.now(timezone.utc).isoformat(), datetime.now(timezone.utc).isoformat()] + ids + ids):
                 conflicts.update(link)
-        terms, scored = words(query), []
+        terms, scored = set(terms), []
         for index, row in enumerate(rows):
             if ASSIGNMENT.search(row['content']) or SECRET.search(row['content']) or 'PRIVATE KEY' in row['content']:
                 continue
@@ -149,9 +212,23 @@ class ContextMemory:
                 continue
             score = overlap * 20 + meta['priority'] + (10 if row['status'] == 'confirmed' else 0) + 1 / (index + 1)
             scored.append((score, {**row, 'kind': meta['kind'], 'source': meta['source'],
+                                   'relevance': score, 'priority': meta['priority'],
                                    'state': state, 'confidence': detail.get('confidence', 1.0 if row['status'] == 'confirmed' else .5),
                                    'tags': json.loads(detail.get('tags', '[]')), 'has_contradictions': row['id'] in conflicts}))
-        return [row for _, row in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
+        result = [row for _, row in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
+        stamp = datetime.now(timezone.utc).isoformat()
+        visible = []
+        with self.base.connect() as db:
+            for row in result:
+                current = db.execute('SELECT content,status,sensitive,expires_at FROM core_memories WHERE id=?', (row['id'],)).fetchone()
+                if (not current or current['sensitive'] or current['content'] != row['content'] or
+                        current['expires_at'] and current['expires_at'] <= stamp or confirmed_only and current['status'] != 'confirmed'):
+                    continue
+                db.execute('''INSERT INTO core2_memory_access VALUES(?,?,1) ON CONFLICT(memory_id)
+                    DO UPDATE SET last_access_at=excluded.last_access_at,access_count=access_count+1''', (row['id'], stamp))
+                row.update(dict(db.execute('SELECT last_access_at,access_count FROM core2_memory_access WHERE memory_id=?', (row['id'],)).fetchone()))
+                visible.append(row)
+        return visible
 
     def record_procedure(self, plan, project='Karen'):
         if (plan.get('status') != 'completed' or not plan.get('id') or not plan.get('steps') or
@@ -188,7 +265,8 @@ class ContextMemory:
             if not meta or meta['kind'] != 'procedural' or not detail:
                 return None
             runs = [dict(r) for r in db.execute('SELECT plan_id,executed_at,evidence FROM core2_procedure_runs WHERE memory_id=? ORDER BY executed_at', (memory_id,))]
-        return {**row, **json.loads(detail['details']), 'successful_runs': len(runs), 'executions': runs}
+        return {**json.loads(detail['details']), **row, 'successful_runs': len(runs), 'executions': runs,
+                'verified': bool(runs), 'basis': 'local_verified_runs' if runs else 'reported_or_user_data'}
 
     def history(self, memory_id):
         # Current sensitivity gates all historical versions, including previously public content.
@@ -230,8 +308,9 @@ class ContextMemory:
         with self.base.connect() as db:
             db.execute('BEGIN')
             memories = [dict(r) for r in db.execute('''SELECT m.*,c.kind,c.priority,c.source,c.retired,
-                d.state,d.confidence,d.tags,d.fact_key,d.details FROM core_memories m
+                d.state,d.confidence,d.tags,d.fact_key,d.details,a.last_access_at,a.access_count FROM core_memories m
                 LEFT JOIN core2_memory c ON c.memory_id=m.id LEFT JOIN core2_memory_details d ON d.memory_id=m.id
+                LEFT JOIN core2_memory_access a ON a.memory_id=m.id
                 WHERE m.project=? AND m.sensitive=0''', (project,))
                 if not SECRET.search(r['content']) and not ASSIGNMENT.search(r['content']) and 'PRIVATE KEY' not in r['content']]
             ids = {r['id'] for r in memories}
@@ -242,8 +321,14 @@ class ContextMemory:
                 if r['source_id'] in ids and r['target_id'] in ids]
             runs = [dict(r) for r in db.execute('''SELECT r.* FROM core2_procedure_runs r
                 JOIN core_memories m ON m.id=r.memory_id WHERE m.project=?''', (project,)) if r['memory_id'] in ids]
-        return {'contract': 'memory-engine-1', 'project': project, 'memories': memories,
-                'versions': versions, 'links': links, 'procedure_runs': runs}
+            reported = [{'memory_id': r['memory_id'], 'claims': json.loads(r['claims'])} for r in db.execute('''
+                SELECT r.memory_id,r.claims FROM core2_memory_reported r JOIN core_memories m ON m.id=r.memory_id
+                WHERE m.project=? AND m.sensitive=0 ORDER BY r.memory_id,r.claim_hash''', (project,)) if r['memory_id'] in ids]
+        result = {'contract': 'memory-engine-1', 'project': project, 'memories': memories,
+                  'versions': versions, 'links': links, 'procedure_runs': runs}
+        if reported:
+            result['reported'] = reported
+        return result
 
     def consolidate(self, project):
         """Read-only proposals. Never merges, deletes, or promotes claims automatically."""

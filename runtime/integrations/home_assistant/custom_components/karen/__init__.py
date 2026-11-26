@@ -11,9 +11,8 @@ async def async_setup_entry(hass, entry):
     client = None
     try:
         client = await async_client(hass)
-        status = await client.request('status')
-        if status.get('name') != 'Karen' or status.get('scope') != 'conversation' or status.get('core') is not True:
-            raise HomeAssistantError('Core de Karen no disponible.')
+        # Read-only HA answers remain available when the PC is deliberately off.
+        # Model/voice requests still report the real connection error on demand.
     except HomeAssistantError as error:
         if client:
             await client.close()

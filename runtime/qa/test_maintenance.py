@@ -12,12 +12,15 @@ class MaintenanceTests(unittest.TestCase):
         from personal_profile import DEFAULTS, load, save
         from karen_core2.memory import ContextMemory
         from karen_core2.knowledge import KnowledgeStore
+        from karen_core2.handoff import Handoffs
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'source'
             private = root / '.private'
             private.mkdir(parents=True)
             memory = ContextMemory(private / 'conversations.sqlite3')
             memory.add('Karen', 'Proyecto telescopio de prueba.')
+            handoff = Handoffs(memory.base).create(project='Karen', description='Verificar telescopio',
+                                                  acceptance=['Restauración conserva la solicitud'])
             knowledge = KnowledgeStore(memory)
             note = root / 'synthetic.md'
             note.write_text('Saturno tiene anillos.', encoding='utf-8')
@@ -32,6 +35,7 @@ class MaintenanceTests(unittest.TestCase):
             self.assertEqual(load(restored / 'personality.json')['initiative'], 'passive')
             self.assertIn('telescopio', recovered.retrieve('Karen', 'telescopio')[0]['content'])
             self.assertEqual(KnowledgeStore(recovered).search('Karen', 'Saturno')[0]['document_id'], document['id'])
+            self.assertEqual(Handoffs(recovered.base).read(handoff['task']['id']), handoff)
 
     def test_online_sqlite_backup_contains_committed_wal_and_detects_tampering(self):
         with tempfile.TemporaryDirectory() as directory:

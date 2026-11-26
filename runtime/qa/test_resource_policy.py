@@ -10,6 +10,18 @@ from qa.test_core2_models import Transport, Response
 
 
 class ResourcePolicyTests(unittest.TestCase):
+    def test_gaming_mode_uses_cpu_and_recovers_after_shared_mode_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            models = self.model(directory, ResourcePolicy('quality'))
+            state = {'mode': 'gaming'}
+            models.mode_probe = lambda: state['mode']
+            candidate = {'size': 2 * 1024**3, 'layers': 32}
+            self.assertEqual(models.allocation(candidate, 'coding', models.probe())['gpu_layers'], 0)
+            state['mode'] = 'normal'
+            self.assertGreater(models.allocation(candidate, 'coding', models.probe())['gpu_layers'], 0)
+            models.mode_probe = lambda: 1 / 0
+            self.assertEqual(models.allocation(candidate, 'coding', models.probe())['gpu_layers'], 0)
+
     def model(self, directory, policy):
         return LocalModels(transport=Transport(), policy=policy,
             probe=lambda: {'ram_available_bytes': 8 * 1024**3, 'vram_available_bytes': 5 * 1024**3},

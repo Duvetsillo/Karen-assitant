@@ -1,0 +1,8 @@
+{
+  "synthetic_memories": 501,
+  "fts_candidate_limit": 200,
+  "returned": 1,
+  "retrieval_seconds": 0.005613,
+  "old_relevant_memory_found": true,
+  "legacy_recent_200_would_include_target": false
+}

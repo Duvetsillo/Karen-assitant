@@ -4,8 +4,8 @@ import hashlib
 import json
 import re
 
-SECRET = re.compile(r'(?i)(password|passwd|contrase[nñ]a|api[_ -]?key|access[_ -]?token|secret|authorization|cookie|credential)')
-ASSIGNMENT = re.compile(r'(?i)\b(password|passwd|api[_ -]?key|token|secret|authorization)\s*[:=]\s*\S+')
+SECRET = re.compile(r'(?i)(password|passwd|contrase[nñ]a|api[_ -]?key|(?:access|refresh)[_ -]?token|private[_ -]?key|secret|authorization|cookie|credential)')
+ASSIGNMENT = re.compile(r'(?i)\b(password|passwd|contrase[nñ]a|api[_ -]?key|(?:access|refresh)[_ -]?token|token|secret|authorization|cookie)\s*[:=]\s*(?:bearer\s+)?\S+')
 
 
 def public(value, depth=0):
@@ -17,7 +17,11 @@ def public(value, depth=0):
     if isinstance(value, (list, tuple)):
         return [public(item, depth + 1) for item in value[:100]]
     if isinstance(value, str):
-        return ASSIGNMENT.sub(r'\1=[redactado]', value[:12000])
+        text = value[:12000]
+        if 'PRIVATE KEY' in text.upper():
+            return '[redactado]'
+        text = ASSIGNMENT.sub(r'\1=[redactado]', text)
+        return re.sub(r'(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+', 'Bearer [redactado]', text)
     if value is None or type(value) in (bool, int, float):
         return value
     return type(value).__name__

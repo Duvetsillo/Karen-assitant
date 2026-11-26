@@ -5,6 +5,7 @@ import os
 import sys
 
 from karen_memory import MemoryStore
+from karen_core2.memory import KINDS
 
 
 def main(argv=None):
@@ -17,7 +18,7 @@ def main(argv=None):
     add.add_argument('--inferred', action='store_true')
     add.add_argument('--sensitive', action='store_true')
     add.add_argument('--retention-days', type=int)
-    add.add_argument('--kind', choices=('semantic', 'episodic', 'procedural', 'contextual', 'temporal', 'relational'))
+    add.add_argument('--kind', choices=sorted(KINDS))
     add.add_argument('--state', choices=('VERIFICADO', 'INFERIDO', 'PENDIENTE', 'DESACTUALIZADO'))
     add.add_argument('--fact-key')
     add.add_argument('--tag', action='append', default=[])
@@ -40,6 +41,17 @@ def main(argv=None):
     bundle = commands.add_parser('export-engine')
     bundle.add_argument('project')
     bundle.add_argument('path', help='Archivo nuevo; incluye versiones públicas y relaciones.')
+    commands.add_parser('reindex', help='Reconstruye FTS5 sin modificar recuerdos.')
+    incoming = commands.add_parser('import-engine', help='Revisa un paquete; aplicar requiere --apply y la huella revisada.')
+    incoming.add_argument('project')
+    incoming.add_argument('path')
+    incoming.add_argument('--apply', action='store_true')
+    incoming.add_argument('--expected-hash')
+    imported = commands.add_parser('inspect-import', help='Muestra recuerdo y procedencia reportada para revisión explícita.')
+    imported.add_argument('id')
+    review = commands.add_parser('review-import', help='Promueve un recuerdo concreto tras revisión explícita.')
+    review.add_argument('id')
+    review.add_argument('--expected-hash', required=True)
     for name, argument in (('history', 'id'), ('procedure', 'id'), ('graph', 'project'), ('consolidate', 'project'), ('search', 'project'), ('timeline', 'project')):
         command = commands.add_parser(name)
         command.add_argument(argument)
@@ -53,10 +65,24 @@ def main(argv=None):
         command.add_argument('--allow-sensitive', action='store_true')
     args = parser.parse_args(argv)
     store = MemoryStore(args.db)
-    if args.command in {'history', 'procedure', 'graph', 'consolidate', 'search', 'timeline', 'export-engine'}:
+    if args.command in {'import-engine', 'inspect-import', 'review-import'}:
+        from karen_core2.memory import ContextMemory
+        from karen_core2.memory_portability import load_bundle
+        port = ContextMemory(store.path).portability
+        if args.command == 'inspect-import':
+            result = port.inspect(args.id)
+        elif args.command == 'review-import':
+            result = port.review(args.id, args.expected_hash)
+        else:
+            bundle = load_bundle(args.path)
+            result = port.apply(bundle, args.project, args.expected_hash) if args.apply else port.preview(bundle, args.project)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+    if args.command in {'history', 'procedure', 'graph', 'consolidate', 'search', 'timeline', 'export-engine', 'reindex'}:
         from karen_core2.memory import ContextMemory
         engine = ContextMemory(store.path)
-        if args.command == 'search': result = engine.retrieve(args.project, args.query)
+        if args.command == 'reindex': result = engine.reindex()
+        elif args.command == 'search': result = engine.retrieve(args.project, args.query)
         elif args.command == 'timeline': result = engine.timeline(args.project, since=args.since, until=args.until, kind=args.kind)
         elif args.command == 'export-engine':
             result = engine.export_bundle(args.project)

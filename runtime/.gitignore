@@ -61,3 +61,6 @@ obsidian-forge/
 !/qa/verify_classic_voice_cancel.py
 !/qa/backup_pet_profile.py
 !/qa/verify_core2_live.py
+!/qa/verify_master_live.py
+!/qa/verify_foundations_live.py
+!/qa/verify_metadata_interop.py

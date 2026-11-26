@@ -88,6 +88,22 @@ def main():
     finally:
         # Exact unique temporary file created by this command; no recursive operation.
         ssh('rm', '-f', stage, check=False)
+    wallpaper = SOURCE.with_name('karen-home-forest.png')
+    if wallpaper.exists():
+        stage = '/tmp/karen-wallpaper-' + uuid.uuid4().hex + '.png'
+        target = '/opt/stacks/homeassistant/config/www/karen-home-forest.png'
+        pending = target + '.pending-' + stamp
+        subprocess.run(['scp', '-q', str(wallpaper), args.host + ':' + stage], check=True, timeout=30)
+        try:
+            ssh('pct', 'push', '101', stage, pending)
+            remote = ssh('pct', 'exec', '101', '--', 'sha256sum', pending).stdout.split()[0]
+            if remote != hashlib.sha256(wallpaper.read_bytes()).hexdigest():
+                raise ValueError('Wallpaper checksum mismatch.')
+            if ssh('pct', 'exec', '101', '--', 'test', '-e', target, check=False).returncode == 0:
+                ssh('pct', 'exec', '101', '--', 'cp', '-a', target, target + '.before-' + stamp)
+            ssh('pct', 'exec', '101', '--', 'mv', pending, target)
+        finally:
+            ssh('rm', '-f', stage, check=False)
     pet = SOURCE.with_name('karen-pet.png')
     if pet.exists():
         stage = '/tmp/karen-pet-' + uuid.uuid4().hex + '.png'

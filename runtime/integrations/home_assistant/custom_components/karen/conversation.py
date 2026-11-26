@@ -4,6 +4,8 @@ from homeassistant.components.conversation.chat_log import AssistantContent
 from homeassistant.const import MATCH_ALL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
+from homeassistant.auth.permissions.const import POLICY_READ
+from .context import snapshot, direct_answer
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -34,9 +36,15 @@ class KarenConversation(conversation.ConversationEntity, conversation.AbstractCo
     async def _async_handle_message(self, user_input, chat_log):
         response = intent.IntentResponse(language=user_input.language)
         try:
-            result = await self.entry.runtime_data.request('conversation', {
+            states = []
+            if self.hass is not None and user_input.context.user_id:
+                user = await self.hass.auth.async_get_user(user_input.context.user_id)
+                if user:
+                    states = [s for s in self.hass.states.async_all() if user.permissions.check_entity(s.entity_id, POLICY_READ)]
+            answer = direct_answer(states, user_input.text)
+            result = {'answer': answer} if answer else await self.entry.runtime_data.request('conversation', {
                 'text': user_input.text, 'conversation_id': chat_log.conversation_id,
-                'user_id': user_input.context.user_id,
+                'user_id': user_input.context.user_id, 'home_context': snapshot(states, user_input.text),
             })
             answer = result.get('answer')
             if not isinstance(answer, str) or not answer.strip():

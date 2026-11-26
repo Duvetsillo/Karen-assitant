@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 import json
 import math
+import os
 import re
 import subprocess
 import threading
@@ -13,6 +14,7 @@ import requests
 from answers import final_answer
 from core_resources import ResourceBusy, microphone_guard, microphone_path
 from .resource_policy import ResourcePolicy
+from .inference_queue import InferenceQueue
 
 KINDS = {'conversation', 'reasoning', 'coding', 'tools', 'vision', 'memory'}
 LIGHT_KINDS = {'conversation', 'memory'}
@@ -64,13 +66,15 @@ def resources():
 
 
 class LocalModels:
-    def __init__(self, endpoint='http://127.0.0.1:11434', *, transport=None, probe=resources, lease_path=None, policy=None):
+    def __init__(self, endpoint='http://127.0.0.1:11434', *, transport=None, probe=resources, lease_path=None, policy=None, mode_probe=None):
         self.endpoint = local_endpoint(endpoint)
         self.http = transport or requests.Session()
         if transport is None:
             self.http.trust_env = False
         self.probe = probe
         self.policy = policy or ResourcePolicy.from_environment()
+        self.mode_probe = mode_probe
+        self.queue = InferenceQueue(int(os.getenv('KAREN_MAX_PENDING_INFERENCES', '16')))
         self.lease_path = lease_path or microphone_path().with_name('ollama-inference.lock')
         self.catalog = []
         self.catalog_at = 0
@@ -78,6 +82,15 @@ class LocalModels:
         self.active = None
         self.active_device = None
         self._guard = threading.Lock()
+
+    def operating_mode(self):
+        if self.mode_probe is None:
+            return 'normal'
+        try:
+            value = self.mode_probe()
+            return value if value in {'normal', 'gaming', 'do_not_disturb'} else 'normal'
+        except Exception:
+            return 'gaming'  # Unknown shared state must not permit new GPU work.
 
     def request(self, path, payload=None, *, stream=False):
         method = self.http.get if payload is None else self.http.post
@@ -122,15 +135,19 @@ class LocalModels:
         size = model.get('size', 0)
         if not isinstance(size, (int, float)) or not math.isfinite(size) or size <= 0:
             return None
-        free = budget.get('vram_available_bytes') or 0
+        free = budget.get('vram_available_bytes')
+        if type(free) not in (int, float) or not math.isfinite(free) or free < 0:
+            free = 0
         layers = model.get('layers')
         gpu_layers = 0
-        if self.policy.profile != 'economy' and kind not in LIGHT_KINDS and type(layers) is int and 1 <= layers <= 256:
+        if self.operating_mode() != 'gaming' and self.policy.profile != 'economy' and kind not in LIGHT_KINDS and type(layers) is int and 1 <= layers <= 256:
             room = max(0, free - self.policy.reserve_bytes - 512 * 1024**2)
             gpu_layers = min(layers, int(room / (size * 1.25 / layers)))
         host_needed = size * (1 - gpu_layers / layers) if gpu_layers else size
         host_needed += 384 * 1024**2
         available = budget.get('ram_available_bytes')
+        if type(available) not in (int, float) or not math.isfinite(available) or available <= 0:
+            return None
         reserve = max(1024**3, min(3 * 1024**3, (available or 0) // 4))
         if available is not None and host_needed + reserve > available:
             return None
@@ -183,10 +200,31 @@ class LocalModels:
                     raise RuntimeError('Otra interfaz está usando la inferencia local.')
                 stop.wait(.1)
 
+    @contextmanager
+    def _gaming_watch(self, response, stop, allocation):
+        finished = threading.Event()
+        def monitor():
+            while not finished.wait(.1):
+                if self.operating_mode() == 'gaming':
+                    stop.set()
+                    response.close()
+                    return
+        thread = None
+        if allocation['gpu_layers'] and self.mode_probe is not None:
+            thread = threading.Thread(target=monitor, name='karen-gaming-cancel', daemon=True)
+            thread.start()
+        try:
+            yield
+        finally:
+            finished.set()
+            if thread:
+                thread.join(timeout=.2)
+
     def chat(self, messages, *, kind='conversation', preferred=None, tools=None, on_token=None,
              stop=None, on_response=None, output_schema=None):
         stop = stop or threading.Event()
-        with self.lease(stop):
+        priority = {'conversation': 0, 'tools': 5, 'memory': 10, 'vision': 10}.get(kind, 20)
+        with self.queue.acquire(stop, priority=priority), self.lease(stop):
             candidates = self.rank(kind, preferred)
             if not candidates:
                 raise ValueError('No hay modelo local instalado con capacidades y memoria suficientes; no se descargó ninguno.')
@@ -198,6 +236,7 @@ class LocalModels:
                 first_token_seconds = None
                 delivered = False
                 name = selected['name']
+                allocation = None
                 self.active = name
                 try:
                     with self.request('/api/ps') as response:
@@ -226,7 +265,7 @@ class LocalModels:
                         payload['tools'] = tools
                     if output_schema:
                         payload['format'] = output_schema
-                    with self.request('/api/chat', payload, stream=bool(on_token)) as response:
+                    with self.request('/api/chat', payload, stream=bool(on_token)) as response, self._gaming_watch(response, stop, allocation):
                         if on_response:
                             on_response(response)
                         if stop.is_set():
@@ -234,6 +273,8 @@ class LocalModels:
                         if on_token:
                             content, done = [], False
                             for line in response.iter_lines():
+                                if allocation['gpu_layers'] and self.operating_mode() == 'gaming':
+                                    stop.set()
                                 if stop.is_set():
                                     raise InterruptedError('Inferencia cancelada.')
                                 if not line:
@@ -269,7 +310,15 @@ class LocalModels:
                                          'device': allocation['device'], 'gpu_layers': allocation['gpu_layers'], 'ok': True})
                     self.metrics[:] = self.metrics[-100:]
                     return result
-                except (requests.RequestException, ValueError) as exc:
+                except Exception as exc:
+                    if stop.is_set():
+                        self.metrics.append({'model': name, 'kind': kind, 'seconds': round(time.monotonic() - started, 3),
+                                             'first_token_seconds': first_token_seconds, 'ok': False, 'canceled': True,
+                                             'device': self.active_device, 'gpu_layers': (allocation or {}).get('gpu_layers')})
+                        self.metrics[:] = self.metrics[-100:]
+                        raise InterruptedError('Inferencia cancelada.') from None
+                    if not isinstance(exc, (requests.RequestException, ValueError)):
+                        raise
                     self.metrics.append({'model': name, 'kind': kind, 'seconds': round(time.monotonic() - started, 3), 'ok': False})
                     self.metrics[:] = self.metrics[-100:]
                     last_error = exc
@@ -282,6 +331,8 @@ class LocalModels:
 
     def status(self):
         return {'endpoint': self.endpoint, 'active_model': self.active, 'active_device': self.active_device,
+                'queue': self.queue.status(),
                 'policy': {'profile': self.policy.profile, 'light_tasks': 'cpu',
-                           'gpu_reserve_bytes': self.policy.reserve_bytes, 'keep_alive': 0}, 'hardware': self.probe(),
+                           'gpu_reserve_bytes': self.policy.reserve_bytes, 'keep_alive': 0,
+                           'operating_mode': self.operating_mode()}, 'hardware': self.probe(),
                 'models': list(self.catalog), 'latency': self.metrics[-10:], 'local_only': True}

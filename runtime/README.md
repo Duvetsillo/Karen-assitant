@@ -1,5 +1,9 @@
 # Karen
 
+Estado y continuidad del desarrollo: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)
+y [docs/HANDOFF.md](docs/HANDOFF.md). La integración local con Obsidian y sus comandos
+se documenta en [docs/OBSIDIAN_INTEGRATION.md](docs/OBSIDIAN_INTEGRATION.md).
+
 Karen clásica es un cliente Windows en Python/Tkinter. `desktop-pet/` es un cliente Electron para OpenClaw. Comparten opcionalmente el archivo Core v1 de turnos finales, eventos y actividad; ahora coordinan el micrófono con un bloqueo del sistema operativo. Sus motores de conversación y permisos todavía requieren unificación. El [informe de implementación](IMPLEMENTATION_REPORT.md) contiene cambios, pruebas Windows, instalador local, instrucciones y pendientes.
 
 La clásica carga, refresca y cambia chats con un trabajador SQLite, sin consultar la base desde los callbacks de Tk. También comparte el estilo guardado en segundo plano. Pet puede consultar el mismo registro de tareas mediante `/tareas listar` y `/tareas estado ID`, incluso sin conexión a OpenClaw. Configura `KAREN_TASKS_DB` con la misma ruta absoluta en ambos procesos; sin esa variable la clásica conserva su ruta anterior y Pet no habilita la consulta de tareas. El puente Pet es de lectura: no ejecuta ni cancela tareas y no muestra argumentos ni resultados privados.

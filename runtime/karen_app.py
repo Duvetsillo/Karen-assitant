@@ -26,7 +26,10 @@ from core_archive import ArchiveWorker
 
 
 def local_command(prompt):
-    if re.match(r'^/(?:core2|plan|ejecutar|vision|conocimiento)(?:\s|$)', prompt.strip(), re.I):
+    from karen_core2.cognition import is_local
+    if is_local(prompt):
+        return True
+    if re.match(r'^/(?:core2|plan|ejecutar|vision|conocimiento|obsidian|handoff|automation)(?:\s|$)|^busca en obsidian ', prompt.strip(), re.I):
         return True
     return bool(re.match(
         r'^/(?:core|memoria|modo|alertas|tareas|proxmox|servidor)(?:\s|$)|^/casa\s+(?:entidades|estado)(?:\s|$)|^/ventana\s+activa\s*$',
@@ -707,7 +710,7 @@ class KarenApp(BenchmarkControls, TargetControls):
         self.closed.set()
         if getattr(self, 'core2_panel', None):
             self.core2_panel.cancel()
-            self.core2.vision.pause()
+            self.core2.close()
         for timer in (getattr(self, 'ui_timer', None), getattr(self, 'core_timer', None),
                       getattr(self, 'core_activity_timer', None),
                       getattr(self, 'core_chat_timer', None),
@@ -796,7 +799,8 @@ class KarenApp(BenchmarkControls, TargetControls):
         controls = tk.Frame(window, bg='#FFFFFF')
         controls.pack(fill='x', padx=20, pady=20)
         def resolve(approved):
-            decision['approved'] = approved
+            decision['approved'] = ({'confirmed_plan': request['plan_id'], 'confirmed_step': request['step_id']}
+                                    if approved and request.get('permission') == 'destructive' else approved)
             window.destroy()
             event.set()
         approve = tk.Button(controls, text='Aprobar esta operación', command=lambda: resolve(True),

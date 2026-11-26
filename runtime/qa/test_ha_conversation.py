@@ -80,3 +80,14 @@ class HAConversationTests(unittest.TestCase):
         self.assertEqual(self.ha(data={'text': '/ejecutar ' + 'a' * 32})[0], 200)
         self.app.core2.run.assert_not_called()
         self.app.core2.command.assert_not_called()
+
+    def test_home_context_reaches_model_but_not_persistent_history(self):
+        record = {'entity_id': 'light.room', 'state': 'on', 'attributes': {'friendly_name': 'Luz'}}
+        self.assertEqual(self.ha(data={'text': 'Resume mi casa', 'home_context': [record]})[0], 200)
+        history = self.app.core2.chat.call_args.args[1]
+        self.assertIn('light.room', history[-1]['content'])
+        self.assertEqual(history[-1]['role'], 'system')
+        for bad in ({**record, 'attributes': {'token': 'secret'}}, {**record, 'entity_id': 'device_tracker.phone'}):
+            self.assertEqual(self.ha(data={'text': 'Hola', 'home_context': [bad]})[0], 400)
+        with self.archive.connect() as db:
+            self.assertNotIn('light.room', str([tuple(row) for row in db.execute('SELECT * FROM exchanges')]))

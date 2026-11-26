@@ -1,8 +1,11 @@
 """Shared in-process facade; no new daemon, provider account, or remote inference."""
 from dataclasses import replace
 import json
+import os
 import re
+import sqlite3
 import threading
+import uuid
 
 from karen_tasks import ToolSpec, task_database_path
 from karen_personality import personality
@@ -13,6 +16,12 @@ from .models import LocalModels, local_model, task_kind
 from .planning import Plans, propose
 from .skills import Skill, builtins, validate_schema, ROLES
 from .vision import Vision
+from .events import EventBus
+from .event_journal import EventJournal
+from .handoff import Handoffs, command as handoff_command
+from .automation import Automations, command as automation_command
+from .cognition import classify, command as cognitive_command
+from .obsidian_bridge import from_environment, register_skills, command as obsidian_command
 
 
 def effective_local_config(config):
@@ -47,10 +56,16 @@ class LogicalAgents:
 
 
 class CoreRuntime:
-    def __init__(self, *, archive_path=None, task_path=None, models=None, registry=None):
+    def __init__(self, *, archive_path=None, task_path=None, models=None, registry=None, obsidian=None):
+        self.events = EventBus()
         self.models = models or LocalModels()
         self.memory = ContextMemory(archive_path)
+        self.memory.events = self.events
+        self.journal = EventJournal(self.events, self.memory.path.parent / 'logs' / 'core-events.jsonl')
+        if isinstance(self.models, LocalModels) and self.models.mode_probe is None:
+            self.models.mode_probe = self._resource_mode
         self.knowledge = KnowledgeStore(self.memory)
+        self.handoffs = Handoffs(self.memory.base)
         self.registry = registry or builtins(task_database_path(task_path))
         self.vision = Vision(self.models)
         self.plans = Plans(self.registry, task_path)
@@ -59,13 +74,34 @@ class CoreRuntime:
         self.approve = None
         self._home = None
         self.on_update = None
+        self._obsidian_error = None
+        try:
+            self.obsidian = obsidian or from_environment(self.memory.path.with_name('obsidian-index.sqlite3'), self.events)
+        except (OSError, ValueError, TypeError, sqlite3.Error):
+            self.obsidian = None
+            self._obsidian_error = 'config_unavailable'
+            self.events.emit('system.error', code='obsidian_config')
         self._extend()
+        if self.obsidian is not None:
+            self.obsidian.start()
+        self.automations = Automations(self.plans, mode=self._resource_mode, events=self.events)
+        if os.getenv('KAREN_AUTOMATION_ENABLED', '').lower() in {'1', 'true'}:
+            self.automations.start()
 
     def _extend(self):
         empty = {'type': 'object', 'properties': {}, 'additionalProperties': False}
         def register(skill):
             self.registry.register(skill)
             self.plans.engine.tools[skill.id] = skill.spec
+        register(Skill('music_summary', 'Resumen musical local',
+                       'Lee observaciones musicales reportadas y preferencias explícitas; escuchar no implica gusto.',
+                       'ANALYST', 'read', empty,
+                       ToolSpec('read', lambda args, stop: self.memory.music.summary(),
+                                lambda args: validate_schema(empty, args),
+                                lambda args, result: result.get('reported_metadata') is True, 5)))
+        if self.obsidian is not None:
+            self.obsidian.events = self.events
+            register_skills(self.obsidian, register)
         register(Skill('diagnostic_sample', 'Muestra de diagnóstico', 'Mide CPU, RAM, disco y VRAM del PC.', 'ANALYST', 'read', empty,
                        ToolSpec('read', lambda args, stop: self.diagnostics.sample(stop),
                                 lambda args: validate_schema(empty, args), lambda args, result: 'cpu_percent' in result, 20)))
@@ -134,10 +170,30 @@ class CoreRuntime:
             return self.plans.create(repaired, request_key)
 
     def run(self, identity, *, approve=None, actor='local-user', resume=False):
-        return self.plans.run(identity, approve=approve or self.approve, actor=actor, resume=resume, on_update=self.on_update)
+        result = self.plans.run(identity, approve=approve or self.approve, actor=actor, resume=resume, on_update=self.on_update)
+        if result['status'] in {'completed', 'failed', 'uncertain', 'denied', 'canceled'}:
+            self.events.emit('task.completed' if result['status'] == 'completed' else 'task.failed',
+                             entity_id=identity, code=result['status'])
+        return result
 
     def chat(self, message, history=None, *, project='Karen', preferred=None, on_token=None, stop=None, on_response=None,
              interruption=None):
+        identity = uuid.uuid4().hex
+        self.events.emit('conversation.started', entity_id=identity)
+        try:
+            result = self._chat(message, history, project=project, preferred=preferred, on_token=on_token,
+                                stop=stop, on_response=on_response, interruption=interruption)
+        except InterruptedError:
+            self.events.emit('conversation.interrupted', entity_id=identity)
+            raise
+        except Exception:
+            self.events.emit('system.error', entity_id=identity, code='conversation_failed')
+            raise
+        self.events.emit('conversation.completed', entity_id=identity)
+        return result
+
+    def _chat(self, message, history=None, *, project='Karen', preferred=None, on_token=None, stop=None, on_response=None,
+              interruption=None):
         memories = self.memory.retrieve(project, message[:400], limit=3, confirmed_only=True)
         system = personality() + ' No afirmes ejecutar acciones sin recibos de herramientas. '
         if interruption:
@@ -162,7 +218,8 @@ class CoreRuntime:
                 break
             bounded.insert(0, {'role': turn['role'], 'content': content})
             size += len(content)
-        kind = task_kind(message)
+        intent = classify(message)
+        kind = {'research': 'reasoning', 'multistep': 'reasoning', 'system': 'reasoning'}.get(intent, task_kind(message))
         return self.models.chat([{'role': 'system', 'content': system}] + bounded + [{'role': 'user', 'content': message}],
                                 kind=kind, preferred=preferred, on_token=on_token, stop=stop, on_response=on_response)['content']
 
@@ -172,6 +229,11 @@ class CoreRuntime:
             self._home = HomeAssistant()
         return self._home
 
+    def _resource_mode(self):
+        with self.memory.base.connect() as db:
+            row = db.execute("SELECT value FROM preferences WHERE key='core.mode'").fetchone()
+        return row[0] if row else 'normal'
+
     def home_status(self):
         try:
             return self.home().status()
@@ -180,10 +242,34 @@ class CoreRuntime:
 
     def status(self):
         return {'version': 2, 'models': self.models.status(), 'vision': self.vision.status(),
-                'agents': self.agents.describe(), 'diagnostics': self.diagnostics.report(), 'home_assistant': self.home_status()}
+                'agents': self.agents.describe(), 'diagnostics': self.diagnostics.report(), 'home_assistant': self.home_status(),
+                'events': self.events.status(),
+                'automations': self.automations.status(),
+                'obsidian': self.obsidian.execute('status', {}) if self.obsidian else
+                            {'configured': False, 'last_error': self._obsidian_error}}
+
+    def close(self):
+        """Stop only resources owned by this runtime; never stop external processes."""
+        self.automations.close()
+        if self.obsidian:
+            self.obsidian.close()
+        self.vision.pause()
+        self.journal.close()
 
     def command(self, text):
         text = text.strip()
+        result = cognitive_command(self, text)
+        if result is not None:
+            return result
+        result = automation_command(self.automations, text)
+        if result is not None:
+            return result
+        result = handoff_command(self.handoffs, text)
+        if result is not None:
+            return result
+        result = obsidian_command(self, text)
+        if result is not None:
+            return result
         if text.startswith('/conocimiento'):
             if text == '/conocimiento':
                 return json.dumps(self.knowledge.list('Karen'), ensure_ascii=False, indent=2)

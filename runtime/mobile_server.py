@@ -192,6 +192,13 @@ def make_handler(app):
                         return self.reply(200, {'models': app.core2.models.discover(force=True)})
                     if parsed.path == '/api/core2/plans':
                         return self.reply(200, {'plans': app.core2.plans.list()})
+                    if parsed.path in {'/api/core2/schedules', '/api/core2/handoffs'}:
+                        if parsed.query:
+                            raise InvalidRequest('Consulta inválida.')
+                        from karen_core2.api import read_metadata
+                        path = '/v1/' + parsed.path.rsplit('/', 1)[-1]
+                        source = app.core2.plans.path if path == '/v1/schedules' else app.archive.path
+                        return self.reply(200, read_metadata(source, path))
                     if re.fullmatch(r'/api/core2/plans/[0-9a-f]{32}', parsed.path):
                         return self.reply(200, app.core2.plans.inspect(parsed.path.rsplit('/', 1)[-1]))
                     if parsed.path == '/api/core2/memory':
@@ -214,7 +221,7 @@ def make_handler(app):
                     if parsed.path == '/api/core2/home/status':
                         return self.reply(200, app.core2.home_status())
                 if self.path.startswith('/api/v1/'):
-                    result = read_contract(app.archive.path, self.path[4:])
+                    result = read_contract(app.archive.path, self.path[4:], task_db_path=app.core2.plans.path if app.core2 else None)
                     return self.reply(200, result) if result is not None else self.reply(404, {'error': 'No encontrado.'})
                 self.reply(404, {'error': 'No encontrado.'})
             except InvalidRequest:

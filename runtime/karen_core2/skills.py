@@ -23,6 +23,8 @@ def validate_schema(schema, value):
             raise ValueError('Texto de parámetro inválido: ' + key)
         if kind == 'integer' and (type(item) is not int or not spec.get('minimum', 0) <= item <= spec.get('maximum', 2**31 - 1)):
             raise ValueError('Número de parámetro inválido: ' + key)
+        if kind == 'boolean' and type(item) is not bool:
+            raise ValueError('Booleano de parámetro inválido: ' + key)
         if 'enum' in spec and item not in spec['enum']:
             raise ValueError('Operación no permitida: ' + key)
         if SECRET.search(key):

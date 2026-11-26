@@ -149,6 +149,9 @@ def _open_readonly(db_path):
 def read_contract(db_path, path, task_db_path=None,
                   alert_db_path=DEFAULT_ALERT_PATH):
     """Return a bounded public contract; never create or mutate the database."""
+    if path in {'/v1/schedules', '/v1/handoffs'}:
+        from karen_core2.api import read_metadata
+        return read_metadata(task_database_path(task_db_path) if path == '/v1/schedules' else db_path, path)
     if path == '/v1/plans' or re.fullmatch(r'/v1/plans/[0-9a-f]{32}', path):
         from karen_core2.api import read_plans
         return read_plans(task_database_path(task_db_path), path)

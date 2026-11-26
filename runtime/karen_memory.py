@@ -74,6 +74,9 @@ class MemoryStore:
     def _content(value):
         if not isinstance(value, str) or not 1 <= len(value.strip()) <= 4000 or '\x00' in value:
             raise ValueError('Recuerdo inválido (1 a 4.000 caracteres).')
+        from karen_core2.privacy import ASSIGNMENT
+        if ASSIGNMENT.search(value) or 'PRIVATE KEY' in value:
+            raise ValueError('No se guardan credenciales en memoria conversacional.')
         return value.strip()
 
     @staticmethod

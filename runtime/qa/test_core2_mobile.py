@@ -74,3 +74,22 @@ class CoreMobileTests(mobile_tests.MobileTests):
             self.assertEqual(self.request(path, auth=False)[0], 401)
             self.assertEqual(self.request(path)[0], 200)
         self.assertEqual(len(memory.history(one['id'])), 2)
+
+    def test_schedule_and_development_metadata_are_authenticated_and_read_only(self):
+        import json
+        recipe = {'goal': 'PRIVATE_MOBILE_RECIPE', 'steps': [
+            {'id': 'ram', 'label': 'Read RAM', 'tool': 'memory_sample', 'args': {}, 'depends': []}]}
+        schedule = self.app.core2.automations.create(name='Routine', recipe=recipe, due_at='2100-01-01T00:00:00+00:00')
+        handoff = self.app.core2.handoffs.create(project='Karen', description='PRIVATE_DESCRIPTION', acceptance=['PRIVATE_CRITERIA'])
+        for kind, identity in (('schedules', schedule['id']), ('handoffs', handoff['task']['id'])):
+            for prefix in ('/api/core2/', '/api/v1/'):
+                route = prefix + kind
+                self.assertEqual(self.request(route, auth=False)[0], 401)
+                status, _, body = self.request(route)
+                self.assertEqual(status, 200)
+                parsed = json.loads(body)
+                self.assertEqual(parsed[kind][0]['id'], identity)
+                self.assertNotIn('PRIVATE_', body.decode())
+            self.assertEqual(self.request('/api/core2/' + kind, {'enabled': True})[0], 400)
+        self.assertEqual(self.app.core2.automations.history(), [])
+        self.assertEqual(self.request('/api/core2/schedules?unknown=1')[0], 400)

@@ -142,10 +142,37 @@ class CoreLocalApiTests(unittest.TestCase):
         client = registry.issue('Indicador', 'core.status')
         self.assertEqual(registry.list()[0]['scope'], 'core.status')
         self.assertEqual(self.request('GET', '/v1/status', client['token'])[0], 200)
-        for path in ('/v1/chats', '/v1/tasks', '/v1/alerts', '/v1/memories?project=Karen'):
+        for path in ('/v1/chats', '/v1/tasks', '/v1/alerts', '/v1/memories?project=Karen', '/v1/schedules', '/v1/handoffs'):
             self.assertEqual(self.request('GET', path, client['token'])[0], 403)
         self.assertTrue(registry.revoke(client['id']))
         self.assertEqual(self.request('GET', '/v1/status', client['token'])[0], 401)
+
+    def test_new_metadata_reads_do_not_execute_decrypt_or_mutate_databases(self):
+        from karen_core2.runtime import CoreRuntime
+        runtime = CoreRuntime(archive_path=self.db_path, task_path=self.tasks_file)
+        try:
+            recipe = {'goal': 'PRIVATE_RECIPE', 'steps': [{'id': 'ram', 'label': 'RAM', 'tool': 'memory_sample', 'args': {}, 'depends': []}]}
+            schedule = runtime.automations.create(name='Routine', recipe=recipe, due_at='2100-01-01T00:00:00+00:00')
+            handoff = runtime.handoffs.create(project='Karen', description='PRIVATE_DESCRIPTION',
+                                               context='PRIVATE_CONTEXT', acceptance=['PRIVATE_ACCEPTANCE'])
+            before = (self.db_path.read_bytes(), self.tasks_file.read_bytes())
+            schedules = self.request('GET', '/v1/schedules', self.token)
+            handoffs = self.request('GET', '/v1/handoffs', self.token)
+            self.assertEqual((schedules[0], handoffs[0]), (200, 200))
+            self.assertEqual(schedules[2]['schedules'][0]['id'], schedule['id'])
+            self.assertEqual(handoffs[2]['handoffs'][0]['id'], handoff['task']['id'])
+            self.assertNotIn('PRIVATE_', json.dumps([schedules, handoffs]))
+            self.assertNotIn('hash', json.dumps([schedules, handoffs]))
+            self.assertEqual((self.db_path.read_bytes(), self.tasks_file.read_bytes()), before)
+            self.assertEqual(runtime.automations.history(), [])
+            self.assertEqual(self.request('POST', '/v1/schedules', self.token)[0], 405)
+        finally:
+            runtime.close()
+
+    def test_missing_metadata_database_is_not_created_by_a_read(self):
+        self.assertFalse(self.tasks_file.exists())
+        self.assertEqual(self.request('GET', '/v1/schedules', self.token)[0], 503)
+        self.assertFalse(self.tasks_file.exists())
 
     def test_legacy_client_registry_migrates_without_losing_token(self):
         old_token = 'legacy-' + 'x' * 40

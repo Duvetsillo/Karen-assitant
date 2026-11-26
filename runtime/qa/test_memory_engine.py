@@ -1,5 +1,6 @@
 """Memory contract and privacy regressions, using temporary SQLite only."""
 import json
+from datetime import datetime
 from pathlib import Path
 import tempfile
 import unittest
@@ -8,23 +9,40 @@ from karen_core2.memory import ContextMemory, KINDS
 from karen_memory import MemoryStore
 from karen_core2.runtime import CoreRuntime
 from qa.test_core2_mobile import FakeModels
+from karen_core2.events import EventBus
 
 
 class MemoryEngineTests(unittest.TestCase):
+    def test_memory_events_are_after_commit_and_contain_no_content(self):
+        with tempfile.TemporaryDirectory() as folder:
+            memory = ContextMemory(Path(folder) / 'core.sqlite3')
+            bus = EventBus()
+            memory.events = bus
+            committed = []
+            bus.subscribe('memory.created', lambda event: committed.append(memory.base.get(event['entity_id'])['id']))
+            row = memory.add('Karen', 'Dato sintético privado', fact_key='synthetic.key')
+            memory.add('Karen', 'Dato sintético privado', fact_key='synthetic.key')
+            memory.add('Karen', 'Dato diferente', fact_key='synthetic.key')
+            events = bus.status()['recent']
+            self.assertEqual(committed[0], row['id'])
+            self.assertEqual([event['topic'] for event in events],
+                             ['memory.created', 'memory.updated', 'memory.created', 'memory.conflict'])
+            self.assertNotIn('Dato', json.dumps(events))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / 'memory.sqlite3'
         self.engine = ContextMemory(self.path)
 
-    def test_six_categories_and_independent_clients_keep_memories_after_model_switch(self):
+    def test_categories_and_independent_clients_keep_memories_after_model_switch(self):
         for kind in KINDS - {'project'}:
             self.engine.add('Homelab', 'Jellyfin ' + kind, kind=kind, tags=['servidor'])
         first = CoreRuntime(archive_path=self.path, task_path=Path(self.temp.name) / 'tasks.db', models=FakeModels())
         for model in ('qwen', 'gemma', 'llama'):
             first.chat('Jellyfin', project='Homelab', preferred=model)
             second = ContextMemory(self.path)
-            self.assertEqual(len(second.retrieve('Homelab', 'Jellyfin')), 6)
+            self.assertEqual(len(second.retrieve('Homelab', 'Jellyfin', limit=20)), len(KINDS - {'project'}))
             self.assertEqual(second.retrieve('Otro'), [])
 
     def test_contradictions_are_explicit_and_never_injected_as_confirmed_context(self):
@@ -132,6 +150,59 @@ class MemoryEngineTests(unittest.TestCase):
         self.assertEqual(self.engine.base.list('Karen'), [])
         with self.engine.base.connect() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM core_memory_versions').fetchone()[0], 0)
+
+    def test_fts_finds_relevant_memory_older_than_the_recent_200_limit(self):
+        old = self.engine.add('Karen', 'Pléyades observadas con telescopio.', kind='episodic')
+        for index in range(205):
+            self.engine.base.add('Karen', 'Ruido sintético número ' + str(index))
+        found = self.engine.retrieve('Karen', 'Pleyades OR NOT "*', confirmed_only=True)
+        self.assertEqual([row['id'] for row in found], [old['id']])
+        self.assertEqual(found[0]['access_count'], 1)
+        restarted = ContextMemory(self.path)
+        again = restarted.retrieve('Karen', 'Pléyades')[0]
+        self.assertEqual(again['access_count'], 2)
+        self.assertIsNotNone(datetime.fromisoformat(again['last_access_at']).utcoffset())
+        bundle = restarted.export_bundle('Karen')
+        exported = next(row for row in bundle['memories'] if row['id'] == old['id'])
+        self.assertEqual(exported['access_count'], 2)
+
+    def test_fts_updates_from_legacy_edits_sensitivity_and_delete_without_reindex(self):
+        old = self.engine.base.add('Karen', 'Saturno anterior')
+        self.assertEqual(self.engine.retrieve('Karen', 'Saturno')[0]['id'], old['id'])
+        self.engine.base.edit(old['id'], 'Neptuno corregido')
+        self.assertEqual(self.engine.retrieve('Karen', 'Saturno'), [])
+        self.assertEqual(self.engine.retrieve('Karen', 'Neptuno')[0]['id'], old['id'])
+        self.engine.base.add('Karen', 'Neptuno corregido', sensitive=True, allow_sensitive=True)
+        self.assertEqual(self.engine.retrieve('Karen', 'Neptuno'), [])
+        with self.engine.base.connect() as db:
+            self.assertEqual(db.execute('SELECT count(*) FROM core2_memory_search WHERE memory_id=?', (old['id'],)).fetchone()[0], 0)
+        self.engine.base.delete(old['id'], allow_sensitive=True)
+        with self.engine.base.connect() as db:
+            self.assertEqual(db.execute('SELECT count(*) FROM core2_memory_access WHERE memory_id=?', (old['id'],)).fetchone()[0], 0)
+
+    def test_new_memory_types_persist_and_credentials_are_rejected_by_legacy_store(self):
+        for kind in ('user', 'autobiographical', 'prospective'):
+            self.engine.add('Karen', 'Dato específico ' + kind, kind=kind)
+        restored = ContextMemory(self.path)
+        self.assertEqual({row['kind'] for row in restored.retrieve('Karen', 'específico')}, {'user', 'autobiographical', 'prospective'})
+        for value in ('password=synthetic', '-----BEGIN PRIVATE KEY-----'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                restored.base.add('Karen', value, sensitive=True, allow_sensitive=True)
+        self.assertEqual(restored.reindex()['indexed'], 3)
+
+    def test_existing_memory_cli_exposes_user_category_and_rebuildable_index(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        from memory_cli import main
+        output = StringIO()
+        with redirect_stdout(output):
+            main(['--db', str(self.path), 'add', 'Karen', 'Preferencia sintética', '--kind', 'user'])
+        identity = json.loads(output.getvalue())['id']
+        self.assertEqual(self.engine.retrieve('Karen', 'Preferencia')[0]['id'], identity)
+        output = StringIO()
+        with redirect_stdout(output):
+            main(['--db', str(self.path), 'reindex'])
+        self.assertEqual(json.loads(output.getvalue())['indexed'], 1)
 
 
 if __name__ == '__main__':

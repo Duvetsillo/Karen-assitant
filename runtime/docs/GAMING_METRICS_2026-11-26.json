@@ -1,0 +1,27 @@
+{
+  "before": {
+    "ram_available_bytes": 8537014272,
+    "vram_available_bytes": 5318377472,
+    "vram_total_bytes": 6442450944
+  },
+  "provider_vram_bytes_during": 1904339844,
+  "gpu_to_gaming_cancel_seconds": 0.007,
+  "total_request_seconds": 3.597,
+  "cancel_metric": {
+    "model": "qwen3.5:2b",
+    "kind": "reasoning",
+    "seconds": 3.53,
+    "first_token_seconds": 3.499,
+    "ok": false,
+    "canceled": true,
+    "device": "gpu",
+    "gpu_layers": 22
+  },
+  "models_loaded_after": [],
+  "queue_released": true,
+  "after": {
+    "ram_available_bytes": 8516747264,
+    "vram_available_bytes": 5318377472,
+    "vram_total_bytes": 6442450944
+  }
+}
