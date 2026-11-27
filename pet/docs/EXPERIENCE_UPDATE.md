@@ -36,8 +36,8 @@ con variables semánticas. No se necesitan imágenes generadas ni otro stack.
 - [x] 1. Tokens, presencia principal y centro de control con opciones reales.
 - [x] 2. Estados visuales, prioridades/blending, idle no cíclico y saludos.
 - [x] 3. Cápsula multimedia compacta/expandible y ocultación sin robar foco.
-- [ ] 4. Manager/router local, selección razonada, disponibilidad y recursos.
-- [ ] 5. Contexto optativo, permisos independientes y proactividad existente.
+- [x] 4. Manager/router local, selección razonada, disponibilidad y recursos.
+- [x] 5. Contexto optativo, permisos independientes y proactividad existente.
 - [ ] 6. Regresión, QA nativa/medidas, documentación, paquete e instalación.
 
 Proveedores sin adaptador, visión/captura no autorizadas y voz full-duplex no
@@ -118,3 +118,25 @@ SDK ni descarga modelos compartidos. La reserva es estimada, no física. Otros
 proveedores y gestión de pesos requieren su adaptador y se explican como límites.
 233 tests Pet, 425 runtime, 26 contratos voz, typecheck/build y QA 17 secciones en
 dos tamaños correctos. Confirmación normal instalada y empaquetado pendientes.
+
+### Fase 5 verificada
+
+Observación del entorno desactivada inicialmente; permiso separado para adaptar
+presencia. El helper Windows ofrece un modo de contexto sin suscribirse a GSMTC:
+solo categoría conocida del proceso en primer plano, estado de protección del
+escritorio, inactividad y batería. No devuelve nombre/título, teclas, capturas ni
+contenido; muestras cada 15 s, sin persistencia ni envío a un modelo. Desactivar
+revoca el helper y descarta resultados pendientes. Fallos no autorizan acciones.
+
+Adaptación: concentración en editores conocidos, menor consumo en batería y
+silencio de iniciativas/overlays automáticos cuando hay protección o una app de
+llamadas/juego. No modifica el modo guardado ni aprueba herramientas. Trabajo
+suprime interrupciones proactivas. Navegadores no certifican llamadas. Los permisos
+existentes de percepción/acciones visuales se mantienen independientes.
+
+236 tests Pet, typecheck/build y helper C# correctos. QA real Windows con perfil
+local temporal confirmó claves mínimas, revocación y cero errores; inspección real
+de ocho modelos y arbitraje de inferencia entre procesos en directorio temporal.
+La regresión de 17 secciones a 1120x800 y 820x640 sigue correcta. Se corrigieron las
+dos animaciones de propiedades de layout halladas por el detector; 247 avisos de
+paleta/rampa/radios contrastados con el sistema existente y su documentación.

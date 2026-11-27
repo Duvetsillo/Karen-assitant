@@ -48,6 +48,8 @@ export type ConnectionState =
   | "reconnecting"
   | "action-required";
 export interface Settings extends IntroPreferences, MusicPreferences {
+  environmentObserve:boolean;
+  environmentAdapt:boolean;
   routingMode: import('./models.js').RoutingMode;
   resourceProfile: import('./models.js').ResourceProfile;
   initiativeEnabled: boolean;
@@ -133,6 +135,7 @@ export interface CaptureStatus {
   startedAt?: number;
 }
 export type DesktopEvent =
+  | {type:'environment';snapshot:import('./environment.js').EnvironmentSnapshot}
   | { type: 'pet-departure'; token: string }
   | { type: 'intro-landing'; token: string | null }
   | { type: 'music'; snapshot: import('./music.js').MusicSnapshot }
@@ -158,6 +161,7 @@ export type DesktopEvent =
   | { type: "energy"; value: number }
   | { type: "wake" };
 export interface Snapshot {
+  environment?:import('./environment.js').EnvironmentSnapshot;
   music?: import('./music.js').MusicSnapshot;
   initiative?: import('./initiative.js').InitiativeSnapshot;
   settings: Settings;

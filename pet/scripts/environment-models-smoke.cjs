@@ -1,0 +1,46 @@
+const { _electron:electron }=require('@playwright/test');
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+const {pathToFileURL}=require('node:url');
+(async()=>{
+ const profile=fs.mkdtempSync(path.join(os.tmpdir(),'karen-environment-'));
+ const output=path.resolve('qa/experience');fs.mkdirSync(output,{recursive:true});
+ const errors=[];let app,manager;const previousResource=process.env.KAREN_RESOURCE_DIR;
+ try{
+  process.env.KAREN_RESOURCE_DIR=path.join(profile,'locks');
+  const {LocalModelManager}=await import(pathToFileURL(path.resolve('dist-electron/electron/model-manager.js')));
+  const {MicrophoneArbiter}=await import(pathToFileURL(path.resolve('dist-electron/electron/core-resource.js')));
+  const {defaults}=await import(pathToFileURL(path.resolve('dist-electron/shared/settings.js')));
+  const python=path.join(process.env.KAREN_PROJECT_ROOT||'C:/karen','voice-runtime/Scripts/python.exe');
+  let settings={...defaults,voiceRoot:path.dirname(path.dirname(path.dirname(python)))};
+  const arbiter=new MicrophoneArbiter(()=>python,path.resolve('python/core_resource.py'),()=>{},'inference');
+  manager=new LocalModelManager(()=>settings,()=> 'http://127.0.0.1:11434',()=>python,path.resolve('python/model_manager.py'),arbiter);
+  const inventory=await manager.inspect('depura este código python');
+  assert(inventory.catalog.length>0);assert.equal(inventory.kind,'coding');
+  assert(inventory.catalog.every(m=>!/(^|[-:/])cloud($|[-:/])/i.test(m.name)));
+  const configured=inventory.catalog.map(m=>({id:`ollama/${m.name}`,name:m.name,provider:'ollama',available:true}));
+  const choice=await manager.prepare({models:configured,effective:null,selected:null,busy:false,sessionKey:'synthetic'},'depura código',false);
+  assert(configured.some(m=>m.id===choice.id));
+  await manager.acquire();
+  const competing=new MicrophoneArbiter(()=>python,path.resolve('python/core_resource.py'),()=>{},'inference');
+  await assert.rejects(()=>competing.claim(2));competing.close();manager.release();
+  settings={...settings,mode:'gaming'};await assert.rejects(()=>manager.prepare({models:configured,effective:null,selected:null,busy:false,sessionKey:'synthetic'},'hola',false),/Normal/);
+  fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({introEnabled:false,voiceEnabled:false,musicEnabled:false,environmentObserve:true}));
+  const env={...process.env,KAREN_QA_PROFILE:profile};for(const key of ['ELECTRON_RUN_AS_NODE','KAREN_CORE_DB','KAREN_TASKS_DB'])delete env[key];
+  app=await electron.launch({args:[path.resolve('.'),'--qa'],env});await app.firstWindow();
+  let panel;
+  for(let i=0;i<80&&!panel;i++){panel=app.windows().find(w=>w.url().includes('view=settings'));if(!panel)await new Promise(resolve=>setTimeout(resolve,100));}assert(panel);
+  for(const w of app.windows())w.on('pageerror',e=>errors.push(e.message));
+  await panel.waitForFunction(async()=>Boolean((await window.karen.snapshot()).environment?.enabled));
+  const context=(await panel.evaluate(()=>window.karen.snapshot())).environment;
+  assert.deepEqual(Object.keys(context).sort(),['at','category','desktopProtected','enabled','idleSeconds','onBattery'].sort());
+  await app.evaluate(({BrowserWindow})=>{for(const w of BrowserWindow.getAllWindows())if(w.webContents.getURL().includes('view=settings')){w.show();w.focus();}});
+  await panel.keyboard.press('Control+k');const search=panel.getByRole('searchbox',{name:'Buscar sección'});await search.fill('Privacidad');await search.press('Enter');
+  await panel.getByText('Observar el contexto del escritorio',{exact:true}).waitFor();
+  await panel.screenshot({path:path.join(output,'privacy-context.png')});
+  await panel.evaluate(()=>window.karen.settings({environmentObserve:false}));
+  assert.equal((await panel.evaluate(()=>window.karen.snapshot())).environment.enabled,false);
+  assert.deepEqual(errors,[]);
+  const report={installedCount:inventory.catalog.length,classification:inventory.kind,cloudRejected:true,routeInstalled:true,inferenceOwnership:true,gamingBlocked:true,environmentNative:true,coarseKeysOnly:true,revocation:true,errors};
+  fs.writeFileSync(path.join(output,'models-environment.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+ }finally{manager?.dispose();await app?.close().catch(()=>{});if(previousResource===undefined)delete process.env.KAREN_RESOURCE_DIR;else process.env.KAREN_RESOURCE_DIR=previousResource;fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
+})().catch(e=>{console.error(e);process.exitCode=1;});

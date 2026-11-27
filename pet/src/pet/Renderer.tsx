@@ -16,6 +16,7 @@ import { chooseMusicSession } from '../../shared/music';
 import { DESKTOP_RESOLUTION, introAvatarResolution, avatarSourceBytes } from '../../shared/avatar-resolution';
 import { bridge } from '../native';
 import { DepartureTimeline } from '../../shared/departure';
+import { interpretEnvironment } from '../../shared/environment';
 
 function damp(value: number, target: number, dt: number, rate = 9) {
   return value + (target - value) * (1 - Math.exp(-rate * dt));
@@ -266,9 +267,11 @@ export function PetRenderer({
         const song = music && chooseMusicSession(music.sessions, music.activeId);
         const musicMotion = !intro && !introLanding && settings.musicAnimations && song?.status === 'playing' && baseState === 'IDLE' && capture.phase === 'idle' &&
           (settings.mode === 'normal' || (settings.mode === 'gaming' && settings.musicGamingReactions)) && !reduced.matches;
-        const state = avatarController.resolve(baseState,{capture,music:Boolean(musicMotion)});
+        const context=interpretEnvironment(useStore.getState().environment,settings.environmentObserve,settings.environmentAdapt);
+        const state = avatarController.resolve(baseState,{capture,music:Boolean(musicMotion)&&!context.quiet,focused:context.focused});
         host.current!.dataset.visualState = state;
-        const s = effectiveSettings(settings);
+        const baseSettings = effectiveSettings(settings);
+        const s = context.conserve?{...baseSettings,lowPower:true,particles:false}:baseSettings;
         const sleeping = state === "SLEEPING";
         app!.ticker.maxFPS = s.lowPower || sleeping || !s.animations || reduced.matches ? 12 : ['IDLE','MUSIC_LISTENING','FOCUSED','BORED','SLEEPY'].includes(state) ? 24 : preview ? 30 : 60;
         frames++;

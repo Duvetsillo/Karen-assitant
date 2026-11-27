@@ -7,7 +7,7 @@ export const controlSections = [
   { title: 'Inteligencia artificial', description: 'Modelo, sesión y conexión local.', target: 'OpenClaw', icon: Brain },
   { title: 'Personalidad', description: 'Iniciativa, expresividad y compañía.', target: 'Personalidad', icon: Layers },
   { title: 'Voz', description: 'Tu voz, su respuesta y las interrupciones.', target: 'Voz', icon: AudioLines },
-  { title: 'Entorno', description: 'Compartir audio o pantalla de forma explícita.', target: 'Percepción', icon: Eye },
+  { title: 'Entorno', description: 'Observar, adaptar y actuar con permisos separados.', target: 'Privacidad', icon: Eye },
   { title: 'Música', description: 'Reproductor, plataformas y reacciones.', target: 'Música', icon: Music2 },
   { title: 'Memoria', description: 'Consultar tus datos y decidir qué compartir.', target: 'Memoria', icon: Database },
   { title: 'Obsidian', description: 'Notas y proyectos con permisos del Core.', target: 'Obsidian', icon: Layers },

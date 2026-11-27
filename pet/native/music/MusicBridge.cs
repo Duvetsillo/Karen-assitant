@@ -17,7 +17,9 @@ using Windows.Storage.Streams;
 
 class MusicBridge {
     [DllImport("shell32.dll")] static extern int SHQueryUserNotificationState(out int state);
-    static object Context(string id) {
+    [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
+    static object Context(string id, bool environment = false) {
         int state; bool safe = SHQueryUserNotificationState(out state) == 0 && state == 5;
         bool clear = false;
         try {
@@ -32,7 +34,17 @@ class MusicBridge {
                 }
             }
         } catch { clear = false; }
-        using (var self = Process.GetCurrentProcess()) return new { type = "result", id = id, ok = true, safeDesktop = safe, callsClear = clear,
+        string category = environment ? (state == 3 ? "game" : "other") : "unknown";
+        if (environment) try {
+            uint pid; GetWindowThreadProcessId(GetForegroundWindow(), out pid);
+            using (var process = Process.GetProcessById((int)pid)) {
+                string name = process.ProcessName.ToLowerInvariant();
+                if (new [] { "code", "devenv", "pycharm64", "idea64", "rider64", "webstorm64", "cursor" }.Contains(name)) category = "coding";
+                else if (new [] { "chrome", "msedge", "firefox", "brave", "opera" }.Contains(name)) category = "browser";
+                else if (new [] { "teams", "ms-teams", "zoom", "discord", "skype", "webex" }.Contains(name)) category = "call";
+            }
+        } catch { category = "unknown"; }
+        using (var self = Process.GetCurrentProcess()) return new { type = "result", id = id, ok = true, safeDesktop = safe, callsClear = clear, category = category,
             workingSetBytes = self.WorkingSet64, cpuSeconds = self.TotalProcessorTime.TotalSeconds };
     }
     static readonly object Gate = new object(), Output = new object();
@@ -145,8 +157,19 @@ class MusicBridge {
             Changed();
         } catch { Write(new { type = "result", id = request, ok = false }); }
     }
-    static int Main() {
+    static int Main(string[] args) {
         Console.InputEncoding = new UTF8Encoding(false); Console.OutputEncoding = new UTF8Encoding(false);
+        if (args.Length == 1 && args[0] == "--context-only") {
+            string input;
+            while ((input = Console.ReadLine()) != null) {
+                if (input.Length > 4096) continue;
+                try {
+                    var request = Json.Deserialize<Dictionary<string, object>>(input);
+                    if (Convert.ToString(request["action"]) == "context") Write(Context(Convert.ToString(request["id"]), true));
+                } catch {}
+            }
+            return 0;
+        }
         try {
             Manager = Wait<GlobalSystemMediaTransportControlsSessionManager>(GlobalSystemMediaTransportControlsSessionManager.RequestAsync());
             Debounce = new Timer(Refresh, null, Timeout.Infinite, Timeout.Infinite);

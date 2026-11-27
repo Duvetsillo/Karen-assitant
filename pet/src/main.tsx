@@ -437,7 +437,14 @@ function SettingsApp() {
 }
 function PrivacySettings() {
   const s=useStore(x=>x.settings);
-  return <><Group title="Lo que Karen puede percibir" description="Los permisos conservan su propósito: observar no autoriza a ejecutar acciones.">
+  const environment=useStore(x=>x.environment);
+  const categories={coding:'Editor de código',browser:'Navegador',call:'Aplicación de llamadas',game:'Juego o pantalla completa',other:'Otra aplicación',unknown:'Sin categoría confirmada'};
+  return <><Group title="Entorno, con tu permiso" description="Una muestra cada 15 segundos. Solo categoría general de la aplicación activa, protección del escritorio, inactividad y batería. Sin títulos de ventanas, teclas, documentos, audio ni imágenes; no se guarda ni se envía al modelo.">
+    <Toggle label="Observar el contexto del escritorio" value={s.environmentObserve} onChange={environmentObserve=>void patch({environmentObserve})}/>
+    <Toggle label="Adaptar su presencia al contexto" description="Calma las interrupciones ante un escritorio protegido o llamadas; expresión concentrada en el editor y menos consumo con batería." value={s.environmentAdapt} disabled={!s.environmentObserve} onChange={environmentAdapt=>void patch({environmentAdapt})}/>
+    <p className="quiet-note" role="status">{!s.environmentObserve?'Observación desactivada.':environment?.enabled?`${categories[environment.category]} · ${environment.onBattery?'con batería':'conectado a corriente'} · ${environment.desktopProtected===null?'protección sin confirmar':environment.desktopProtected?'escritorio protegido':'escritorio disponible'}`:'Esperando la primera muestra local…'}</p>
+    <p className="quiet-note">Adaptar modifica solo la presencia. No autoriza herramientas, clics, escritura ni cambios en otras aplicaciones. Las categorías son aproximadas; un navegador no confirma una videollamada.</p>
+  </Group><Group title="Lo que Karen puede percibir" description="Los permisos conservan su propósito: observar no autoriza a ejecutar acciones.">
     <Toggle label="Percepción musical" description="Solo metadatos de sesiones multimedia compatibles." value={s.musicEnabled} onChange={musicEnabled=>void patch({musicEnabled})}/>
     <Toggle label="Activación por voz" description="Escucha de la palabra de activación, usando el micrófono configurado." value={s.wakeWordEnabled} disabled={!s.sttEnabled} onChange={wakeWordEnabled=>void patch({wakeWordEnabled})}/>
     <Toggle label="Historial musical" description="Guardar metadatos musicales en Core es una autorización independiente." value={s.musicHistory} onChange={musicHistory=>void patch({musicHistory})}/>
@@ -1403,6 +1410,7 @@ function Root() {
               ? useStore.getState().settings
               : snapshot.settings,
             music: musicSeen ? useStore.getState().music : snapshot.music,
+            environment:snapshot.environment,
             connection: connectionSeen
               ? useStore.getState().connection
               : snapshot.connection,

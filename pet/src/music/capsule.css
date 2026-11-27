@@ -16,8 +16,8 @@ html[data-view="music"],html[data-view="music"] body { background: transparent; 
 .capsule-expand svg { transition: transform 180ms ease; }
 .music-capsule[data-expanded="true"] .capsule-expand svg { transform: rotate(180deg); }
 .capsule-progress { height: 2px; margin: 0 20px; background: #2b3344; }
-.capsule-progress i { display: block; height: 100%; background: #9be1e8; transition: width 1s linear; }
-.capsule-details { max-height: 0; opacity: 0; overflow: hidden; padding: 0 18px; transform: translateY(-5px); transition: opacity 160ms ease,transform 180ms ease,max-height 180ms ease,padding-top 180ms ease; }
+.capsule-progress i { display: block; height: 100%; background: #9be1e8; }
+.capsule-details { max-height: 0; opacity: 0; overflow: hidden; padding: 0 18px; transform: translateY(-5px); transition: opacity 160ms ease,transform 180ms ease; }
 .music-capsule[data-expanded="true"] { border-radius: 22px; }
 .music-capsule[data-expanded="true"] .capsule-details { max-height: 270px; opacity: 1; padding-top: 14px; transform: none; overflow-y: auto; }
 .capsule-seek { display: block; font-size: 0; }

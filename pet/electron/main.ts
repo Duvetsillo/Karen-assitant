@@ -18,6 +18,9 @@ import { fileURLToPath } from "node:url";
 import { Storage } from "./storage.js";
 import { OpenClawAdapter } from "./gateway.js";
 import { LocalModelManager } from './model-manager.js';
+import { EnvironmentService } from './environment.js';
+import { WindowsMediaAdapter } from './music-adapter.js';
+import { interpretEnvironment } from '../shared/environment.js';
 import { CoreStore } from "./core-store.js";
 import type { CoreState } from './core-store.js';
 import { CoreActivityState } from '../shared/core-activity.js';
@@ -69,6 +72,8 @@ let coreState: CoreState = 'IDLE';
 const coreActivityState = new CoreActivityState();
 let microphoneArbiter: MicrophoneArbiter;
 let modelManager: LocalModelManager | undefined;
+let environment:EnvironmentService|undefined;
+function environmentQuiet(){return Boolean(storage&&interpretEnvironment(environment?.snapshot,storage.settings.environmentObserve,storage.settings.environmentAdapt).quiet);}
 let coreStyleTimer: ReturnType<typeof setInterval> | undefined;
 let coreStyleFailed = false;
 let initiative: InitiativeService | undefined;
@@ -199,7 +204,7 @@ function initiativeTick(explicit=false) {
     now,hour:date.getHours(),day:localDay(now),
     present:!sessionLocked && powerMonitor.getSystemIdleState(180)!=='locked' && powerMonitor.getSystemIdleTime()<180,
     visible:Boolean(pet?.isVisible() && !pet.isMinimized()),
-    busy:capture.phase!=='idle' || wakeStatus==='processing' || wakeStatus==='recovering' ||
+    busy:environmentQuiet() || storage.settings.resourceProfile==='work' || capture.phase!=='idle' || wakeStatus==='processing' || wakeStatus==='recovering' ||
       Boolean(pendingPoint) || gateway.messages.some(m=>m.pending) ||
       Boolean(coreStore?.activities().some(c=>c.client_id!==coreClientId && c.state!=='IDLE')),
     lastInteraction,disconnectedSince,taskChanges:[...initiativeTaskChanges.values()],
@@ -461,6 +466,8 @@ function updateSettings(patch: Partial<Settings>, fromCore = false) {
   startupIntros?.cancel();
   const before = storage.settings;
   const saved = storage.saveSettings(patch);
+  if(before.environmentObserve!==saved.environmentObserve)environment?.configure();
+  if(!saved.environmentAdapt||!saved.environmentObserve)emit({type:'environment',snapshot:environment?.snapshot??{enabled:false,at:Date.now(),idleSeconds:0,onBattery:false,desktopProtected:null,category:'unknown'}});
   if (before.musicEnabled !== saved.musicEnabled) musicPresence?.configure();
   else if (Object.keys(patch).some(key => key.startsWith('music'))) musicPresence?.preferencesChanged();
   musicWindow?.setAlwaysOnTop(saved.musicPlayerPinned);
@@ -576,6 +583,16 @@ async function ready() {
     try { coreStore = new CoreStore(process.env.KAREN_CORE_DB, process.env.KAREN_TASKS_DB); }
     catch { log('warn', 'Karen Core', 'Archivo compartido no disponible; revisa KAREN_CORE_DB.'); }
   }
+  // Installed shortcuts do not inherit a development terminal's environment.
+  // Reuse only existing stores in the explicitly configured local resource root.
+  if(!qa&&!coreStore&&storage.settings.voiceRoot){
+    const database=join(storage.settings.voiceRoot,'.private','conversations.sqlite3');
+    const tasks=join(storage.settings.voiceRoot,'.private','karen-tasks.sqlite3');
+    if(existsSync(database)){
+      try{coreStore=new CoreStore(database,existsSync(tasks)?tasks:undefined);}
+      catch{log('warn','Karen Core','No se pudo abrir la memoria existente del recurso local.');}
+    }
+  }
   if (coreStore) {
     try {
       const style = coreStore.getVoiceStyle();
@@ -631,7 +648,7 @@ async function ready() {
   startupIntros = new StartupIntroManager({
     pet, settings: () => storage.settings, directory: app.getPath('userData'), prefs,
     load: loadWindow, protect,
-    blocked: () => sessionLocked || quitting || storage.settings.mode !== 'normal' ||
+    blocked: () => sessionLocked || quitting || environmentQuiet() || storage.settings.mode !== 'normal' ||
       (capture.phase !== 'idle' && !(capture.kind === 'microphone' && capture.phase === 'transcribing')),
     log: message => log('warn', 'Introducciones', message),
   });
@@ -640,13 +657,18 @@ async function ready() {
     directory: app.getPath('userData'), settings: () => storage.settings, token: () => storage.musicToken(),
     memory: () => coreStore?.musicMemory(), publish: snapshot => { emit({ type: 'music', snapshot });mediaWindow?.update(snapshot); },
     context: () => ({ now: Date.now(), present: !sessionLocked && powerMonitor.getSystemIdleTime() < 180,
-      conversation: coreState !== 'IDLE' || Date.now() - lastInteraction < 45000,
+      conversation: environmentQuiet() || storage.settings.resourceProfile==='work' || coreState !== 'IDLE' || Date.now() - lastInteraction < 45000,
       voiceBusy: capture.phase !== 'idle', intro: Boolean(startupIntros?.active) }),
   });
   mediaWindow=new MediaWindowController({settings:()=>storage.settings,
-    blocked:()=>sessionLocked||quitting||departurePending||storage.settings.mode!=='normal'||Boolean(startupIntros?.active),
+    blocked:()=>sessionLocked||quitting||environmentQuiet()||departurePending||storage.settings.mode!=='normal'||Boolean(startupIntros?.active),
     safe:()=>musicPresence!.desktopSafe(),show:showMusicWindow,hide:hideMusicWindow});
   musicPresence.configure();
+  environment=new EnvironmentService(()=>storage.settings,new WindowsMediaAdapter(
+    app.isPackaged?join(process.resourcesPath,'app.asar.unpacked/dist-native/KarenMusicBridge.exe'):join(here,'../../dist-native/KarenMusicBridge.exe'),()=>{},true),
+    ()=>({idleSeconds:powerMonitor.getSystemIdleTime(),onBattery:powerMonitor.isOnBatteryPower()}),
+    snapshot=>{emit({type:'environment',snapshot});if(environmentQuiet()){cancelInitiativeSpeech();startupIntros?.cancel();}mediaWindow?.update(musicPresence!.snapshot());});
+  environment.configure();
   void loadWindow(pet, "pet");
   pet.on("close", (event) => {
     if (!quitting) {
@@ -726,6 +748,7 @@ async function ready() {
     "snapshot",
     (): Snapshot => ({
       music: musicPresence?.snapshot(),
+      environment:environment?.snapshot,
       initiative: initiative?.snapshot(),
       settings: storage.settings,
       connection: gateway.info,
@@ -1068,6 +1091,7 @@ else {
     quitting = true;
     microphoneArbiter?.close();
     modelManager?.dispose();
+    environment?.dispose();
     voice?.dispose();
     loopback?.cancel();
     gateway?.disconnect(false);

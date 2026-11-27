@@ -5,6 +5,8 @@ import { PET_STYLES, VOICE_STYLES } from './types.js';
 import { PET_SCALE } from "./pet-layout.js";
 import { ROUTING_MODES, RESOURCE_PROFILES } from './models.js';
 export const defaults: Settings = {
+  environmentObserve:false,
+  environmentAdapt:false,
   routingMode: 'auto',
   resourceProfile: 'balanced',
   ...introDefaults,
@@ -136,6 +138,7 @@ export function validateSettings(
     s.idleActivity = raw.idleActivity;
   }
   for (const key of [
+    'environmentObserve','environmentAdapt',
     'musicAutoShow','musicHoverExpand','musicAmbientColors','musicEnabled', 'musicPlayer', 'musicPlayerPinned', 'musicStrictYouTube', 'musicComments', 'musicAnimations', 'musicGamingReactions', 'musicHistory', 'musicObsidian',
     'introEnabled', 'introVoice', 'introSounds', 'introReducedMotion', 'introEscape', 'farewellEnabled',
     "particles",
