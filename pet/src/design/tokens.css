@@ -1,0 +1,31 @@
+:root {
+  --k-canvas: #10131c;
+  --k-navigation: #0c0f16;
+  --k-surface: #191e2b;
+  --k-surface-hover: #232b3c;
+  --k-field: #141925;
+  --k-line: #2b3344;
+  --k-text: #edf2fb;
+  --k-muted: #acb8cc;
+  --k-quiet: #8998b0;
+  --k-ice: #9be1e8;
+  --k-lavender: #bdb5f2;
+  --k-success: #a4dfc8;
+  --k-warning: #f1c197;
+  --k-focus: #d1c8ff;
+  --k-radius-field: 10px;
+  --k-radius-control: 10px;
+  --k-radius-surface: 18px;
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-page: 32px;
+  --k-font: "Segoe UI Variable", "Segoe UI", sans-serif;
+  --k-mono: Consolas, monospace;
+  --k-fast: 140ms;
+  --k-enter: 220ms;
+  --k-ease: cubic-bezier(.2,.8,.2,1);
+}

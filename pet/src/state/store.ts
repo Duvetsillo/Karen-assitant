@@ -70,7 +70,7 @@ export const useStore = create<Store>((set, get) => ({
   hasCredential: false,
   ready: false,
   error: "",
-  tab: "Conversación",
+  tab: "Presencia",
   conversationDraft: '',
   chatDraft: '',
   capture: { kind: "microphone", phase: "idle" },

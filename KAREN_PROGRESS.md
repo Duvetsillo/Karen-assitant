@@ -195,3 +195,12 @@ usuario se conserva; no se instaló ni reinició su ejecutable. Para revisar de 
 `cd pet; node scripts/open-interface-review.cjs`. El inicio normal sigue disponible
 en `start_pet.ps1` con la base y recursos locales existentes. La revisión no genera
 saludos ni copia modelos o credenciales. La aceptación física de voz sigue pendiente.
+
+
+## Experience Update — fase 1, 26/11/2026
+
+Auditoría y nuevo encargo en pet/docs/EXPERIENCE_UPDATE.md. Inicio centrado en
+Presencia, tokens centralizados y centro de control modular. 210 pruebas Pet,
+typecheck/Vite y QA nativa de 17 secciones en dos resoluciones correctos.
+Próximo bloque: prioridades/estados y scheduler de comportamientos. El usuario
+solicita actualizar el ejecutable del escritorio al concluir todas las fases.

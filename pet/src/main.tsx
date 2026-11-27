@@ -42,6 +42,8 @@ import { AudioDirector } from "./voice/audio";
 import { VoiceReplies } from "./voice/replies";
 import "./style.css";
 import "./settings-surface.css";
+import "./design/tokens.css";
+import "./experience.css";
 import { APP_VERSION } from "../shared/version";
 import { mergeMessages } from "../shared/protocol";
 import { PET_SCALE } from "../shared/pet-layout";
@@ -54,6 +56,8 @@ import { IntroPreferencesPanel } from './intros/IntroPreferencesPanel';
 import { MusicSettings, MusicPlayer } from './music/MusicPanel';
 import { chooseMusicSession } from '../shared/music';
 import {InitiativePanel,Notice} from './InitiativePanel';
+import { PresenceHome } from './home/PresenceHome';
+import { ControlCenter, CoreArea } from './control/ControlCenter';
 import { ConversationPanel } from './chat/ConversationPanel';
 import { PRESENCE_PRESETS } from './pet/presence-motion';
 import { petStyles } from '../shared/pet-styles';
@@ -294,6 +298,13 @@ function PetPreview() {
   );
 }
 const tabs: { name: string; icon: LucideIcon; group: string }[] = [
+  { name: "Presencia", icon: Sparkles, group: "KAREN" },
+  { name: "Centro de control", icon: SlidersHorizontal, group: "KAREN" },
+  { name: "Memoria", icon: Activity, group: "CONEXIONES Y SISTEMA" },
+  { name: "Obsidian", icon: Keyboard, group: "CONEXIONES Y SISTEMA" },
+  { name: "Herramientas", icon: Radio, group: "CONEXIONES Y SISTEMA" },
+  { name: "Personalidad", icon: Bell, group: "PERSONALIZA" },
+  { name: "Privacidad", icon: EyeOff, group: "CONEXIONES Y SISTEMA" },
   { name: "Conversación", icon: MessageCircle, group: "TU ESPACIO" },
   { name: "Iniciativa", icon: Bell, group: "TU ESPACIO" },
   { name: "Música", icon: Music2, group: "TU ESPACIO" },
@@ -306,6 +317,13 @@ const tabs: { name: string; icon: LucideIcon; group: string }[] = [
   { name: "Diagnóstico", icon: Activity, group: "CONEXIONES Y SISTEMA" },
 ];
 const subtitles: Record<string, string> = {
+  Presencia: 'A tu lado, a tu ritmo.',
+  'Centro de control': 'Opciones reales, organizadas alrededor de ti.',
+  Memoria: 'Lo que recuerdas y lo que decides compartir.',
+  Obsidian: 'Tus notas, conectadas con permisos explícitos.',
+  Herramientas: 'Integraciones y permisos para actuar.',
+  Personalidad: 'Su expresividad y la forma de acompañarte.',
+  Privacidad: 'Percibir, interpretar y actuar son decisiones distintas.',
   Conversación: "Aquí para escucharte, pensar contigo y ayudarte.",
   Iniciativa: 'Cuándo puede hablarte y qué te ha sugerido.',
   Apariencia: "Luz, color y pequeños detalles.",
@@ -335,7 +353,7 @@ function SettingsApp() {
     agent = useStore(s=>s.settings.agentId),
     mode = useStore(s=>s.settings.mode);
   return (
-    <div className="app-shell">
+    <div className="app-shell experience-shell" data-page={tab}>
       <nav className="sidebar" aria-label="Ajustes de Karen">
         <div className="brand">
           <Logo />
@@ -348,8 +366,8 @@ function SettingsApp() {
           if(e.key==='Enter'&&matching.length){useStore.setState({tab:matching[0].name});setQuery('');}
         }}/><kbd>Ctrl K</kbd></div>
         <div className="nav-links">
-          {matching.map(({name,icon:Icon,group},index) => <React.Fragment key={name}>
-            {(index===0||matching[index-1].group!==group)&&<span className="nav-section">{group}</span>}
+          {(query.trim() ? matching : [tabs.find(t=>t.name==='Presencia')!,tabs.find(t=>t.name==='Conversación')!,tabs.find(t=>t.name==='Centro de control')!,tabs.find(t=>t.name==='Diagnóstico')!,...(!['Presencia','Conversación','Centro de control','Diagnóstico'].includes(tab) ? tabs.filter(t=>t.name===tab) : [])]).map(({name,icon:Icon},index) => <React.Fragment key={name}>
+            {index===4&&<span className="nav-section">ESTÁS AJUSTANDO</span>}
             <button className={tab===name?'active':''} aria-label={name} title={name} aria-current={tab===name?'page':undefined} onClick={()=>{useStore.setState({tab:name});setQuery('');}}>
               <Icon size={18}/><span>{name}</span>{tab===name&&<ChevronRight size={14}/>}
             </button>
@@ -366,7 +384,7 @@ function SettingsApp() {
         <header className="page-header">
           <div>
             <span className="eyebrow">KAREN / {tab==='Conversación'?'CONTIGO':tab==='Iniciativa'?'COMPAÑÍA':'TU ASISTENTE'}</span>
-            <h1 tabIndex={-1}>{tab}</h1>
+            <h1 tabIndex={-1}>{tab==='Presencia'?'Karen':tab}</h1>
             <p>{subtitles[tab]}</p>
           </div>
           <div className="header-actions"><span className="settings-save-hint"><Check size={13}/> Guardado automático</span><select aria-label="Modo de Karen" value={mode} onChange={e=>void patch({mode:e.target.value as Settings['mode']})}>
@@ -394,7 +412,17 @@ function SettingsApp() {
           className={`page-body ${tab === "Diagnóstico" ? "diagnostics-page" : ""} ${tab==='Conversación'?'conversation-page':''} ${tab==='Iniciativa'?'initiative-layout':''} ${tab==='Apariencia'?'appearance-page':''}`}
         >
           <div className="settings-content" data-section={tab}>
-            {tab === "Conversación" ? (
+            {tab === 'Presencia' ? (
+              <PresenceHome stateLabel={state=>labels[state]}/>
+            ) : tab === 'Centro de control' ? (
+              <ControlCenter/>
+            ) : ['Memoria','Obsidian','Herramientas'].includes(tab) ? (
+              <CoreArea area={tab as 'Memoria'|'Obsidian'|'Herramientas'}/>
+            ) : tab === 'Privacidad' ? (
+              <PrivacySettings/>
+            ) : tab === 'Personalidad' ? (
+              <InitiativePanel/>
+            ) : tab === "Conversación" ? (
               <Conversation />
             ) : tab === 'Iniciativa' ? (
               <InitiativePanel/>
@@ -421,6 +449,14 @@ function SettingsApp() {
       </main>
     </div>
   );
+}
+function PrivacySettings() {
+  const s=useStore(x=>x.settings);
+  return <><Group title="Lo que Karen puede percibir" description="Los permisos conservan su propósito: observar no autoriza a ejecutar acciones.">
+    <Toggle label="Percepción musical" description="Solo metadatos de sesiones multimedia compatibles." value={s.musicEnabled} onChange={musicEnabled=>void patch({musicEnabled})}/>
+    <Toggle label="Activación por voz" description="Escucha de la palabra de activación, usando el micrófono configurado." value={s.wakeWordEnabled} disabled={!s.sttEnabled} onChange={wakeWordEnabled=>void patch({wakeWordEnabled})}/>
+    <Toggle label="Historial musical" description="Guardar metadatos musicales en Core es una autorización independiente." value={s.musicHistory} onChange={musicHistory=>void patch({musicHistory})}/>
+  </Group><Group title="Pantalla y acciones" description="No hay captura continua. Compartir una imagen se decide en Percepción y no aprueba una acción visual."><button onClick={()=>useStore.setState({tab:'Percepción'})}>Revisar percepción</button><button onClick={()=>useStore.setState({tab:'OpenClaw'})}>Revisar permisos de herramientas</button></Group></>;
 }
 function Conversation() {
   return <ConversationPanel logo={<Logo/>} status={<Status compact/>}/>;

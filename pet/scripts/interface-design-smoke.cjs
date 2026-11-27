@@ -1,7 +1,7 @@
 const {_electron:electron}=require('@playwright/test');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-const sections=['Conversación','Iniciativa','Música','Apariencia','Comportamiento','Voz','OpenClaw','Percepción','Sistema','Diagnóstico'];
+const sections=['Presencia','Centro de control','Memoria','Obsidian','Herramientas','Personalidad','Privacidad','Conversación','Iniciativa','Música','Apariencia','Comportamiento','Voz','OpenClaw','Percepción','Sistema','Diagnóstico'];
 (async()=>{
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'karen-interface-'));
  fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({introEnabled:false,voiceEnabled:false,musicEnabled:false}));
@@ -12,18 +12,20 @@ const sections=['Conversación','Iniciativa','Música','Apariencia','Comportamie
   const panel=app.windows().find(w=>w.url().includes('view=settings'));assert(panel);await panel.waitForSelector('h1');
   for(const w of app.windows())w.on('pageerror',e=>errors.push(e.message));
   const resize=async(width,height)=>{await app.evaluate(({BrowserWindow},{width,height})=>{for(const w of BrowserWindow.getAllWindows()){if(w.webContents.getURL().includes('view=pet'))w.hide();else if(w.webContents.getURL().includes('view=settings')){w.setBounds({x:40,y:40,width,height});w.show();w.focus();}}},{width,height});await delay(150);};
-  const select=async name=>{await panel.getByRole('navigation').getByRole('button',{name,exact:true}).click();await panel.getByRole('heading',{name,exact:true,level:1}).waitFor();};
+  const select=async name=>{await panel.keyboard.press('Control+k');const field=panel.getByRole('searchbox',{name:'Buscar sección'});await field.fill(name);await field.press('Enter');await panel.getByRole('heading',{name:name==='Presencia'?'Karen':name,exact:true,level:1}).waitFor();};
   for(const [width,height] of [[1120,800],[820,640]]){
    await resize(width,height);
    for(const name of sections){
     await select(name);await delay(80);
     const overflow=await panel.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);assert(!overflow,`${name}: desbordamiento de ventana`);
-    if(['Conversación','Música','Apariencia','Voz'].includes(name))await panel.screenshot({path:path.join(output,`${name}-${width}.png`)});
+    if(['Presencia','Centro de control','Conversación','Música','Apariencia','Voz'].includes(name))await panel.screenshot({path:path.join(output,`${name}-${width}.png`)});
    }
    checks.push({width,height,navigated:sections.length,noWindowOverflow:true});
   }
   await resize(1120,800);await panel.keyboard.press('Control+k');const search=panel.getByRole('searchbox',{name:'Buscar sección'});await search.fill('musica');assert.equal(await panel.getByRole('navigation').getByRole('button').count(),1);await search.press('Enter');await panel.getByRole('heading',{name:'Música',exact:true,level:1}).waitFor();
-  await panel.keyboard.press('Control+k');await search.fill('ninguna-seccion');await panel.getByText('No hay secciones con ese nombre.').waitFor();await search.press('Escape');assert.equal(await panel.getByRole('navigation').getByRole('button').count(),10);
+  await panel.keyboard.press('Control+k');await search.fill('ninguna-seccion');await panel.getByText('No hay secciones con ese nombre.').waitFor();await search.press('Escape');assert.equal(await panel.getByRole('navigation').getByRole('button').count(),5);
+  await select('Centro de control');assert.equal(await panel.locator('.control-directory > button').count(),13);
+  await select('Memoria');await panel.getByRole('button',{name:'Consultar memoria',exact:true}).click();await panel.getByRole('textbox',{name:'Mensaje para Karen'}).waitFor();assert.equal(await panel.getByRole('textbox',{name:'Mensaje para Karen'}).inputValue(),'/memoria');
   await select('Conversación');const editor=panel.getByRole('textbox',{name:'Mensaje para Karen'});await editor.fill('Un borrador que conserva mi idea.');await select('Apariencia');await select('Conversación');assert.equal(await editor.inputValue(),'Un borrador que conserva mi idea.');await editor.fill('');
   const sample='Una respuesta clara para seguir trabajando.\n\n- Primer paso\n- Segundo paso\n\n```js\nconst saludo = "Hola Karen";\n'+ 'x'.repeat(250)+'\n```\n\nTexto seguro: <img src=x onerror=alert(1)> · 日本語 · ¡Hola!';
   const broadcast=async(message)=>app.evaluate(({BrowserWindow},message)=>{const w=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('view=settings'));w.webContents.send('desktop-event',{type:'chat',message,final:!message.pending});},message);
