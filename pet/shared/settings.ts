@@ -125,7 +125,7 @@ export function validateSettings(
     s.idleActivity = raw.idleActivity;
   }
   for (const key of [
-    'musicEnabled', 'musicPlayer', 'musicPlayerPinned', 'musicStrictYouTube', 'musicComments', 'musicAnimations', 'musicGamingReactions', 'musicHistory', 'musicObsidian',
+    'musicAutoShow','musicHoverExpand','musicAmbientColors','musicEnabled', 'musicPlayer', 'musicPlayerPinned', 'musicStrictYouTube', 'musicComments', 'musicAnimations', 'musicGamingReactions', 'musicHistory', 'musicObsidian',
     'introEnabled', 'introVoice', 'introSounds', 'introReducedMotion', 'introEscape', 'farewellEnabled',
     "particles",
     "initiativeEnabled",
@@ -158,6 +158,7 @@ export function validateSettings(
     initiativeQuietStart: [0, 23],
     initiativeQuietEnd: [0, 23],
     scale: [PET_SCALE.min, PET_SCALE.max],
+    musicAutoHideSeconds: [0,300],
     brightness: [0.35, 1.4],
     opacity: [0.35, 1],
     sleepAfter: [30, 3600],

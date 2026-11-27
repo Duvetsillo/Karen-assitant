@@ -21,6 +21,7 @@ export class MusicPresence {
     memory: () => MusicMemory | undefined; publish: (state: MusicSnapshot) => void;
   }) { this.adapter = new WindowsMediaAdapter(options.executable, (sessions, error) => { this.native = sessions; this.refresh(error); }); }
   snapshot() { return this.state; }
+  async desktopSafe() { return (await this.adapter.context()).safeDesktop === true; }
   private memory() { try { return this.options.memory(); } catch { return undefined; } }
   preferencesChanged() { if (!this.options.settings().musicComments) this.state.comment = undefined; this.refresh(); }
   configure() {
@@ -53,7 +54,8 @@ export class MusicPresence {
     if (active && this.play) this.play.session = active;
     if (active?.status !== 'playing') this.comments.tick(active, settings, { ...this.options.context(), safeDesktop: false, callsKnownClear: false });
     this.state = { enabled: settings.musicEnabled, status: !settings.musicEnabled ? 'off' : error ? 'unavailable' : 'ready',
-      sessions, activeId: active?.sessionId, error, historyAvailable: Boolean(this.memory()), playerPinned: settings.musicPlayerPinned,
+      sessions, activeId: active?.sessionId, error, historyAvailable: Boolean(this.memory()), historyEnabled: settings.musicHistory, playerPinned: settings.musicPlayerPinned,
+      playerOptions:{hoverExpand:settings.musicHoverExpand,ambientColors:settings.musicAmbientColors},
       comment: !changed && this.state.comment?.trackId === active?.trackId ? this.state.comment : undefined };
     this.options.publish(this.state);
     if (active?.status === 'playing' && !this.timer) this.timer = setInterval(() => { void this.tick(); }, 1000);
@@ -123,7 +125,7 @@ export class MusicPresence {
     if (request.action === 'shuffle' && typeof request.value !== 'boolean') throw new Error('Aleatorio inválido.');
     if (request.action === 'repeat' && !['none','track','list'].includes(String(request.value))) throw new Error('Repetición inválida.');
     const skipped = request.action === 'next' && this.play?.session.trackId === active.trackId ? { ...this.play } : undefined;
-    const ok = active.evidence === 'browser' ? await this.browser?.command(active.sessionId, active.trackId, request) : await this.adapter.command({ ...request, sessionId: active.sessionId });
+    const ok = active.evidence === 'browser' ? await this.browser?.control({...request,sessionId:active.sessionId,trackId:active.trackId}) : await this.adapter.control({ ...request, sessionId: active.sessionId });
     if (!ok) throw new Error('La aplicación no confirmó el control multimedia.');
     if (skipped && this.options.settings().musicHistory && skipped.seconds >= 10 && active.duration && skipped.seconds < active.duration - 15) {
       this.memory()?.observe(skipped.session, skipped.id, skipped.started, skipped.seconds, true);

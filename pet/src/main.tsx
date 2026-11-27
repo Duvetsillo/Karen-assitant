@@ -53,7 +53,8 @@ import { ModelPicker } from './ModelPicker';
 import { StylePicker } from './pet/StylePicker';
 import { StartupIntro } from './intros/StartupIntro';
 import { IntroPreferencesPanel } from './intros/IntroPreferencesPanel';
-import { MusicSettings, MusicPlayer } from './music/MusicPanel';
+import { MusicSettings } from './music/MusicPanel';
+import { MusicCapsule } from './music/MusicCapsule';
 import { chooseMusicSession } from '../shared/music';
 import {InitiativePanel,Notice} from './InitiativePanel';
 import { PresenceHome } from './home/PresenceHome';
@@ -1447,4 +1448,4 @@ function Root() {
   }, []);
   return isPet ? <PetApp /> : <SettingsApp />;
 }
-createRoot(document.getElementById("root")!).render(isMusic ? <MusicPlayer mini /> : isIntro ? <StartupIntro /> : <Root />);
+createRoot(document.getElementById("root")!).render(isMusic ? <MusicCapsule /> : isIntro ? <StartupIntro /> : <Root />);

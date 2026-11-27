@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('karen', {
   departureComplete: token => ipcRenderer.invoke('pet-departure-complete', token),
   introPetRendered: token => ipcRenderer.invoke('intro-pet-rendered', token),
   music: {
+    layout: (expanded,height) => ipcRenderer.invoke('music-layout', expanded,height),
     snapshot: () => ipcRenderer.invoke('music-snapshot'),
     action: request => ipcRenderer.invoke('music-action', request),
     history: () => ipcRenderer.invoke('music-history'),

@@ -28,6 +28,7 @@ import { applyCoreMode, applyCoreVoiceStyle } from './core-style-sync.js';
 import { NativeVoice } from "./voice.js";
 import { StartupIntroManager } from './startup-intros.js';
 import { PetDeparture } from './pet-departure.js';
+import { MediaWindowController } from './media-window.js';
 import { MusicPresence } from './music-presence.js';
 import { musicCommand, chooseMusicSession, type MusicRequest } from '../shared/music.js';
 import { INTRO_IDS, introCommand, type IntroId } from '../shared/startup-intros.js';
@@ -96,6 +97,9 @@ let departure: PetDeparture | undefined;
 let departurePending = false;
 let musicPresence: MusicPresence | undefined;
 let musicWindow: BrowserWindow | undefined;
+let mediaWindow: MediaWindowController | undefined;
+let musicHideTimer: ReturnType<typeof setTimeout> | undefined;
+let musicLayoutTimer: ReturnType<typeof setTimeout> | undefined;
 let capture: CaptureStatus = { kind: "microphone", phase: "idle" };
 let wakeStatus: WakeStatus = 'off';
 let wakeError = '';
@@ -358,18 +362,24 @@ function openSettings() {
     panel = undefined;
   });
 }
-function openMusicPlayer() {
-  if (!storage.settings.musicPlayer) throw new Error('Activa el minirreproductor en Música.');
-  if (musicWindow && !musicWindow.isDestroyed()) { musicWindow.show(); return; }
-  let bounds = { x: pet!.getBounds().x, y: pet!.getBounds().y, width: 380, height: 465 };
-  try { bounds = clampBounds({ ...bounds, ...JSON.parse(readFileSync(join(app.getPath('userData'), 'music-window.json'), 'utf8')) }); } catch { bounds = clampBounds(bounds); }
-  const w = musicWindow = new BrowserWindow({ ...bounds, minWidth: 330, minHeight: 400, frame: false, show: false,
-    title: 'Karen · Música', alwaysOnTop: storage.settings.musicPlayerPinned, webPreferences: prefs() });
-  protect(w); w.setMenuBarVisibility(false);
-  w.once('ready-to-show', () => w.show());
-  w.on('close', event => { if (!quitting) { event.preventDefault(); w.hide(); } });
-  w.on('moved', () => { if (!w.isDestroyed()) writeFileSync(join(app.getPath('userData'), 'music-window.json'), JSON.stringify(w.getBounds())); });
-  void loadWindow(w, 'music');
+function openMusicPlayer() { mediaWindow?.openManual(); }
+function hideMusicWindow() {
+  if(!musicWindow||musicWindow.isDestroyed())return;
+  musicWindow.webContents.send('desktop-event',{type:'surface-visibility',visible:false} satisfies DesktopEvent);
+  clearTimeout(musicHideTimer);musicHideTimer=setTimeout(()=>{if(musicWindow&&!musicWindow.isDestroyed())musicWindow.hide();},150);
+}
+function showMusicWindow() {
+  clearTimeout(musicHideTimer);
+  if (musicWindow && !musicWindow.isDestroyed()) { if(!musicWindow.webContents.isLoadingMainFrame())musicWindow.showInactive(); return; }
+  let bounds = { x: pet!.getBounds().x, y: pet!.getBounds().y, width: 392, height: 88 };
+  try { const saved=JSON.parse(readFileSync(join(app.getPath('userData'),'music-window.json'),'utf8'));bounds=clampBounds({...bounds,x:saved.x,y:saved.y}); } catch { bounds=clampBounds(bounds); }
+  const w=musicWindow=new BrowserWindow({...bounds,minWidth:320,minHeight:88,resizable:false,frame:false,transparent:true,backgroundColor:'#00000000',show:false,
+    title:'Karen · Música',alwaysOnTop:storage.settings.musicPlayerPinned,webPreferences:prefs()});
+  protect(w);w.setMenuBarVisibility(false);
+  w.once('ready-to-show',()=>{if(mediaWindow?.visibleRequested)w.showInactive();});
+  w.on('close',event=>{if(!quitting){event.preventDefault();mediaWindow?.dismiss();}});
+  w.on('moved',()=>{if(!w.isDestroyed())writeFileSync(join(app.getPath('userData'),'music-window.json'),JSON.stringify({x:w.getBounds().x,y:w.getBounds().y}));});
+  void loadWindow(w,'music');
 }
 function contextMenu() {
   Menu.buildFromTemplate([
@@ -452,7 +462,7 @@ function updateSettings(patch: Partial<Settings>, fromCore = false) {
   if (before.musicEnabled !== saved.musicEnabled) musicPresence?.configure();
   else if (Object.keys(patch).some(key => key.startsWith('music'))) musicPresence?.preferencesChanged();
   musicWindow?.setAlwaysOnTop(saved.musicPlayerPinned);
-  if (!saved.musicPlayer) musicWindow?.hide();
+  mediaWindow?.update(musicPresence?.snapshot() ?? {enabled:false,status:'off',sessions:[]});
   if(!saved.initiativeEnabled || !saved.initiativeSpeak || saved.mode!=='normal')cancelInitiativeSpeech();
   if (patch.voiceStyle !== undefined && before.voiceStyle !== saved.voiceStyle && coreStore) {
     try { coreStore.setVoiceStyle(saved.voiceStyle); }
@@ -620,11 +630,14 @@ async function ready() {
   musicPresence = new MusicPresence({
     executable: app.isPackaged ? join(process.resourcesPath, 'app.asar.unpacked/dist-native/KarenMusicBridge.exe') : join(here, '../../dist-native/KarenMusicBridge.exe'),
     directory: app.getPath('userData'), settings: () => storage.settings, token: () => storage.musicToken(),
-    memory: () => coreStore?.musicMemory(), publish: snapshot => emit({ type: 'music', snapshot }),
+    memory: () => coreStore?.musicMemory(), publish: snapshot => { emit({ type: 'music', snapshot });mediaWindow?.update(snapshot); },
     context: () => ({ now: Date.now(), present: !sessionLocked && powerMonitor.getSystemIdleTime() < 180,
       conversation: coreState !== 'IDLE' || Date.now() - lastInteraction < 45000,
       voiceBusy: capture.phase !== 'idle', intro: Boolean(startupIntros?.active) }),
   });
+  mediaWindow=new MediaWindowController({settings:()=>storage.settings,
+    blocked:()=>sessionLocked||quitting||departurePending||storage.settings.mode!=='normal'||Boolean(startupIntros?.active),
+    safe:()=>musicPresence!.desktopSafe(),show:showMusicWindow,hide:hideMusicWindow});
   musicPresence.configure();
   void loadWindow(pet, "pet");
   pet.on("close", (event) => {
@@ -730,13 +743,21 @@ async function ready() {
     if (![pet?.webContents.id, panel?.webContents.id, musicWindow?.webContents.id].includes(event.sender.id) || event.senderFrame !== event.sender.mainFrame) throw new Error('Origen musical no autorizado.');
     return callback(...args);
   });
+  ipcMain.handle('music-layout',(event,expanded:unknown,height:unknown)=>{
+    if(!musicWindow||event.sender.id!==musicWindow.webContents.id||event.senderFrame!==event.sender.mainFrame)throw new Error('Origen de cápsula no autorizado.');
+    if(typeof expanded!=='boolean')throw new Error('Tamaño de cápsula inválido.');
+    if(height!==undefined&&(typeof height!=='number'||!Number.isFinite(height)||height<150||height>360))throw new Error('Altura de cápsula inválida.');
+    clearTimeout(musicLayoutTimer);
+    const resize=()=>{if(musicWindow&&!musicWindow.isDestroyed())musicWindow.setBounds(clampBounds({...musicWindow.getBounds(),height:expanded?(typeof height==='number'?Math.round(height):218):88}));};
+    if(expanded)resize();else musicLayoutTimer=setTimeout(resize,180);
+  });
   musicHandle('music-snapshot', () => musicPresence!.snapshot());
   musicHandle('music-history', () => musicPresence!.history());
   musicHandle('music-comment', id => typeof id === 'string' && id.length < 100 ? musicPresence!.commentAudio(id) : undefined);
   musicHandle('music-action', async (request: MusicRequest) => {
     if (!request || typeof request !== 'object') throw new Error('Acción musical inválida.');
     if (request.action === 'open') return openMusicPlayer();
-    if (request.action === 'close') return musicWindow?.hide();
+    if (request.action === 'close') return mediaWindow?.dismiss();
     if (request.action === 'minimize') return musicWindow?.minimize();
     if (request.action === 'pin') { if (typeof request.value !== 'boolean') throw new Error('Anclaje inválido.'); updateSettings({ musicPlayerPinned: request.value }); return; }
     if (request.action === 'pair-browser') { const token = storage.musicToken(true); musicPresence!.configure(); return token; }
@@ -1032,6 +1053,7 @@ else {
       return;
     }
     departure?.dispose();
+    mediaWindow?.dispose();clearTimeout(musicLayoutTimer);clearTimeout(musicHideTimer);
     musicPresence?.stop();
     startupIntros?.dispose();
     if(initiativeTimer)clearInterval(initiativeTimer);

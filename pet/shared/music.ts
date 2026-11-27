@@ -1,14 +1,16 @@
 import type { Settings } from './types.js';
-export const MUSIC_PLATFORMS = ['spotify', 'apple', 'youtube-music', 'youtube'] as const;
+export const MUSIC_PLATFORMS = ['spotify', 'apple', 'youtube-music', 'youtube', 'windows'] as const;
 export type MusicPlatform = typeof MUSIC_PLATFORMS[number];
 export interface MusicPreferences {
   musicEnabled: boolean; musicPlayer: boolean; musicPlatforms: MusicPlatform[];
   musicPlayerPinned: boolean;
+  musicAutoShow: boolean; musicHoverExpand: boolean; musicAmbientColors: boolean; musicAutoHideSeconds: number;
   musicStrictYouTube: boolean; musicComments: boolean; musicCommentProbability: number;
   musicCommentVolume: number; musicCooldownMinutes: number; musicMaxComments: number;
   musicAnimations: boolean; musicGamingReactions: boolean; musicHistory: boolean; musicObsidian: boolean;
 }
 export const musicDefaults: MusicPreferences = {
+  musicAutoShow: true, musicHoverExpand: true, musicAmbientColors: false, musicAutoHideSeconds: 20,
   musicEnabled: false, musicPlayer: true, musicPlayerPinned: false, musicPlatforms: [...MUSIC_PLATFORMS], musicStrictYouTube: true,
   musicComments: false, musicCommentProbability: .1, musicCommentVolume: .6,
   musicCooldownMinutes: 35, musicMaxComments: 2, musicAnimations: true,
@@ -26,8 +28,9 @@ export interface MediaSession {
 export interface MusicSnapshot {
   enabled: boolean; status: 'off' | 'starting' | 'ready' | 'unavailable';
   sessions: MediaSession[]; activeId?: string; error?: string; comment?: { id: string; text: string; trackId: string };
-  historyAvailable?: boolean;
+  historyAvailable?: boolean; historyEnabled?: boolean;
   playerPinned?: boolean;
+  playerOptions?: { hoverExpand: boolean; ambientColors: boolean };
 }
 export interface MusicHistoryRow {
   trackId: string; title: string; artist?: string; album?: string; platform: string;
@@ -36,11 +39,13 @@ export interface MusicHistoryRow {
 export type MusicAction = MusicControl | 'open' | 'close' | 'minimize' | 'pin' | 'select' | 'like' | 'dislike' | 'remember' | 'clear-history' | 'summary' | 'pair-browser' | 'revoke-browser';
 export interface MusicRequest { action: MusicAction; sessionId?: string; trackId?: string; value?: number | boolean | string; relative?: boolean }
 export interface MusicBridge {
+  layout?(expanded: boolean, height?: number): Promise<void>;
   snapshot(): Promise<MusicSnapshot>;
   action(request: MusicRequest): Promise<unknown>;
   history(): Promise<MusicHistoryRow[]>;
   comment(id: string): Promise<{ text: string; trackId: string; audio: Uint8Array; volume: number } | undefined>;
 }
+export interface MediaProvider { readonly kind: 'native'|'browser'; start(): void; stop(): void; control(request: MusicRequest): Promise<boolean>; }
 /** Missing source evidence remains unknown. A title alone never establishes music. */
 export function classifyMusic(session: MediaSession, strict = true): MusicPlatform | undefined {
   const source = session.source.toLowerCase(), domain = session.domain?.toLowerCase();
@@ -65,6 +70,7 @@ export function classifyMusic(session: MediaSession, strict = true): MusicPlatfo
     if (session.category === 'Music' || session.category === '10') return 'youtube';
     if (!strict && session.officialMusic && session.artist && session.mediaType === 'music') return 'youtube';
   }
+  if(session.evidence==='native'&&session.mediaType==='music'&&session.artist&&session.album&&!/msedge|chrome|firefox|brave|browser/i.test(source))return 'windows';
 }
 export function validateMediaSession(raw: unknown, evidence: 'native' | 'browser'): MediaSession | undefined {
   if (!raw || typeof raw !== 'object') return;

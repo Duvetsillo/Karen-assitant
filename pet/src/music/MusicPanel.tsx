@@ -5,19 +5,8 @@ import { report, useStore } from '../state/store';
 import { MUSIC_PLATFORMS, chooseMusicSession, musicPosition, type MusicSnapshot, type MusicRequest, type MusicHistoryRow } from '../../shared/music';
 import type { Settings } from '../../shared/types';
 
-export function useMusic() {
-  const [state, setState] = useState<MusicSnapshot>({ enabled: false, status: 'off', sessions: [] });
-  useEffect(() => {
-    let alive = true;
-    const off = bridge.event(event => { if (event.type === 'music' && alive) setState(event.snapshot); });
-    void bridge.music?.snapshot().then(s => { if (alive) setState(s); }).catch(report);
-    return () => { alive = false; off(); };
-  }, []);
-  return state;
-}
-const act = async (request: MusicRequest) => { try { return await bridge.music?.action(request); } catch (error) { report(error); } };
-const time = (seconds?: number) => seconds === undefined ? '—' : `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2,'0')}`;
-const platformNames = { spotify: 'Spotify', apple: 'Apple Music', 'youtube-music': 'YouTube Music', youtube: 'YouTube · música confirmada' };
+export { useMusic } from './state';
+import { useMusic, act, time, platformNames } from './state';
 export function MusicPlayer({ mini = false }: { mini?: boolean }) {
   const state = useMusic(), song = chooseMusicSession(state.sessions, state.activeId);
   const [now, setNow] = useState(Date.now());
@@ -65,8 +54,12 @@ export function MusicSettings() {
   const save = async (patch: Partial<Settings>) => { try { useStore.setState({ settings: await bridge.settings(patch) }); } catch (e) { report(e); } };
   const toggle = (label: string, key: keyof Settings, description: string) => <div className="setting-row"><div><label>{label}</label><p>{description}</p></div>
     <button className="toggle" role="switch" aria-label={label} aria-checked={Boolean(s[key])} disabled={!bridge.music} onClick={() => void save({ [key]: !s[key] })}><span/></button></div>;
-  return <div className="music-settings"><section className="group"><h2>Escuchar tu música</h2><p className="group-description">Conecta su presencia con lo que ya estás escuchando.</p>
+  return <div className="music-settings"><section className="group"><h2>Escuchar tu música</h2>{state.error&&<p role="alert" className="music-error">{state.error}</p>}<p className="group-description">Conecta su presencia con lo que ya estás escuchando.</p>
     {toggle('Percepción musical', 'musicEnabled', 'Lee metadatos de Windows o del complemento emparejado. No captura audio.')}
+    {toggle('Aparición automática', 'musicAutoShow', 'Muestra la cápsula solo ante una sesión musical confirmada, sin tomar el foco.')}
+    {toggle('Expandir al pasar el cursor', 'musicHoverExpand', 'También puedes expandirla con el botón o contraerla con Escape.')}
+    {toggle('Color ambiental de la portada', 'musicAmbientColors', 'Un matiz suave de la portada, calculado en esta PC.')}
+    <label className="music-hide-delay">Ocultar tras una pausa (segundos)<input type="number" min="0" max="300" value={s.musicAutoHideSeconds} onChange={e=>void save({musicAutoHideSeconds:Number(e.target.value)})}/></label>
     {toggle('Minirreproductor', 'musicPlayer', 'Una ventana independiente, movible y con controles de la sesión.')}
     <button disabled={!bridge.music || !s.musicPlayer} onClick={() => void act({ action: 'open' })}>Abrir reproductor</button>
     <fieldset className="music-platforms"><legend>Plataformas habilitadas</legend>{MUSIC_PLATFORMS.map(p => <label className="music-check" key={p}><input type="checkbox" checked={s.musicPlatforms.includes(p)} onChange={e => void save({ musicPlatforms: e.target.checked ? [...s.musicPlatforms,p] : s.musicPlatforms.filter(x => x !== p) })}/>{platformNames[p]}</label>)}</fieldset>
@@ -91,5 +84,5 @@ export function MusicSettings() {
     <div className="button-row"><button onClick={() => { void bridge.music?.history().then(setHistory).catch(report); }}>Ver historial</button><button disabled={!s.musicObsidian} onClick={() => void act({ action: 'summary' })}>Exportar resumen</button>
       <button onClick={() => { void act({ action: 'clear-history' }).then(() => setHistory([])); }}>Borrar historial musical</button></div>
     {history.length > 0 && <ul>{history.map(row => <li key={row.trackId}>{row.title}{row.artist ? ' — ' + row.artist : ''} · {row.plays} reproducciones · {Math.round(row.seconds)} s</li>)}</ul>}
-  </section><MusicPlayer/></div>;
+  </section><div className="music-inline-status"><Music2 size={19}/><div><strong>{chooseMusicSession(state.sessions,state.activeId)?.title??'Tu música, cuando decidas compartirla.'}</strong><p>La cápsula aparece fuera del panel y no ocupa espacio aquí.</p></div></div></div>;
 }

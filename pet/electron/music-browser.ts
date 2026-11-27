@@ -1,9 +1,11 @@
 import { createServer, type Server, type ServerResponse } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
-import { validateMediaSession, type MediaSession, type MusicRequest } from '../shared/music.js';
+import { validateMediaSession, type MediaSession, type MusicRequest, type MediaProvider } from '../shared/music.js';
 
 /** Loopback-only metadata/control channel. Audio and arbitrary URLs are not accepted. */
-export class MusicBrowserHub {
+export class MusicBrowserHub implements MediaProvider {
+  readonly kind = 'browser' as const;
+  control(request: MusicRequest) { return request.sessionId && request.trackId ? this.command(request.sessionId,request.trackId,request) : Promise.resolve(false); }
   private server?: Server;
   private sessions = new Map<string, { session: MediaSession; client: string; seen: number }>();
   private listeners = new Map<string, { response: ServerResponse; timer: ReturnType<typeof setTimeout> }>();

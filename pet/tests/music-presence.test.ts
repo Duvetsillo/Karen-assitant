@@ -4,7 +4,7 @@ import type { MediaSession } from '../shared/music';
 const mock = vi.hoisted(() => ({ publish: undefined as ((s: MediaSession[]) => void) | undefined, command: vi.fn(async () => true), stop: vi.fn() }));
 vi.mock('../electron/music-adapter.js', () => ({ WindowsMediaAdapter: class {
   constructor(_path: string, publish: (s: MediaSession[]) => void) { mock.publish = publish; }
-  start() {} stop = mock.stop; command = mock.command; context = async () => ({ safeDesktop: false, callsClear: false });
+  start() {} stop = mock.stop; command = mock.command; control = mock.command; context = async () => ({ safeDesktop: false, callsClear: false });
 } }));
 import { MusicPresence } from '../electron/music-presence';
 afterEach(() => { vi.useRealTimers(); vi.clearAllMocks(); });

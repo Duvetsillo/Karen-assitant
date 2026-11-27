@@ -1,8 +1,10 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { validateMediaSession, type MediaSession, type MusicRequest } from '../shared/music.js';
+import { validateMediaSession, type MediaSession, type MusicRequest, type MediaProvider } from '../shared/music.js';
 
-export class WindowsMediaAdapter {
+export class WindowsMediaAdapter implements MediaProvider {
+  readonly kind = 'native' as const;
+  control(request: MusicRequest) { return this.command(request); }
   private child?: ChildProcessWithoutNullStreams;
   private sequence = 0;
   private pending = new Map<string, { resolve: (value: { ok: boolean; safeDesktop?: boolean; callsClear?: boolean }) => void; timer: ReturnType<typeof setTimeout> }>();

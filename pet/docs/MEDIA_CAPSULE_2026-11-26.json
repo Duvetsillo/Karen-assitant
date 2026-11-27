@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-26",
+  "tests": 221,
+  "compactDIP": {
+    "width": 392,
+    "height": 88
+  },
+  "previousDIP": {
+    "width": 380,
+    "height": 465
+  },
+  "areaReductionPercent": 80.5,
+  "nativeElectron": true,
+  "transport": "Loopback HTTP real; metadatos y control del navegador simulados",
+  "focusPreserved": true,
+  "pauseAutoHide": true,
+  "autoResumeShown": false,
+  "resumeGuardedByDesktop": true,
+  "controls": true,
+  "filtering": true,
+  "history": true,
+  "multipleSessions": true,
+  "errors": [],
+  "actualCommercialPlaybackControlled": false
+}

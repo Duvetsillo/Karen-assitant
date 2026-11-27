@@ -35,7 +35,7 @@ con variables semánticas. No se necesitan imágenes generadas ni otro stack.
 
 - [x] 1. Tokens, presencia principal y centro de control con opciones reales.
 - [x] 2. Estados visuales, prioridades/blending, idle no cíclico y saludos.
-- [ ] 3. Cápsula multimedia compacta/expandible y ocultación sin robar foco.
+- [x] 3. Cápsula multimedia compacta/expandible y ocultación sin robar foco.
 - [ ] 4. Manager/router local, selección razonada, disponibilidad y recursos.
 - [ ] 5. Contexto optativo, permisos independientes y proactividad existente.
 - [ ] 6. Regresión, QA nativa/medidas, documentación, paquete e instalación.
@@ -76,3 +76,22 @@ formas flotantes, escalas 50/100/200 %, tres clips idle reales, interrupción po
 tarea, persistencia, movimiento reducido y cero errores. Idle medido en 23 FPS;
 CPU puntual de los dos renderers ~0,67/0,69 %, sin atribuirlo al total del sistema.
 Regreso físico tras dos horas y audición humana siguen pendientes.
+
+
+### Fase 3 verificada
+
+Cápsula flotante de 392×88 DIP, ~80,5 % menos superficie que 380×465 anterior.
+Se expande según controles/sesiones, con portada, progreso y transporte compacto.
+Seek, volumen, aleatorio y repetición aparecen solo si la sesión los admite;
+preferencias requieren historial autorizado. No deja un reproductor grande en ajustes.
+Aparición automática optativa, guardia de escritorio, ocultación por pausa, cierre
+respetado por pista, hover/clic y Escape. Color de portada opcional y local.
+Interfaz común MediaProvider; otros reproductores Windows requieren metadatos
+musicales nativos fuertes y nunca promueven un navegador ambiguo.
+
+221 tests Pet y typecheck/Vite/Electron correctos. Electron/HTTP local real con
+sesiones/control simulados verifica dimensiones, foco conservado, controles,
+múltiples sesiones, filtrado, historial, ocultación real al pausar e IPC restringido.
+La guardia Windows omitió la reapertura automática en esta pasada; casos seguro,
+protegido y respuesta tardía están cubiertos en pruebas de política. No se afirma
+aceptación comercial multiplataforma ni ausencia de fugas por estas pruebas.

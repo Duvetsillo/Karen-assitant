@@ -214,3 +214,12 @@ y cuatro frecuencias de saludo. 216 pruebas Pet y QA nativa de treinta estados,
 ocho estilos, escalas, persistencia y reposo correctas. Detalles y límites en
 pet/docs/EXPERIENCE_UPDATE.md. Próximo: cápsula musical y después manager/router.
 El ejecutable del escritorio se actualizará al concluir la entrega completa.
+
+
+## Experience Update — fase 3, 26/11/2026
+
+Cápsula musical compacta/expandible, ciclo de visibilidad y adaptadores comunes.
+221 pruebas y QA Electron/HTTP local correctas con metadatos/control sintéticos.
+392×88 DIP, foco conservado, pausa oculta y controles adicionales por capacidades.
+Guardia del escritorio respetada; reapertura automática nativa omitida al estar
+protegido en esta pasada. Fases 4–6 y actualización del ejecutable pendientes.
