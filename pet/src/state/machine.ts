@@ -41,6 +41,7 @@ export class PetMachine {
       this.transition("IDLE", now);
     if (
       this.snapshot.state === "IDLE" &&
+      sleepAfter > 0 &&
       now - this.snapshot.lastActivity >= sleepAfter * 1000
     )
       this.transition("SLEEPING", now);

@@ -45,7 +45,7 @@ export class IdleActivities {
       const progress = (now - this.since) / IDLE_CLIPS[this.kind].duration;
       if (progress < 1) return { kind: this.kind, progress: Math.max(0, progress) };
       this.kind = 'none';
-      this.nextAt = now + (60 + (1 - s.activity) * 40) * ( .85 + this.roll() * .3) * 1000;
+      this.nextAt = now + (18 + (1 - s.activity) * 72) * ( .85 + this.roll() * .3) * 1000;
     }
     if (now >= Math.max(this.nextAt, input.lastActivity + s.idleAfter * 1000)) {
       if(!this.remaining.length)this.remaining=(Object.keys(IDLE_CLIPS) as IdleClip[]).filter(kind=>kind!==this.previous);

@@ -33,7 +33,7 @@ export const defaults: Settings = {
   accent: "#8be4f3",
   animations: true,
   cursorTracking: true,
-  sleepAfter: 180,
+  sleepAfter: 0,
   activity: 0.6,
   gatewayUrl: "ws://127.0.0.1:18789",
   agentId: "main",
@@ -193,6 +193,7 @@ export function validateSettings(
     const n = raw[key];
     if (n !== undefined) {
       if (!Number.isFinite(n)) throw new Error("Número inválido.");
+      if(key==='sleepAfter'&&n===0){s.sleepAfter=0;continue;}
       const value = Math.min(ranges[key][1], Math.max(ranges[key][0], n));
       s[key] = key.startsWith('initiative') || key === 'musicMaxComments' ? Math.round(value) : value;
     }

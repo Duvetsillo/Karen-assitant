@@ -66,3 +66,20 @@ Empaquetado, instalación y verificación final pendientes. No confundir los aud
 generados en staging con una biblioteca ya instalada.
 
 Validación incremental: 256 pruebas Pet y typecheck correctos; auditoría del código fuente sin datos privados. QA de las once actividades y cierre de instalación en curso.
+
+## Corrección de reposo — 2026-11-27 / 1.10.1
+
+El perfil real instalado 1.10.0 tenía sleepAfter=60 e idleAfter=30: tras el primer
+clip, la pausa entre actividades superaba el umbral de sueño y la mascota quedaba
+en SLEEPING indefinidamente. No era ausencia de las once animaciones.
+
+Nuevo valor explícito sleepAfter=0, «No dormir automáticamente», como valor inicial.
+Los tiempos positivos y el sueño solicitado manualmente conservan su significado.
+El control ahora dice «Dormir automáticamente» y explica el efecto de tiempos cortos.
+Con actividad máxima, la pausa entre clips pasa a ~15–21 s; baja actividad mantiene
+pausas largas. Sin inferencias, audio ni percepción adicional para animarse.
+
+257 tests y typecheck/build correctos. La prueba nativa en tiempo real de 76 s y
+la instalación/configuración del perfil real se documentarán al completarse.
+La aceptación previa Pet → Gateway → Ollama de 1.10.0 fue correcta (7,72 s), pero
+la entrega anterior se interrumpió antes de copiar los 78 audios al perfil real.

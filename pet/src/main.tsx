@@ -601,12 +601,13 @@ function Behavior() {
           onChange={(activity) => void patch({ activity })}
         />
         <div className="input-field">
-          <label htmlFor="sleep">Reposar después de</label>
+          <label htmlFor="sleep">Dormir automáticamente</label>
           <select
             id="sleep"
             value={s.sleepAfter}
             onChange={(e) => void patch({ sleepAfter: Number(e.target.value) })}
           >
+            <option value={0}>No dormir automáticamente</option>
             <option value={30}>30 segundos</option>
             <option value={60}>1 minuto</option>
             <option value={180}>3 minutos</option>
@@ -614,6 +615,7 @@ function Behavior() {
             <option value={900}>15 minutos</option>
             <option value={3600}>1 hora</option>
           </select>
+          <p className="quiet-note">Si eliges un tiempo corto, Karen dejará sus actividades para dormir. Sin sueño automático, sigue alternando sus animaciones; puedes hacerla descansar desde sus estados.</p>
         </div>
       </Group>
       <Group

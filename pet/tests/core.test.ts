@@ -56,6 +56,16 @@ describe("configuración", () => {
   });
 });
 describe("máquina de estados", () => {
+  it('keeps active idle running when automatic sleep is disabled, while allowing explicit sleep',()=>{
+    const m=new PetMachine(0);
+    expect(validateSettings({sleepAfter:0}).sleepAfter).toBe(0);
+    expect(validateSettings({sleepAfter:1}).sleepAfter).toBe(30);
+    expect(m.tick(0,24*3600*1000).state).toBe('IDLE');
+    m.transition('SLEEPING',24*3600*1000+1);
+    expect(m.tick(0,24*3600*1000+10000).state).toBe('SLEEPING');
+    m.wake(24*3600*1000+11000);
+    expect(m.tick(0,25*3600*1000).state).toBe('IDLE');
+  });
   it("duerme por inactividad, despierta y completa emociones temporales", () => {
     const m = new PetMachine(0);
     expect(m.tick(30, 29999).state).toBe("IDLE");
