@@ -83,3 +83,22 @@ pausas largas. Sin inferencias, audio ni percepción adicional para animarse.
 la instalación/configuración del perfil real se documentarán al completarse.
 La aceptación previa Pet → Gateway → Ollama de 1.10.0 fue correcta (7,72 s), pero
 la entrega anterior se interrumpió antes de copiar los 78 audios al perfil real.
+
+### Verificación y entrega completadas — 2026-11-27
+
+1.10.1 generada e instalada, salida NSIS 0; archivo de producto 1.10.1.0. Se cerró
+Karen desde su menú, se respaldaron ajustes/DPAPI/biblioteca y se conservó el resto
+del perfil. Perfil real: sleepAfter=0, idleAfter=15, actividades en variedad y
+actividad 100 %. UI instalada confirmó «No dormir automáticamente», versión 1.10.1,
+conexión activa y mascota En calma. Aplicación normal dejada abierta.
+
+Prueba nativa de 76 segundos reales: twirl, stretch y orbit; estado IDLE durante
+la prueba, ningún SLEEPING, ajuste cero persistido y cero errores. Los 257 tests
+Pet, typecheck/build y auditoría de fuente pasaron. El sueño solicitado manualmente
+sigue disponible. Instalador verificado copiado al escritorio.
+
+Se completó además la entrega interrumpida de audio: 78 WAV y manifiesto copiados
+desde staging al perfil, con respaldo de la biblioteca anterior. No se activaron
+micrófono, proactividad ni observación. La aceptación auditiva física sigue pendiente.
+Las pruebas de runtime y voz de fases anteriores no se repitieron para este cambio
+de estado/temporización del Pet. Ver ACTIVE_IDLE_ACCEPTANCE_2026-11-27.json.

@@ -1,5 +1,13 @@
 # Estado comprobado — 2026-11-26
 
+## Reposo activo — 2026-11-27 / 1.10.1
+
+Confirmada 1.10.0 instalada por el usuario con sueño a 60 s: interrumpía los clips.
+Añadido sleepAfter=0 y pausas menores según actividad. 257 pruebas Pet y QA nativa
+76 s (tres clips, sin dormir, cero errores). 1.10.1 instalada, perfil con sueño 0 e
+idle15; 78 audios copiados con respaldo y nuevo instalador en el escritorio. Karen
+normal abierta, UI instalada confirmó versión y opción. Sin cambios de permisos.
+Ver ../../pet/docs/PRESENCE_1_10.md y ACTIVE_IDLE_ACCEPTANCE_2026-11-27.json.
 ## Experience Update 1.9.0 — entrega 2026-11-26
 
 Pet siempre flotante sin extremidades, Presencia y centro de control, treinta

@@ -233,3 +233,5 @@ protegido en esta pasada. Fases 4–6 y actualización del ejecutable pendientes
 2026-11-26: 78 saludos/11 clips y ocultación por fullscreen implementados; pruebas Windows de ocultación/regreso correctas. Gateway real vuelve a responder con gemma3:1b en sesión sintética (17,21 s). Empaquetado/instalación pendientes; ver pet/docs/PRESENCE_1_10.md.
 
 2026-11-27: identificado sueño a 60 s que interrumpía la variedad. Añadido sueño automático desactivable (0) y pausas menores con actividad alta. 257 pruebas Pet correctas; verificación nativa/instalación 1.10.1 en curso.
+
+2026-11-27: 1.10.1 instalada y abierta. Sueño automático desactivado, primera actividad a 15 s y pausas cortas con actividad alta. Prueba nativa76s: tres clips distintos, sin dormir y cero errores; 257 pruebas. Instalador nuevo en escritorio y 78 audios entregados. Código del arreglo publicado en 3a15a30.

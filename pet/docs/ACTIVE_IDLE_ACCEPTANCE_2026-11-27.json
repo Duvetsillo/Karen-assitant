@@ -1,0 +1,26 @@
+{
+  "greetingsInstalled": 78,
+  "sleepAfter": 0,
+  "issue": "El sueño a 60 s interrumpía las actividades y quedaba permanente.",
+  "nativeStates": [
+    "IDLE"
+  ],
+  "manualSleepPreserved": true,
+  "rendererErrors": 0,
+  "activity": 1,
+  "date": "2026-11-27",
+  "petTests": 257,
+  "nativeRealSeconds": 76,
+  "installerExit": 0,
+  "version": "1.10.1",
+  "privacySettingsUnchanged": true,
+  "desktopInstaller": "Karen Desktop Pet Setup 1.10.1.exe",
+  "nativeClips": [
+    "twirl",
+    "stretch",
+    "orbit"
+  ],
+  "installerSha256": "AD2C3A433BD74CA1C86BF38E3F2E390228BAC0BBCB1C3647EAB3F5373EEBF7E6",
+  "installedVersion": "1.10.1.0",
+  "idleAfter": 15
+}
