@@ -1,6 +1,7 @@
 import { GatewayClient } from "@openclaw/gateway-client";
 import type { GatewayClientHostDeps } from "@openclaw/gateway-client";
 import { randomUUID } from "node:crypto";
+import type { TurnModels } from './model-manager.js';
 import { APP_VERSION } from "../shared/version.js";
 import type {
   ChatMessage,
@@ -51,6 +52,8 @@ export class OpenClawAdapter {
   private accepted = false;
   private pending = false;
   private modelChanging = false;
+  private routing = false;
+  private routingGeneration=0;
   private knownRuns = new Set<string>();
   private retiredRuns = new Set<string>();
   private rawText = new Map<string, string>();
@@ -67,6 +70,7 @@ export class OpenClawAdapter {
       message: string,
     ) => void,
     private core?: CoreTurnSink,
+    private modelManager?: TurnModels,
   ) {}
   get sessionKey() {
     return `agent:${this.storage.settings.agentId}:main`;
@@ -96,14 +100,19 @@ export class OpenClawAdapter {
     const row = sessions.sessions.find(s => s.key === sessionKey);
     const effective = canonical(row?.modelProvider, row?.model) ?? canonical(sessions.defaults?.modelProvider, sessions.defaults?.model);
     const selected = row?.modelOverrideSource === 'user' || row?.modelOverride || row?.providerOverride ? effective : null;
-    const selection = {sessionKey, effective, selected, models, busy: row?.hasActiveRun === true};
+    const selection:ModelSelection = {sessionKey, effective, selected, models, busy: row?.hasActiveRun === true};
+    if(this.modelManager) {
+      try{selection.manager=await this.modelManager.inspect();}
+      catch(error){selection.managerError=error instanceof Error?error.message:'Catálogo local no disponible.';}
+    }
+    if(epoch!==this.epoch||client!==this.client)throw new Error('La conexión cambió. Actualiza los modelos.');
     this.emit({type: 'models', selection});
     return selection;
   }
-  async selectModel(model: unknown): Promise<ModelSelection> {
+  async selectModel(model: unknown, routingInternal=false): Promise<ModelSelection> {
     if (model !== null && (typeof model !== 'string' || model.length > 512))
       throw new Error('Modelo inválido.');
-    if (this.pending || this.modelChanging)
+    if (this.pending || this.modelChanging || (this.routing&&!routingInternal))
       throw new Error('Espera a que termine la respuesta o el cambio actual.');
     this.modelChanging = true;
     const client = this.client;
@@ -392,7 +401,25 @@ export class OpenClawAdapter {
       throw new Error(
         "Hay una respuesta en curso. Puedes detenerla antes de enviar otra orden.",
       );
-    const localSelection = await this.models();
+    if(this.routing)throw new Error('Ya se está preparando una tarea.');
+    this.routing=true;
+    const routingEpoch=this.epoch;
+    const routingGeneration=this.routingGeneration;
+    let localSelection:ModelSelection;
+    try {
+      localSelection=await this.models();
+      if(this.modelManager){
+        const choice=await this.modelManager.prepare(localSelection,text,images.length>0);
+        if(routingEpoch!==this.epoch||routingGeneration!==this.routingGeneration)throw new Error('La preparación fue cancelada o cambió la conexión.');
+        if(choice.id!==localSelection.effective){
+          localSelection=await this.selectModel(choice.id,true);
+        }
+        if(localSelection.effective!==choice.id)throw new Error('OpenClaw no confirmó el modelo elegido. Actualiza la sesión.');
+        if(routingGeneration!==this.routingGeneration)throw new Error('La preparación fue cancelada.');
+        await this.modelManager.acquire();
+        if(routingEpoch!==this.epoch||routingGeneration!==this.routingGeneration){this.modelManager.release();throw new Error('La preparación fue cancelada o cambió la conexión.');}
+      }
+    } finally {this.routing=false;}
     if (!localSelection.effective || !isLocalInferenceModel(localSelection.effective))
       throw new Error('El modelo activo no pertenece al catálogo local Ollama; selecciona uno local antes de enviar.');
     if (this.pending || this.modelChanging)
@@ -574,6 +601,7 @@ export class OpenClawAdapter {
     } catch { return 'No pude leer el registro local de tareas. Revisa KAREN_TASKS_DB y vuelve a consultar.'; }
   }
   async abort() {
+    this.routingGeneration++;
     this.emit({ type: "voice-cancel" });
     const run = this.runId;
     if (run) this.retireRun(run);
@@ -604,6 +632,7 @@ export class OpenClawAdapter {
     this.finishRun();
   }
   private finishRun() {
+    this.modelManager?.release();
     clearTimeout(this.watchdog);
     this.pending = false;
     this.accepted = false;

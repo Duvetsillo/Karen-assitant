@@ -95,3 +95,26 @@ múltiples sesiones, filtrado, historial, ocultación real al pausar e IPC restr
 La guardia Windows omitió la reapertura automática en esta pasada; casos seguro,
 protegido y respuesta tardía están cubiertos en pruebas de política. No se afirma
 aceptación comercial multiplataforma ni ausencia de fugas por estas pruebas.
+
+### Fase 4: selección local verificada
+
+Manager de metadatos bajo demanda que importa LocalModels y ResourcePolicy del
+Core, sin duplicar su ranking. Consulta instalada real: ocho modelos válidos;
+clasificación de código y ranking coherentes. Se rechazan marcadores cloud y
+metadatos remotos. El endpoint se obtiene del proveedor Ollama de OpenClaw y se
+valida como loopback. No carga pesos ni descarga modelos al consultar.
+
+Once rutas, elección manual, catálogo/capacidades y seis perfiles visibles. El
+router intersecta instalados, capacidades, presupuesto estimado y configuración
+real del Gateway; confirma el cambio de sesión antes del envío. Fallback solo
+antes de enviar, nunca repite una orden aceptada. Cancelación durante preparación,
+cambio de conexión y envíos simultáneos cubiertos. Juego/Silencio no inician LLM;
+los comandos Core deterministas continúan disponibles. Memoria y persona conservadas.
+
+Arbitraje OS de inferencia compartido con Core; liberación al evento terminal o
+cancelación. Se conserva el contrato del micrófono. Carga/descarga y parámetros de
+inferencia del Gateway siguen bajo OpenClaw/Ollama: el cliente no inventa opciones
+SDK ni descarga modelos compartidos. La reserva es estimada, no física. Otros
+proveedores y gestión de pesos requieren su adaptador y se explican como límites.
+233 tests Pet, 425 runtime, 26 contratos voz, typecheck/build y QA 17 secciones en
+dos tamaños correctos. Confirmación normal instalada y empaquetado pendientes.

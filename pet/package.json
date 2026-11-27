@@ -81,6 +81,9 @@
       "extensions/music-presence/**",
       "python/**"
     ],
+    "extraResources": [
+      {"from":"../runtime", "to":"model-core", "filter":["answers.py","core_resources.py","karen_core2/__init__.py","karen_core2/models.py","karen_core2/resource_policy.py","karen_core2/inference_queue.py"]}
+    ],
     "win": {
       "target": "nsis",
       "icon": "assets/karen.ico",

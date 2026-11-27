@@ -11,7 +11,7 @@ export class MicrophoneArbiter {
   private closing?: Promise<void>;
 
   constructor(private python: () => string, private worker: string,
-    private lost: () => void) {}
+    private lost: () => void, private resource: 'microphone' | 'inference' = 'microphone') {}
 
   async claim(owner: number): Promise<string> {
     if (this.owner !== undefined && this.owner !== owner)
@@ -43,7 +43,7 @@ export class MicrophoneArbiter {
     await this.closing;
     if (epoch !== this.epoch) throw new Error('Solicitud de micrófono cancelada.');
     return new Promise((resolve, reject) => {
-      const child = spawn(this.python(), ['-u', this.worker], {
+      const child = spawn(this.python(), ['-u', this.worker, '--resource', this.resource], {
         windowsHide: true, stdio: 'pipe', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
       });
       this.child = child;

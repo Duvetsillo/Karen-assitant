@@ -58,8 +58,15 @@ def microphone_guard(path=None):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resource', choices=('microphone', 'inference'), default='microphone')
+    args = parser.parse_args()
+    path = microphone_path()
+    if args.resource == 'inference':
+        path = path.with_name('ollama-inference.lock')
     try:
-        with microphone_guard():
+        with microphone_guard(path):
             print('ACQUIRED', flush=True)
             # No commands accepted; the pipe lifetime is the ownership lifetime.
             sys.stdin.buffer.read()

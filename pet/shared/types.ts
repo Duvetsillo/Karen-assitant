@@ -30,6 +30,8 @@ export interface ModelOption {
   available: boolean;
 }
 export interface ModelSelection {
+  managerError?: string;
+  manager?: import('./models.js').ModelManagerStatus;
   busy: boolean;
   sessionKey: string;
   selected: string | null;
@@ -46,6 +48,8 @@ export type ConnectionState =
   | "reconnecting"
   | "action-required";
 export interface Settings extends IntroPreferences, MusicPreferences {
+  routingMode: import('./models.js').RoutingMode;
+  resourceProfile: import('./models.js').ResourceProfile;
   initiativeEnabled: boolean;
   initiativeSpeak: boolean;
   initiativeInterval: number;

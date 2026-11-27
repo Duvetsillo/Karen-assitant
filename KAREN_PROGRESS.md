@@ -223,3 +223,5 @@ Cápsula musical compacta/expandible, ciclo de visibilidad y adaptadores comunes
 392×88 DIP, foco conservado, pausa oculta y controles adicionales por capacidades.
 Guardia del escritorio respetada; reapertura automática nativa omitida al estar
 protegido en esta pasada. Fases 4–6 y actualización del ejecutable pendientes.
+
+2026-11-26: router local y manager reutilizan Core; 233 Pet, 425 runtime, 26 contratos voz y QA nativa correctos. Empaquetado/instalación pendientes. Ver pet/docs/EXPERIENCE_UPDATE.md.

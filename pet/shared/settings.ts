@@ -3,7 +3,10 @@ import { introDefaults, INTRO_IDS } from './startup-intros.js';
 import { musicDefaults, MUSIC_PLATFORMS } from './music.js';
 import { PET_STYLES, VOICE_STYLES } from './types.js';
 import { PET_SCALE } from "./pet-layout.js";
+import { ROUTING_MODES, RESOURCE_PROFILES } from './models.js';
 export const defaults: Settings = {
+  routingMode: 'auto',
+  resourceProfile: 'balanced',
   ...introDefaults,
   ...musicDefaults,
   initiativeEnabled: false,
@@ -114,6 +117,14 @@ export function validateSettings(
     if (!['normal', 'gaming', 'do_not_disturb'].includes(raw.mode))
       throw new Error('Modo desconocido.');
     s.mode = raw.mode;
+  }
+  if(raw.routingMode!==undefined){
+    if(!ROUTING_MODES.includes(raw.routingMode))throw new Error('Ruta de modelos desconocida.');
+    s.routingMode=raw.routingMode;
+  }
+  if(raw.resourceProfile!==undefined){
+    if(!RESOURCE_PROFILES.includes(raw.resourceProfile))throw new Error('Perfil de recursos desconocido.');
+    s.resourceProfile=raw.resourceProfile;
   }
   if (raw.petStyle !== undefined) {
     if (!PET_STYLES.includes(raw.petStyle)) throw new Error('Apariencia desconocida.');

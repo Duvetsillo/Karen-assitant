@@ -81,6 +81,16 @@ export class Storage {
   get origin() {
     return new URL(this.settings.gatewayUrl).origin;
   }
+  localModelEndpoint():string {
+    const path=process.env.OPENCLAW_CONFIG_PATH||join(homedir(),'.openclaw','openclaw.json');
+    const cfg=JSON.parse(readFileSync(path,'utf8'));
+    const value=cfg.models?.providers?.ollama?.baseUrl;
+    if(typeof value!=='string')throw new Error('Configura el proveedor Ollama local en OpenClaw antes de usar modelos.');
+    const url=new URL(value);
+    if(url.protocol!=='http:'||!['127.0.0.1','localhost','[::1]'].includes(url.hostname)||url.username||url.password||url.search||url.hash||!['','/','/v1','/v1/'].includes(url.pathname))
+      throw new Error('El proveedor Ollama de OpenClaw debe estar en loopback HTTP.');
+    return url.origin;
+  }
   credential(): { token?: string; password?: string } {
     if (this.settings.authSource === "stored")
       return { token: this.vault.credentials[this.origin] };

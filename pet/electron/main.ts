@@ -17,6 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Storage } from "./storage.js";
 import { OpenClawAdapter } from "./gateway.js";
+import { LocalModelManager } from './model-manager.js';
 import { CoreStore } from "./core-store.js";
 import type { CoreState } from './core-store.js';
 import { CoreActivityState } from '../shared/core-activity.js';
@@ -67,6 +68,7 @@ const coreClientId = randomUUID().replaceAll('-', '');
 let coreState: CoreState = 'IDLE';
 const coreActivityState = new CoreActivityState();
 let microphoneArbiter: MicrophoneArbiter;
+let modelManager: LocalModelManager | undefined;
 let coreStyleTimer: ReturnType<typeof setInterval> | undefined;
 let coreStyleFailed = false;
 let initiative: InitiativeService | undefined;
@@ -584,7 +586,13 @@ async function ready() {
     } catch { log('warn', 'Karen Core', 'No se pudieron aplicar las preferencias compartidas.'); }
     coreStyleTimer = setInterval(syncCoreVoiceStyle, 5000);
   }
-  gateway = new OpenClawAdapter(storage, emitGateway, log, coreStore);
+  const modelPython=()=>join(storage.settings.voiceRoot||process.env.KAREN_PROJECT_ROOT||join(app.getPath('userData'),'voice'),'voice-runtime','Scripts','python.exe');
+  const modelArbiter=new MicrophoneArbiter(modelPython,
+    app.isPackaged?join(process.resourcesPath,'app.asar.unpacked/python/core_resource.py'):join(here,'../../python/core_resource.py'),
+    ()=>{void gateway?.abort();log('error','Modelos','Se perdió la propiedad de la inferencia.');},'inference');
+  modelManager=qa&&!process.argv.includes('--qa-models')?undefined:new LocalModelManager(()=>storage.settings,()=>storage.localModelEndpoint(),modelPython,
+    app.isPackaged?join(process.resourcesPath,'app.asar.unpacked/python/model_manager.py'):join(here,'../../python/model_manager.py'),modelArbiter);
+  gateway = new OpenClawAdapter(storage, emitGateway, log, coreStore, modelManager);
   const area = screen.getPrimaryDisplay().workArea;
   let bounds = {
     x: area.x + area.width - 410,
@@ -1059,6 +1067,7 @@ else {
     if(initiativeTimer)clearInterval(initiativeTimer);
     quitting = true;
     microphoneArbiter?.close();
+    modelManager?.dispose();
     voice?.dispose();
     loopback?.cancel();
     gateway?.disconnect(false);

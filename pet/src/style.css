@@ -68,6 +68,14 @@ html[data-view="music"] body { background: #101925; color: #e9f2f7; }
 .model-picker .quiet-note { margin: 6px 0 0; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .model-picker .model-current { color: #ced9ee; }
 .model-error { color: #ffd0b1; margin-top: 8px; font-size: 12px; }
+.model-routing-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+.model-routing-controls label{display:grid;gap:6px;font-size:12px;color:var(--muted);}
+.model-routing-controls select{width:100%;min-width:0;}
+.model-inventory{margin-top:12px;font-size:12px;}
+.model-inventory summary{cursor:pointer;padding:8px 0;}
+.model-inventory ul{list-style:none;padding:0;display:grid;gap:8px;}
+.model-inventory li{display:grid;gap:3px;overflow-wrap:anywhere;}
+.model-inventory li span{color:var(--muted);}
 .conversation .messages { min-height: 140px; }
 .conversation .empty-chat { min-height: 170px; padding: 20px 0; }
 .presence-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 16px; }

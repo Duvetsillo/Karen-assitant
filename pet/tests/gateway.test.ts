@@ -11,6 +11,7 @@ import { buildDeviceAuthPayloadV3 } from "@openclaw/gateway-client";
 import { OpenClawAdapter } from "../electron/gateway";
 import { defaults } from "../shared/settings";
 import type { DesktopEvent } from "../shared/types";
+import type { TurnModels } from '../electron/model-manager';
 
 const resources: { adapter: OpenClawAdapter; server: WebSocketServer }[] = [];
 afterEach(async () => {
@@ -27,7 +28,7 @@ async function until(check: () => boolean, timeout = 4000) {
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 }
-async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: string, prompt: string, answer: string): void }) {
+async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: string, prompt: string, answer: string): void }, manager?:TurnModels) {
   const server = new WebSocketServer({ port: 0, host: "127.0.0.1" });
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address();
@@ -72,6 +73,7 @@ async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: stri
     (event) => events.push(event),
     () => {},
     core,
+    manager,
   );
   resources.push({ adapter, server });
   server.on("connection", (ws) => {
@@ -197,6 +199,51 @@ async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: stri
   };
 }
 describe("adaptador contra servidor de contrato WebSocket", () => {
+  it('routes before sending, confirms the model and releases ownership on the terminal event',async()=>{
+    const release=vi.fn();
+    const manager:TurnModels={inspect:vi.fn().mockRejectedValue(new Error('metadata test')),
+      prepare:vi.fn().mockResolvedValue({id:'ollama/test-large',reason:'coding'}),acquire:vi.fn().mockResolvedValue(undefined),release};
+    const t=await setup(undefined,manager);
+    release.mockClear();
+    await t.adapter.send('depura código');
+    expect(t.requests.find(r=>r.method==='sessions.patch')?.params.model).toBe('ollama/test-large');
+    expect(manager.acquire).toHaveBeenCalledOnce();
+    const run=t.requests.find(r=>r.method==='chat.send')!.params.idempotencyKey;
+    expect(release).not.toHaveBeenCalled();
+    t.event('chat',{sessionKey:'agent:main:main',runId:run,state:'final',deltaText:'Listo'});
+    await until(()=>release.mock.calls.length>0);
+  });
+  it('does not send or silently bypass a failed local lease',async()=>{
+    const manager:TurnModels={inspect:vi.fn().mockRejectedValue(new Error('metadata test')),
+      prepare:vi.fn().mockResolvedValue({id:'ollama/test-small',reason:'conversation'}),acquire:vi.fn().mockRejectedValue(new Error('ocupada')),release:vi.fn()};
+    const t=await setup(undefined,manager);
+    await expect(t.adapter.send('Hola')).rejects.toThrow('ocupada');
+    expect(t.requests.some(r=>r.method==='chat.send')).toBe(false);
+  });
+  it('rejects overlapping preparation and model edits while routing',async()=>{
+    let resume:(value:{id:string;reason:string})=>void=()=>{};
+    const manager:TurnModels={inspect:vi.fn().mockRejectedValue(new Error('metadata test')),
+      prepare:vi.fn(()=>new Promise<{id:string;reason:string}>(resolve=>{resume=resolve;})),acquire:vi.fn().mockResolvedValue(undefined),release:vi.fn()};
+    const t=await setup(undefined,manager);
+    const first=t.adapter.send('Primera');
+    await until(()=>vi.mocked(manager.prepare).mock.calls.length>0);
+    await expect(t.adapter.send('Segunda')).rejects.toThrow(/preparando/);
+    await expect(t.adapter.selectModel('ollama/test-large')).rejects.toThrow(/Espera/);
+    resume({id:'ollama/test-small',reason:'test'});await first;
+    expect(t.requests.filter(r=>r.method==='chat.send')).toHaveLength(1);
+  });
+  it('cancels preparation without sending a late turn',async()=>{
+    let resume:(value:{id:string;reason:string})=>void=()=>{};
+    const manager:TurnModels={inspect:vi.fn().mockRejectedValue(new Error('metadata test')),
+      prepare:vi.fn(()=>new Promise<{id:string;reason:string}>(resolve=>{resume=resolve;})),acquire:vi.fn().mockResolvedValue(undefined),release:vi.fn()};
+    const t=await setup(undefined,manager);
+    const first=t.adapter.send('Primera');
+    const rejected=expect(first).rejects.toThrow(/cancelada/);
+    await until(()=>vi.mocked(manager.prepare).mock.calls.length>0);
+    await t.adapter.abort();resume({id:'ollama/test-small',reason:'test'});await rejected;
+    expect(t.requests.some(r=>r.method==='chat.send')).toBe(false);
+    expect(manager.acquire).not.toHaveBeenCalled();
+  });
   it('shows schedules and development offline without gateway requests or write actions', async () => {
     const core = {appendOpenClawTurn: vi.fn(),
       listSchedules: vi.fn(() => [{id:'a'.repeat(32),name:'Routine',next_run:'2100-01-01',interval_seconds:null,retries:0,enabled:1,last_status:null}]),
