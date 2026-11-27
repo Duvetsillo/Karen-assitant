@@ -75,6 +75,11 @@ let initiativeTasksFailed = false;
 let initiativeSpeaking = false;
 let sessionLocked = false;
 let lastInteraction = Date.now();
+let awaySince = 0;
+function greetingOnReturn() {
+  const elapsed = awaySince ? Date.now()-awaySince : 0; awaySince=0;
+  if(elapsed>=2*60*60*1000&&storage?.settings.introFrequency==='after-away')void startupIntros?.play(undefined,true,'return');
+}
 let disconnectedSince = Date.now();
 let taskBaseline: Map<string,string> | undefined;
 const initiativeTaskChanges = new Map<string,{key:string;status:string;id:string}>();
@@ -658,15 +663,17 @@ async function ready() {
     if (pet) pet.setBounds(clampBounds(pet.getBounds()));
   });
   powerMonitor.on("suspend", () => {
+    if(!awaySince)awaySince=Date.now();
     musicPresence?.stop();
     startupIntros?.cancel();
     stopPerception();
     stopPointing();
     gateway.disconnect();
   });
-  powerMonitor.on("lock-screen", () => { sessionLocked=true;musicPresence?.stop();startupIntros?.cancel();stopPerception(); stopPointing(); });
-  powerMonitor.on('unlock-screen',()=>{sessionLocked=false;lastInteraction=Date.now();musicPresence?.configure();});
+  powerMonitor.on("lock-screen", () => { if(!awaySince)awaySince=Date.now();sessionLocked=true;musicPresence?.stop();startupIntros?.cancel();stopPerception(); stopPointing(); });
+  powerMonitor.on('unlock-screen',()=>{sessionLocked=false;lastInteraction=Date.now();musicPresence?.configure();greetingOnReturn();});
   powerMonitor.on("resume", () => {
+    greetingOnReturn();
     musicPresence?.configure();
     lastInteraction=Date.now();
     void gateway.connect();

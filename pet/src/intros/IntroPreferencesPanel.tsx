@@ -20,6 +20,9 @@ export function IntroPreferencesPanel({ settings: s, patch, report }: {
   return <div className="intro-preferences">
     <div className="intro-toggles">{toggle('Activar al arrancar la aplicación', 'introEnabled')}
     {toggle('Despedida animada al salir de Karen', 'farewellEnabled')}</div>
+    <label>Frecuencia del saludo<select aria-label="Frecuencia del saludo" value={s.introFrequency} onChange={e=>void patch({introFrequency:e.target.value as Settings['introFrequency']})}>
+      <option value="startup">Al iniciar Karen</option><option value="daily">Una vez al día</option><option value="after-away">Al regresar de una pausa de dos horas</option><option value="manual">Solo al solicitar vista previa</option>
+    </select></label>
     <div className="intro-scene-fields"><label>Selección<select value={s.introSelection} onChange={e => void patch({ introSelection: e.target.value as Settings['introSelection'] })}>
       <option value="random">Aleatoria</option><option value="fixed">Fija</option><option value="contextual">Según la hora</option>
     </select></label>

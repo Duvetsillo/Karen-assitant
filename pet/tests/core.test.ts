@@ -156,7 +156,7 @@ describe("eventos reales de OpenClaw", () => {
         sessionKey,
         new Set(["r1"]),
       )[0],
-    ).toMatchObject({ type: "pet", state: "THINKING" });
+    ).toMatchObject({ type: "pet", state: "READING" });
     expect(
       routeGatewayEvent(
         "agent",

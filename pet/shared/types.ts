@@ -16,6 +16,9 @@ export const PET_STATES = [
   "ERROR",
   "SLEEPING",
   "DRAGGING",
+  "WORKING", "SEARCHING", "READING", "WRITING", "CODING", "OBSERVING",
+  "CONCERNED", "BORED", "SLEEPY", "EXCITED", "MUSIC_LISTENING",
+  "GREETING", "GOODBYE", "INTERRUPTED", "FOCUSED",
 ] as const;
 export type PetState = (typeof PET_STATES)[number];
 export const PET_STYLES = ['crystal', 'cloud', 'orbit', 'sprite', 'bloom', 'aurora', 'ember', 'midnight'] as const;

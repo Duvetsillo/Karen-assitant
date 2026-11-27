@@ -13,8 +13,8 @@ export const defaults: Settings = {
   initiativeQuietStart: 22,
   initiativeQuietEnd: 9,
   petStyle: 'crystal',
-  showArms: true,
-  showLegs: true,
+  showArms: false,
+  showLegs: false,
   idleActivities: true,
   idleActivity: 'variety',
   idleAfter: 30,
@@ -50,6 +50,7 @@ export const defaults: Settings = {
 };
 /** Temporary runtime profile: underlying user preferences stay intact. */
 export function effectiveSettings(settings: Settings): Settings {
+  if (settings.showArms || settings.showLegs) settings = {...settings,showArms:false,showLegs:false};
   // Keep the saved preference, but never send voice text to cloud in Core 2.
   if (settings.ttsEngine === 'edge') settings = {...settings, ttsEngine: 'local'};
   if (!settings.mode || settings.mode === 'normal') return settings;
@@ -88,6 +89,10 @@ export function validateSettings(
   if (raw.musicPlatforms !== undefined) {
     if (!Array.isArray(raw.musicPlatforms) || raw.musicPlatforms.some(p => !MUSIC_PLATFORMS.includes(p))) throw new Error('Plataforma musical inválida.');
     s.musicPlatforms = [...new Set(raw.musicPlatforms)];
+  }
+  if (raw.introFrequency !== undefined) {
+    if (!['startup','daily','after-away','manual'].includes(raw.introFrequency)) throw new Error('Frecuencia de saludo inválida.');
+    s.introFrequency = raw.introFrequency;
   }
   if (raw.introSelection !== undefined) {
     if (!['random', 'fixed', 'contextual'].includes(raw.introSelection)) throw new Error('Selección de introducción inválida.');
@@ -198,5 +203,7 @@ export function validateSettings(
     if (!['bubble','panel','ribbon'].includes(raw.petChatShape)) throw new Error('Forma de chat desconocida.');
     s.petChatShape = raw.petChatShape;
   }
+  // Retain legacy keys for profile compatibility; the character is always floating.
+  s.showArms = false; s.showLegs = false;
   return s;
 }

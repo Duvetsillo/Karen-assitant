@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 (async () => {
   const { directory, profile, cleanup } = createCoreQaProfile('karen-native-variants-');
   const core = path.join(directory,'core.sqlite3');
-  execFileSync('python',['-c','from conversations import Conversations; import sys; Conversations(sys.argv[1]).current()',core],{cwd:path.resolve('..')});
+  execFileSync('python',['-c','from conversations import Conversations; import sys; Conversations(sys.argv[1]).current()',core],{cwd:fs.existsSync(path.resolve('../runtime/conversations.py'))?path.resolve('../runtime'):path.resolve('..')});
   const env = {...process.env,KAREN_QA_PROFILE:profile,KAREN_CORE_DB:core};
   delete env.ELECTRON_RUN_AS_NODE;
   const executable = process.env.KAREN_SMOKE_EXECUTABLE;
@@ -31,32 +31,14 @@ const assert = require('node:assert/strict');
     report.version = (await panel.evaluate(()=>window.karen.snapshot())).version;
     const settings = values => panel.evaluate(values=>window.karen.settings(values),values);
     await settings({voiceEnabled:false,sttEnabled:false,wakeWordEnabled:false,scale:1,animations:false,particles:false,cursorTracking:false,sleepAfter:3600});
-    await panel.getByRole('button',{name:'Apariencia',exact:true}).click();
+    await panel.keyboard.press('Control+k');await panel.getByRole('searchbox',{name:'Buscar sección'}).fill('Apariencia');await panel.keyboard.press('Enter');
     await expect(panel.getByRole('radio')).toHaveCount(8);
-    await panel.getByRole('button',{name:'Completa',exact:true}).click();
-    await expect(pet.locator('.pet-renderer')).toHaveAttribute('data-arms','true');
-    const full = await pet.locator('canvas').screenshot({path:'qa/variants/with-arms-and-legs.png',omitBackground:true});
-    await panel.getByRole('button',{name:'Sin brazos',exact:true}).click();
+    await settings({showArms:true,showLegs:true});
     await expect(pet.locator('.pet-renderer')).toHaveAttribute('data-arms','false');
-    await expect(pet.locator('.pet-renderer')).toHaveAttribute('data-legs','true');
-    const armless = await pet.locator('canvas').screenshot({path:'qa/variants/without-arms.png',omitBackground:true});
-    await panel.getByRole('button',{name:'Flotante',exact:true}).click();
     await expect(pet.locator('.pet-renderer')).toHaveAttribute('data-legs','false');
-    const floating = await pet.locator('canvas').screenshot({path:'qa/variants/without-arms-and-legs.png',omitBackground:true});
-    const pixels = (buffer,area) => pet.evaluate(async ({base64,area}) => {
-      const bytes = Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
-      const image = await createImageBitmap(new Blob([bytes],{type:'image/png'}));
-      const canvas = document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
-      const context = canvas.getContext('2d');context.drawImage(image,0,0);image.close();
-      const data = context.getImageData(0,0,canvas.width,canvas.height).data; let count=0;
-      for(let y=area[1];y<area[3];y++) for(let x=area[0];x<area[2];x++)
-        if(data[(y*canvas.width+x)*4+3]>100)count++;
-      return count;
-    },{base64:buffer.toString('base64'),area});
-    report.limbPixels = { arms:[await pixels(full,[35,250,85,325]),await pixels(armless,[35,250,85,325])],
-      legs:[await pixels(armless,[125,345,250,400]),await pixels(floating,[125,345,250,400])] };
-    assert(report.limbPixels.arms[0]>report.limbPixels.arms[1]+20,'Arms must disappear in actual pixels');
-    assert(report.limbPixels.legs[0]>report.limbPixels.legs[1]+20,'Legs must disappear in actual pixels');
+    assert.equal(await panel.getByRole('switch',{name:'Mostrar brazos',exact:true}).count(),0);
+    assert.equal(await panel.getByRole('switch',{name:'Mostrar piernas',exact:true}).count(),0);
+    report.floatingOnly=true;
     for(const style of ['crystal','cloud','orbit','sprite','bloom','aurora','ember','midnight']) {
       await settings({petStyle:style});
       await expect(pet.locator('.pet-renderer')).toHaveAttribute('aria-label',/sin brazos y sin piernas/);
@@ -66,7 +48,7 @@ const assert = require('node:assert/strict');
     }
     for(const scale of [.5,1,2]) {
       await settings({scale});
-      await pet.getByRole('button',{name:'Mostrar brazos y piernas',exact:true}).focus();
+      await pet.getByRole('button',{name:'Abrir mensaje',exact:true}).focus();
       const fits = await pet.locator('.pet-toolbar').evaluate(node=>{const r=node.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;});
       assert(fits,`Toolbar must fit scale ${scale}`);
     }
@@ -117,7 +99,7 @@ const assert = require('node:assert/strict');
     app = await launch();
     ({panel,pet}=await pages());
     const restored = (await panel.evaluate(()=>window.karen.snapshot())).settings;
-    assert.equal(restored.petStyle,'aurora'); assert.equal(restored.showArms,false);assert.equal(restored.showLegs,true);
+    assert.equal(restored.petStyle,'aurora'); assert.equal(restored.showArms,false);assert.equal(restored.showLegs,false);
     assert.equal(restored.idleActivity,'stargaze');assert.equal(restored.idleActivities,false);
     report.persisted = true;
     assert.deepEqual(report.rendererErrors,[]);

@@ -204,3 +204,13 @@ Presencia, tokens centralizados y centro de control modular. 210 pruebas Pet,
 typecheck/Vite y QA nativa de 17 secciones en dos resoluciones correctos.
 Próximo bloque: prioridades/estados y scheduler de comportamientos. El usuario
 solicita actualizar el ejecutable del escritorio al concluir todas las fases.
+
+
+## Experience Update — fase 2, 26/11/2026
+
+Primer incremento fed51db publicado. Ahora: avatar siempre flotante, treinta
+estados, prioridades y mezcla de poses, cinco niveles de actividad, idle variable
+y cuatro frecuencias de saludo. 216 pruebas Pet y QA nativa de treinta estados,
+ocho estilos, escalas, persistencia y reposo correctas. Detalles y límites en
+pet/docs/EXPERIENCE_UPDATE.md. Próximo: cápsula musical y después manager/router.
+El ejecutable del escritorio se actualizará al concluir la entrega completa.

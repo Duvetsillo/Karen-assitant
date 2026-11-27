@@ -34,7 +34,7 @@ con variables semánticas. No se necesitan imágenes generadas ni otro stack.
 ## Fases y evidencia
 
 - [x] 1. Tokens, presencia principal y centro de control con opciones reales.
-- [ ] 2. Estados visuales, prioridades/blending, idle no cíclico y saludos.
+- [x] 2. Estados visuales, prioridades/blending, idle no cíclico y saludos.
 - [ ] 3. Cápsula multimedia compacta/expandible y ocultación sin robar foco.
 - [ ] 4. Manager/router local, selección razonada, disponibilidad y recursos.
 - [ ] 5. Contexto optativo, permisos independientes y proactividad existente.
@@ -58,3 +58,21 @@ src/design/tokens.css. Se conservan presets, voz y vistas existentes.
 y 820×640, memoria preparada, búsqueda, borrador, copia y lectura segura sin errores.
 Capturas antes reutilizadas del estado 84e5dd5; nuevas en qa/interface-design/after
 (ignoradas por Git). Resto de fases e instalación final siguen pendientes.
+
+
+### Fase 2 verificada
+
+Treinta estados independientes del proveedor, con prioridades de interacción/voz,
+poses interpoladas y clasificación visual de metadatos reales de herramientas.
+Cinco intensidades, selección no cíclica de idle y pausas variables. Reutiliza
+parpadeo aleatorio, respiración y resorte existentes. Frecuencia de saludo:
+inicio, diario, regreso tras dos horas de bloqueo/suspensión o solo vista previa.
+El evento de regreso conserva la guardia de escritorio y no habilita micrófono.
+
+Pet siempre flotante por petición del usuario. Los perfiles antiguos y peticiones
+IPC no reactivan extremidades; se retiraron los controles correspondientes.
+216 tests, typecheck/Vite/Electron correctos. QA nativa: treinta estados, ocho
+formas flotantes, escalas 50/100/200 %, tres clips idle reales, interrupción por
+tarea, persistencia, movimiento reducido y cero errores. Idle medido en 23 FPS;
+CPU puntual de los dos renderers ~0,67/0,69 %, sin atribuirlo al total del sistema.
+Regreso físico tras dos horas y audición humana siguen pendientes.

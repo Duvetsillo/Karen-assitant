@@ -1,4 +1,5 @@
 import type { DesktopEvent, ChatMessage } from "./types.js";
+import { toolVisualState } from './avatar-states.js';
 import { expressionForReply } from './expression.js';
 export function mergeMessages(
   snapshot: ChatMessage[],
@@ -127,7 +128,7 @@ export function routeGatewayEvent(
             ? "ERROR"
             : data.phase === "result"
               ? "HAPPY"
-              : "THINKING",
+              : toolVisualState(data.name),
           reason:
             typeof data.name === "string"
               ? `Herramienta: ${data.name}`

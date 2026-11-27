@@ -1,7 +1,8 @@
 import { BrowserWindow, ipcMain, screen } from 'electron';
 import { join } from 'node:path';
+import { readFileSync, writeFileSync, renameSync } from 'node:fs';
 import type { Settings } from '../shared/types.js';
-import { INTRO_IDS, IntroTimeline, selectIntro, type IntroId, type IntroPayload } from '../shared/startup-intros.js';
+import { INTRO_IDS, IntroTimeline, selectIntro, shouldPlayIntro, type IntroId, type IntroPayload } from '../shared/startup-intros.js';
 import { GreetingLibrary, ResourceCache, greetingVoiceVersion } from './greeting-library.js';
 import { IntroGuard } from './intro-guard.js';
 import { randomUUID } from 'node:crypto';
@@ -22,6 +23,8 @@ export class StartupIntroManager {
   private landingResolve?: (ready: boolean) => void;
   private landingTimer?: ReturnType<typeof setTimeout>;
   private revealed = false;
+  private lastPlayed = 0;
+  private automatic = false;
   constructor(private options: {
     pet: BrowserWindow; settings: () => Settings; directory: string;
     prefs: () => Electron.WebPreferences;
@@ -30,6 +33,10 @@ export class StartupIntroManager {
     blocked: () => boolean;
     log: (message: string) => void;
   }) {
+    try {
+      const stored=JSON.parse(readFileSync(join(options.directory,'intro-last-play.json'),'utf8'));
+      if(Number.isFinite(stored.at)&&stored.at>0&&stored.at<=Date.now())this.lastPlayed=stored.at;
+    } catch { /* First run or unreadable timing never prevents opening the pet. */ }
     const own = (event: Electron.IpcMainInvokeEvent) => {
       if (event.sender.id !== this.window?.webContents.id || event.senderFrame !== event.sender.mainFrame)
         throw new Error('Origen de introducción no autorizado.');
@@ -39,6 +46,13 @@ export class StartupIntroManager {
       own(event);
       if (this.started || !this.payload || this.options.blocked()) { if (this.options.blocked()) this.cancel(); return false; }
       this.started = true;
+      if(this.automatic){
+        this.lastPlayed=Date.now();
+        try {
+          const file=join(this.options.directory,'intro-last-play.json');
+          writeFileSync(file+'.tmp',JSON.stringify({at:this.lastPlayed}),{mode:0o600});renameSync(file+'.tmp',file);
+        } catch { this.options.log('No se pudo recordar la frecuencia del saludo. La introducción continúa.'); }
+      }
       this.options.pet.hide();
       this.window!.showInactive(); // Never take foreground focus, including in preview.
       return true;
@@ -90,11 +104,12 @@ export class StartupIntroManager {
     // final frame. The regular avatar has already rendered under zero opacity.
     this.window?.hide();
   }
-  async play(id?: IntroId, startup = false): Promise<boolean> {
+  async play(id?: IntroId, startup = false, trigger: 'startup'|'return' = 'startup'): Promise<boolean> {
     if (id !== undefined && !INTRO_IDS.includes(id)) throw new Error('Introducción desconocida.');
     if (this.busy || this.options.blocked()) return false;
     const settings = { ...this.options.settings() };
-    if ((startup && !settings.introEnabled) || settings.mode !== 'normal') return false;
+    if ((startup && !shouldPlayIntro(settings,trigger,Date.now(),this.lastPlayed)) || settings.mode !== 'normal') return false;
+    this.automatic = startup;
     this.busy = true; this.restorePet = startup || this.options.pet.isVisible();
     const epoch = ++this.epoch;
     try {

@@ -16,7 +16,9 @@ export class IdleActivities {
   private kind: IdleActivity = 'none';
   private since = 0;
   private nextAt = 0;
-  private sequence = 0;
+  private previous?: IdleActivity;
+  constructor(private random: () => number = Math.random) {}
+  private roll() { const value=this.random(); return Number.isFinite(value) ? Math.max(0,Math.min(.999999,value)) : .5; }
   private previousTime = 0;
   private previousDelay: number | undefined;
   private wasAllowed: boolean | undefined;
@@ -42,11 +44,12 @@ export class IdleActivities {
       const progress = (now - this.since) / durations[this.kind];
       if (progress < 1) return { kind: this.kind, progress: Math.max(0, progress) };
       this.kind = 'none';
-      this.nextAt = now + (60 + (1 - s.activity) * 40) * 1000;
+      this.nextAt = now + (60 + (1 - s.activity) * 40) * ( .85 + this.roll() * .3) * 1000;
     }
     if (now >= Math.max(this.nextAt, input.lastActivity + s.idleAfter * 1000)) {
-      const choices = ['play', 'stretch', 'stargaze'] as const;
-      this.kind = s.idleActivity === 'variety' ? choices[this.sequence++ % choices.length] : s.idleActivity;
+      const choices = (['play','stretch','stargaze'] as const).filter(kind=>kind!==this.previous);
+      this.kind = s.idleActivity === 'variety' ? choices[Math.floor(this.roll()*choices.length)] : s.idleActivity;
+      this.previous = this.kind;
       this.since = now;
       return { kind: this.kind, progress: 0 };
     }

@@ -5,6 +5,7 @@ export type IntroId = typeof INTRO_IDS[number];
 export interface IntroPreferences {
   farewellEnabled: boolean;
   introEnabled: boolean;
+  introFrequency: 'startup' | 'daily' | 'after-away' | 'manual';
   introSelection: 'random' | 'fixed' | 'contextual';
   introFixed: IntroId;
   introVoice: boolean;
@@ -18,7 +19,7 @@ export interface IntroPreferences {
 }
 export const introDefaults: IntroPreferences = {
   farewellEnabled: true,
-  introEnabled: true, introSelection: 'random', introFixed: 'awakening',
+  introEnabled: true, introFrequency: 'startup', introSelection: 'random', introFixed: 'awakening',
   introVoice: true, introSounds: true, introVolume: .65,
   introReducedMotion: false, introEscape: true, introFPS: 60, introMonitor: '',
 };
@@ -140,4 +141,12 @@ export class IntroTimeline {
 export interface IntroPayload {
   id: IntroId; settings: import('./types.js').Settings; target: Rectangle;
   greeting?: Greeting; audio?: Uint8Array;
+}
+
+
+export function shouldPlayIntro(preferences: IntroPreferences, trigger: 'startup'|'return', now: number, lastPlayed: number) {
+  if (!preferences.introEnabled || preferences.introFrequency === 'manual') return false;
+  if (preferences.introFrequency === 'after-away') return trigger === 'return';
+  if (preferences.introFrequency === 'startup') return trigger === 'startup';
+  return !lastPlayed || new Date(now).toDateString() !== new Date(lastPlayed).toDateString();
 }

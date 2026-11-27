@@ -23,9 +23,11 @@ export class PresenceSpring {
 }
 
 export const PRESENCE_PRESETS = [
-  { name: 'Serena', activity: .25, description: 'Flota despacio y acompaña con gestos pequeños.' },
-  { name: 'Equilibrada', activity: .6, description: 'Una presencia suave, con mirada y aletas vivas.' },
-  { name: 'Expresiva', activity: .9, description: 'Saluda con más energía y se mueve con soltura.' },
+  { name: 'Desactivado', activity: 0, description: 'Sin movimiento ambiental.' },
+  { name: 'Discreto', activity: .25, description: 'Gestos pequeños y pausas amplias.' },
+  { name: 'Natural', activity: .6, description: 'Una presencia suave y variada.' },
+  { name: 'Expresivo', activity: .9, description: 'Mayor expresividad visual.' },
+  { name: 'Muy interactivo', activity: 1, description: 'La mayor intensidad, con cooldowns y límites.' },
 ] as const;
 
 /** One short response to a state change; never an endless celebration loop. */

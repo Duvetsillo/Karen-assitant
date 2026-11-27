@@ -8,6 +8,8 @@ import { SpeechMotion } from "./speech-motion";
 import { machine, signals, useStore } from "../state/store";
 import { effectiveSettings } from '../../shared/settings';
 import { IdleActivities } from './idle-activities';
+import { AvatarController } from './avatar-controller';
+import { AVATAR_STATES } from '../../shared/avatar-states';
 import { PresenceMotion, PresenceSpring } from './presence-motion';
 import type { IntroRenderer } from '../intros/IntroRenderer';
 import { chooseMusicSession } from '../../shared/music';
@@ -34,8 +36,8 @@ export function PetRenderer({
   const host = useRef<HTMLDivElement>(null);
   const ready = useStore(s=>s.ready);
   const petStyle = useStore((s) => s.settings.petStyle);
-  const showArms = useStore((s) => s.settings.showArms);
-  const showLegs = useStore((s) => s.settings.showLegs);
+  const showArms = false;
+  const showLegs = false;
   useEffect(() => {
     if(!ready)return;
     let disposed = false;
@@ -233,6 +235,7 @@ export function PetRenderer({
         haloTint = 0xffffff;
       const speechMotion = new SpeechMotion();
       const presenceMotion = new PresenceMotion();
+      const avatarController = new AvatarController();
       const headSpring = new PresenceSpring();
       const idleActivities = new IdleActivities();
       const avatar = { scene, root, eyes, eyeL, eyeR, irisL, irisR, finL, finR, facial, shadow, halo, bodyParts: [...maskSprites,heart] };
@@ -259,13 +262,15 @@ export function PetRenderer({
       app.ticker.add((ticker) => {
         const dt = Math.min(ticker.deltaMS / 1000, 0.06);
         t += dt;
-        const { settings, state, expression: spokenExpression, capture, coreActivity, wakeStatus, messages, surfaceVisible, music, introLanding, departure } = useStore.getState();
+        const { settings, state: baseState, expression: spokenExpression, capture, coreActivity, wakeStatus, messages, surfaceVisible, music, introLanding, departure } = useStore.getState();
         const song = music && chooseMusicSession(music.sessions, music.activeId);
-        const musicMotion = !intro && !introLanding && settings.musicAnimations && song?.status === 'playing' && state === 'IDLE' && capture.phase === 'idle' &&
+        const musicMotion = !intro && !introLanding && settings.musicAnimations && song?.status === 'playing' && baseState === 'IDLE' && capture.phase === 'idle' &&
           (settings.mode === 'normal' || (settings.mode === 'gaming' && settings.musicGamingReactions)) && !reduced.matches;
+        const state = avatarController.resolve(baseState,{capture,music:Boolean(musicMotion)});
+        host.current!.dataset.visualState = state;
         const s = effectiveSettings(settings);
         const sleeping = state === "SLEEPING";
-        app!.ticker.maxFPS = s.lowPower || sleeping || !s.animations || reduced.matches ? 12 : state === 'IDLE' ? 24 : preview ? 30 : 60;
+        app!.ticker.maxFPS = s.lowPower || sleeping || !s.animations || reduced.matches ? 12 : ['IDLE','MUSIC_LISTENING','FOCUSED','BORED','SLEEPY'].includes(state) ? 24 : preview ? 30 : 60;
         frames++;
         frameTime += ticker.deltaMS / 1000;
         if (frameTime > 3) {
@@ -276,11 +281,11 @@ export function PetRenderer({
           frameTime = 0;
         }
         const motion = s.animations && !reduced.matches;
-        armL.visible = armR.visible = s.showArms;
-        legL.visible = legR.visible = s.showLegs;
-        if (host.current!.dataset.arms !== String(s.showArms)) host.current!.dataset.arms = String(s.showArms);
-        if (host.current!.dataset.legs !== String(s.showLegs)) host.current!.dataset.legs = String(s.showLegs);
-        const idle = idleActivities.update({ settings: s, state, lastActivity: machine.snapshot.lastActivity,
+        armL.visible = armR.visible = false;
+        legL.visible = legR.visible = false;
+        host.current!.dataset.arms = 'false';
+        host.current!.dataset.legs = 'false';
+        const idle = idleActivities.update({ settings: s, state: baseState, lastActivity: machine.snapshot.lastActivity,
           blocked: Boolean(musicMotion) || document.hidden || !surfaceVisible || capture.phase !== 'idle' || signals.pointingSide !== 0 ||
             wakeStatus === 'processing' || wakeStatus === 'recovering' || Boolean(messages.at(-1)?.pending) ||
             coreActivity.some(client => client.state !== 'IDLE'),
@@ -307,7 +312,7 @@ export function PetRenderer({
         }
         const speaking = state === "SPEAKING";
         const preparingVoice = capture.kind === "voice" && capture.phase === "preparing";
-        const expression = speaking || preparingVoice ? spokenExpression : state;
+        const expression = speaking || preparingVoice ? spokenExpression : AVATAR_STATES[state].face;
         const laughing = expression === 'LAUGHING';
         const angry = expression === 'ANGRY';
         const sad = expression === 'SAD';
@@ -547,6 +552,12 @@ export function PetRenderer({
           if (t % 15 < 2) {
             facial.moveTo(-12,36).quadraticCurveTo(0,53,12,36).stroke({color:0xcdfaff,width:3,cap:'round'});
           }
+        }
+        if (!intro && !introLanding && !departure) {
+          const pose = avatarController.update(state,dt,motion,s.activity);
+          root.rotation += pose.tilt; root.y += pose.lift;
+          eyeL.scale.y *= pose.eyes; eyeR.scale.y *= pose.eyes;
+          irisL.x += pose.gaze; irisR.x += pose.gaze;
         }
         if (intro) {
           app!.ticker.maxFPS = s.introFPS;

@@ -29,7 +29,6 @@ import {
   RotateCcw,
   Power,
   CircleHelp,
-  PersonStanding,
   Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -44,6 +43,7 @@ import "./style.css";
 import "./settings-surface.css";
 import "./design/tokens.css";
 import "./experience.css";
+import { AVATAR_STATES } from '../shared/avatar-states';
 import { APP_VERSION } from "../shared/version";
 import { mergeMessages } from "../shared/protocol";
 import { PET_SCALE } from "../shared/pet-layout";
@@ -67,23 +67,7 @@ const isIntro = new URLSearchParams(location.search).get('view') === 'intro';
 const isMusic = new URLSearchParams(location.search).get('view') === 'music';
 document.documentElement.dataset.view = isMusic ? 'music' : isIntro ? 'intro' : isPet ? "pet" : "settings";
 document.title = isMusic ? 'Karen · Música' : isIntro ? 'Karen · Introducción' : isPet ? "Karen Desktop Pet" : "Karen · Ajustes";
-const labels: Record<PetState, string> = {
-  IDLE: "En calma",
-  LISTENING: "Escuchando",
-  THINKING: "Pensando",
-  SPEAKING: "Hablando",
-  HAPPY: "Feliz",
-  LAUGHING: "Riendo",
-  ANGRY: "Molesta",
-  SAD: "Triste",
-  SURPRISED: "Sorprendida",
-  PROUD: "Orgullosa",
-  CURIOUS: "Curiosa",
-  CONFUSED: "Con duda",
-  ERROR: "Algo ocurrió",
-  SLEEPING: "Descansando",
-  DRAGGING: "En tus manos",
-};
+const labels = Object.fromEntries(Object.entries(AVATAR_STATES).map(([state,profile])=>[state,profile.label])) as Record<PetState,string>;
 const audio = isPet ? new AudioDirector() : undefined;
 const replies = audio ? new VoiceReplies(text => audio.speak(text), () => ({ enabled: effectiveSettings(useStore.getState().settings).voiceEnabled, capture: useStore.getState().capture })) : undefined;
 let musicCommentTrack: string | undefined;
@@ -466,14 +450,14 @@ function Appearance() {
   return (
     <>
       <Group title="Elige su forma" description="Ocho estilos, la misma Karen. Los cambios se guardan al elegir.">
-        <StylePicker value={s.petStyle} arms={s.showArms} legs={s.showLegs} onChange={petStyle => void patch({petStyle})}/>
+        <StylePicker value={s.petStyle} arms={false} legs={false} onChange={petStyle => void patch({petStyle})}/>
       </Group>
       <Group title="Su manera de moverse" description="Elige un ritmo y prueba el saludo en la vista previa.">
         <div className="presence-presets" role="group" aria-label="Ritmo de la mascota">
           {PRESENCE_PRESETS.map(preset => <button key={preset.name}
-            aria-pressed={s.animations && Math.abs(s.activity - preset.activity) < .05}
-            title={preset.description} onClick={() => void patch({activity: preset.activity, animations: true})}>
-            <span className={`presence-mark ${preset.name === 'Serena' ? 'calm' : preset.name === 'Expresiva' ? 'lively' : 'balanced'}`} aria-hidden="true"><i/><i/><i/></span>
+            aria-pressed={preset.activity===0 ? !s.animations : s.animations && Math.abs(s.activity - preset.activity) < .05}
+            title={preset.description} onClick={() => void patch({activity: preset.activity, animations: preset.activity > 0})}>
+            <span className={`presence-mark ${preset.name === 'Discreto' ? 'calm' : preset.name === 'Muy interactivo' ? 'lively' : 'balanced'}`} aria-hidden="true"><i/><i/><i/></span>
             {preset.name}
           </button>)}
         </div>
@@ -484,19 +468,6 @@ function Appearance() {
       </Group>
       <Group title="Chat de escritorio" description="Elige cómo aparecen sus respuestas junto a la mascota.">
         <div className="chat-shapes">{(['bubble','panel','ribbon'] as const).map((shape,i) => <button key={shape} aria-pressed={s.petChatShape===shape} onClick={()=>void patch({petChatShape:shape})}>{['Globo','Panel','Cinta'][i]}</button>)}</div>
-      </Group>
-      <Group title="Su silueta" description="Cada estilo puede tener brazos, piernas o flotar libremente.">
-        <div className="size-presets" role="group" aria-label="Versiones de cuerpo">
-          {[
-            { name: 'Completa', arms: true, legs: true },
-            { name: 'Sin brazos', arms: false, legs: true },
-            { name: 'Flotante', arms: false, legs: false },
-          ].map(preset => <button key={preset.name} aria-pressed={s.showArms === preset.arms && s.showLegs === preset.legs}
-            onClick={() => void patch({showArms:preset.arms,showLegs:preset.legs})}>{preset.name}</button>)}
-        </div>
-        <Toggle label="Mostrar brazos" value={s.showArms} onChange={showArms => void patch({showArms})}/>
-        <Toggle label="Mostrar piernas" value={s.showLegs} onChange={showLegs => void patch({showLegs})}/>
-        <button onClick={() => void patch({showArms:false,showLegs:false})}>Ocultar brazos y piernas</button>
       </Group>
       <Group
         title="Tamaño del PET"
@@ -1289,11 +1260,6 @@ function PetApp() {
         <details className="pet-more" onKeyDown={e=>{if(e.key==='Escape'){e.currentTarget.open=false;e.currentTarget.querySelector('summary')?.focus();}}}>
           <summary aria-label="Más opciones de Karen" title="Más opciones"><MoreHorizontal size={16}/></summary>
           <div className="pet-more-actions">
-        <button title="Mostrar u ocultar brazos y piernas" aria-label="Mostrar brazos y piernas"
-          aria-pressed={s.showArms && s.showLegs}
-          onClick={() => void patch({showArms:!(s.showArms && s.showLegs),showLegs:!(s.showArms && s.showLegs)})}>
-          <PersonStanding size={16}/>
-        </button>
         <button
           title={s.voiceEnabled ? "Silenciar respuestas habladas" : "Activar respuestas habladas"}
           aria-label="Leer respuestas"

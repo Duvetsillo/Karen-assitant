@@ -57,7 +57,7 @@ describe('physical pet presence', () => {
     }
   });
 
-  it('uses existing persisted activity settings for its three presets', () => {
-    expect(PRESENCE_PRESETS.map(preset => preset.activity)).toEqual([.25, .6, .9]);
+  it('uses existing persisted activity settings for its five activity levels', () => {
+    expect(PRESENCE_PRESETS.map(preset => preset.activity)).toEqual([0, .25, .6, .9, 1]);
   });
 });
