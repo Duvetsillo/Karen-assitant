@@ -1,0 +1,41 @@
+{
+  "runtimeTests": 425,
+  "limitations": [
+    "Voz física y AEC pendientes de aceptación humana.",
+    "Reapertura musical automática omitida por guardia Windows en esta pasada.",
+    "DPI forzado por Chromium; no sustituye todas las pantallas físicas.",
+    "isAlwaysOnTop=false en QA pese a preferencia activa; superposición con otras apps pendiente.",
+    "LM Studio/llama.cpp y proveedores remotos sin adaptador.",
+    "Carga, descarga y parámetros Gateway gestionados por OpenClaw/Ollama; reserva estimada."
+  ],
+  "nativeSections": 17,
+  "windowSizes": [
+    "1120x800",
+    "820x640"
+  ],
+  "localRoute": "manual",
+  "packageNativeErrors": 0,
+  "date": "2026-11-26",
+  "modelsDiscovered": 8,
+  "floatingStyles": 8,
+  "installerExit": 0,
+  "desktopShortcutVerified": true,
+  "forcedDeviceScale": 1.5,
+  "petTests": 236,
+  "environmentDefaultOff": true,
+  "armsAndLegs": false,
+  "legacyTests": 4,
+  "vaultHashPreserved": true,
+  "installedLocalModel": "ollama/qwen3:4b",
+  "interop": [
+    "core",
+    "metadata",
+    "music"
+  ],
+  "version": "1.9.0",
+  "installerSha256": "B15A4B5FD1E2E8C195E4FCD7072746FBF3060C5878D6393DF826752F9203F79B",
+  "voiceContracts": 26,
+  "avatarStates": 30,
+  "debugPortClosed": true,
+  "initialSettingsHashPreserved": true
+}

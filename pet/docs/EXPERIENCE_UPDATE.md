@@ -38,7 +38,7 @@ con variables semánticas. No se necesitan imágenes generadas ni otro stack.
 - [x] 3. Cápsula multimedia compacta/expandible y ocultación sin robar foco.
 - [x] 4. Manager/router local, selección razonada, disponibilidad y recursos.
 - [x] 5. Contexto optativo, permisos independientes y proactividad existente.
-- [ ] 6. Regresión, QA nativa/medidas, documentación, paquete e instalación.
+- [x] 6. Regresión, QA nativa/medidas, documentación, paquete e instalación.
 
 Proveedores sin adaptador, visión/captura no autorizadas y voz full-duplex no
 certificada deben explicar su dependencia. Ningún control decorativo se presenta
@@ -140,3 +140,39 @@ de ocho modelos y arbitraje de inferencia entre procesos en directorio temporal.
 La regresión de 17 secciones a 1120x800 y 820x640 sigue correcta. Se corrigieron las
 dos animaciones de propiedades de layout halladas por el detector; 247 avisos de
 paleta/rampa/radios contrastados con el sistema existente y su documentación.
+
+### Fase 6: entrega 1.9.0 instalada
+
+236 tests Pet, 425 runtime, 26 contratos de voz y cuatro tests legacy correctos;
+las tres interoperabilidades Python/Node se repitieron sobre SQLite temporal.
+QA final: treinta estados flotantes, contexto nativo revocable, música/control e
+historial simulados, controles de saludos/persistencia/Gaming y cero errores.
+Diecisiete secciones a 1120x800 y 820x640, también con deviceScaleFactor forzado
+1,5; no equivale a probar cada monitor físico. El paquete NSIS x64 abre ventanas,
+permite controles, sintetiza audio Windows decodificable y cifra el secreto de QA.
+La aserción antigua de topmost se sustituyó por identificación de la ventana por
+URL y su visibilidad: isAlwaysOnTop devuelve false en este entorno aun con la
+preferencia true. No se certifica su comportamiento sobre otras aplicaciones.
+
+Aceptación Core local con datos temporales: conversación 4,874 s, primer token
+4,503 s; cancelación tras fragmento, GPU desactivada en Gaming, plan Obsidian y
+journal correctos, ningún modelo quedó cargado. Es una medida puntual de Core,
+no latencia del Gateway ni garantía global de rendimiento. Ver métricas runtime.
+
+Instalador 1.9.0 generado e instalado, salida 0. Copia previa de ajustes/DPAPI fuera
+del repositorio; hashes intactos al terminar instalación. Después se eligió la
+ruta manual qwen3:4b, ya instalado/configurado, para sustituir la sesión cloud
+inválida. Paquete real descubre ocho modelos, conecta y confirma cambio de sesión.
+Voz/activación y observación siguen apagadas según preferencias; no se aprobaron
+herramientas ni se ejecutó una conversación de prueba sobre la memoria real.
+El acceso Desktop Pet apunta al ejecutable actualizado. Reiniciada la aplicación
+normal sin puerto de depuración y dejada abierta; el instalador permanece local
+en release/ (ignorado), sin publicación binaria remota.
+
+PRODUCT.md adopta el esquema actual sin inventar público/afirmaciones; DESIGN.md
+y sidecar reflejan los tokens y límites reales. Detector local ejecutado una vez:
+249 hallazgos iniciales (247 avisos de valores heredados, dos de layout animado).
+Se retiraron ambas transiciones de layout; no se declara conformidad WCAG por ello.
+Consulta el JSON de aceptación para límites y evidencia compacta. Voz física,
+llamadas de navegador, retorno tras dos horas y pantalla completa real conservan
+aceptación humana pendiente; los proveedores sin adaptador no se presentan activos.

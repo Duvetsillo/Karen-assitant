@@ -8,7 +8,7 @@ const sections=['Presencia','Centro de control','Memoria','Obsidian','Herramient
  const env={...process.env,KAREN_QA_PROFILE:profile};for(const key of ['ELECTRON_RUN_AS_NODE','KAREN_CORE_DB','KAREN_TASKS_DB'])delete env[key];
  const output=path.resolve('qa/interface-design/after');fs.mkdirSync(output,{recursive:true});let app;const errors=[],checks=[];
  try{
-  app=await electron.launch({args:[path.resolve('.'),'--qa'],env});await app.firstWindow();await delay(700);
+  app=await electron.launch({args:[path.resolve('.'),'--qa',...(process.env.KAREN_QA_DPI?[`--force-device-scale-factor=${Number(process.env.KAREN_QA_DPI)}`]:[])],env});await app.firstWindow();await delay(700);
   const panel=app.windows().find(w=>w.url().includes('view=settings'));assert(panel);await panel.waitForSelector('h1');
   for(const w of app.windows())w.on('pageerror',e=>errors.push(e.message));
   const resize=async(width,height)=>{await app.evaluate(({BrowserWindow},{width,height})=>{for(const w of BrowserWindow.getAllWindows()){if(w.webContents.getURL().includes('view=pet'))w.hide();else if(w.webContents.getURL().includes('view=settings')){w.setBounds({x:40,y:40,width,height});w.show();w.focus();}}},{width,height});await delay(150);};

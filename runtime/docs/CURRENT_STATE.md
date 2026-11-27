@@ -1,5 +1,16 @@
 # Estado comprobado — 2026-11-26
 
+## Experience Update 1.9.0 — entrega 2026-11-26
+
+Pet siempre flotante sin extremidades, Presencia y centro de control, treinta
+estados, saludos configurables, cápsula musical, router que reutiliza LocalModels
+y contexto Windows optativo con permisos separados. Commits fed51db, ab3bdaf,
+9643dbb, dc7d9ca y 5ce2a22 publicados. Paquete 1.9.0 instalado, acceso directo
+verificado y proceso normal abierto con qwen3:4b local/manual. No se habilitó voz,
+observación, herramientas ni scheduler. 425 runtime, 236 Pet, 26 voz, cuatro legacy,
+tres interoperabilidades y aceptación Core temporal correctos. Ver
+../../pet/docs/EXPERIENCE_UPDATE.md y JSON de aceptación para medidas y límites;
+no declarar voz física, topmost o pantalla completa certificados.
 
 ## Destino canónico e interfaz — 2026-11-26
 

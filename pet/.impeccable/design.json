@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-15T19:21:04.244Z",
+  "generatedAt": "2026-11-27T01:28:36.261Z",
   "title": "Design System: Karen Desktop Pet",
   "extensions": {
     "colorMeta": {
@@ -294,8 +294,8 @@
       },
       {
         "name": "pet-frame-caps",
-        "value": "60 / 30 / 15 FPS",
-        "purpose": "Mascota / vista previa / reposo o bajo consumo."
+        "value": "60 / 30 / 24 / 12 FPS",
+        "purpose": "Interacción / vista previa / reposo / bajo consumo."
       }
     ],
     "breakpoints": [
@@ -303,7 +303,41 @@
         "name": "compact-desktop",
         "value": "950px"
       }
-    ]
+    ],
+    "semanticTokens": {
+      "source": "src/design/tokens.css",
+      "values": {
+        "canvas": "#10131c",
+        "navigation": "#0c0f16",
+        "surface": "#191e2b",
+        "surface-hover": "#232b3c",
+        "field": "#141925",
+        "line": "#2b3344",
+        "text": "#edf2fb",
+        "muted": "#acb8cc",
+        "quiet": "#8998b0",
+        "ice": "#9be1e8",
+        "lavender": "#bdb5f2",
+        "success": "#a4dfc8",
+        "warning": "#f1c197",
+        "focus": "#d1c8ff",
+        "radius-field": "10px",
+        "radius-control": "10px",
+        "radius-surface": "18px",
+        "space-1": "4px",
+        "space-2": "8px",
+        "space-3": "12px",
+        "space-4": "16px",
+        "space-6": "24px",
+        "space-8": "32px",
+        "page": "32px",
+        "font": "\"Segoe UI Variable\", \"Segoe UI\", sans-serif",
+        "mono": "Consolas, monospace",
+        "fast": "140ms",
+        "enter": "220ms",
+        "ease": "cubic-bezier(.2,.8,.2,1)"
+      }
+    }
   },
   "components": [
     {
@@ -378,7 +412,7 @@
   ],
   "narrative": {
     "northStar": "Vidrio de estudio",
-    "overview": "Karen es una criatura pequeña de vidrio holográfico: volumen azul hielo, aletas laminadas lavanda, cara hundida índigo y ojos luminosos con iris y reflejos. Su corazón incrustado y sus bordes orgánicos le dan identidad incluso con las partículas apagadas. Es una criatura original, no humana; el personaje vive en la ventana transparente del escritorio.\n\nLa interfaz de ajustes es una herramienta nativa de Windows: sobria, oscura y ordenada, con navegación lateral y controles junto a una vista de Karen. El panel combina material acrílico nativo de Windows 11 con capas índigo semitransparentes y niveles tonales, mientras el vidrio, los gradientes y el resplandor del personaje conservan su propia profundidad. La dirección se implementó directamente desde el brief; semilla de dirección registrada: `3a07d84c`.",
+    "overview": "Vidrio de estudio: personaje flotante protagonista, panel carbón con hielo y lavanda; opciones secundarias y permisos separados.",
     "keyCharacteristics": [
       "Criatura de vidrio con silueta orgánica, aletas expresivas y corazón incrustado.",
       "Índigo oscuro para operar; hielo y lavanda para la presencia de Karen.",

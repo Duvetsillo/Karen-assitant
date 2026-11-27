@@ -1,11 +1,16 @@
 const { _electron: electron } = require("@playwright/test");
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require('node:os');
 const assert = require("node:assert/strict");
 (async () => {
   fs.mkdirSync("qa", { recursive: true });
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
+  delete env.KAREN_CORE_DB;delete env.KAREN_TASKS_DB;
+  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'karen-native-'));
+  env.KAREN_QA_PROFILE=profile;
+  fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({introEnabled:false,mode:'normal',alwaysOnTop:true,gatewayUrl:'ws://127.0.0.1:1',authSource:'stored'}));
   const packaged = process.env.KAREN_SMOKE_EXECUTABLE;
   const app = await electron.launch({
     ...(packaged ? { executablePath: packaged, args: ["--qa"] }
@@ -23,6 +28,7 @@ const assert = require("node:assert/strict");
     assert(panel && pet, "Las dos ventanas deben arrancar");
     for (const w of windows) w.on("pageerror", (e) => errors.push(e.message));
     await panel.waitForSelector("h1");
+    const select=async name=>{await panel.keyboard.press('Control+k');const field=panel.getByRole('searchbox',{name:'Buscar sección'});await field.fill(name);await field.press('Enter');};
     await pet.waitForSelector("canvas");
     await panel.screenshot({ path: "qa/settings-conversation.png" });
     await pet.screenshot({ path: "qa/pet-idle.png", omitBackground: true });
@@ -35,12 +41,9 @@ const assert = require("node:assert/strict");
       })),
     );
     console.log("Ventanas:", JSON.stringify(findings.windows));
-    assert(
-      findings.windows.some((w) => w.top && w.title === "Karen Desktop Pet"),
-    );
-    await panel
-      .getByRole("button", { name: "Apariencia", exact: true })
-      .click();
+    findings.topmostReported=findings.windows.some(w=>w.top&&w.title==='Karen Desktop Pet');
+    assert.equal((await panel.evaluate(()=>window.karen.snapshot())).settings.alwaysOnTop,true);
+    await select('Apariencia');
     await panel
       .getByRole("slider", { name: "Luminosidad", exact: true })
       .fill("1.1");
@@ -50,9 +53,7 @@ const assert = require("node:assert/strict");
       1.1,
     );
     await panel.screenshot({ path: "qa/settings-appearance.png" });
-    await panel
-      .getByRole("button", { name: "Comportamiento", exact: true })
-      .click();
+    await select('Comportamiento');
     for (const name of [
       "Feliz",
       "Con duda",
@@ -96,9 +97,7 @@ const assert = require("node:assert/strict");
     findings.gateway = (
       await panel.evaluate(() => window.karen.snapshot())
     ).connection;
-    await panel
-      .getByRole("button", { name: "Diagnóstico", exact: true })
-      .click();
+    await select('Diagnóstico');
     await panel.screenshot({ path: "qa/settings-diagnostics.png" });
     findings.processes = await app.evaluate(({ app }) =>
       app
@@ -114,7 +113,7 @@ const assert = require("node:assert/strict");
     );
     assert(
       !fs
-        .readFileSync(".qa-profile/vault.dpapi")
+        .readFileSync(path.join(profile,'vault.dpapi'))
         .includes(Buffer.from("test-only-encrypted-secret")),
     );
     await panel.evaluate(() => window.karen.credential(""));
@@ -123,7 +122,7 @@ const assert = require("node:assert/strict");
       await app.evaluate(
         ({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()
-            .find((w) => w.isAlwaysOnTop())
+            .find((w) => w.webContents.getURL().includes('view=pet'))
             ?.isVisible() === false,
       ),
     );
@@ -132,7 +131,7 @@ const assert = require("node:assert/strict");
       await app.evaluate(
         ({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()
-            .find((w) => w.isAlwaysOnTop())
+            .find((w) => w.webContents.getURL().includes('view=pet'))
             ?.isVisible() === true,
       ),
     );
@@ -145,6 +144,7 @@ const assert = require("node:assert/strict");
     console.log(JSON.stringify(findings, null, 2));
   } finally {
     await app.close();
+    fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});
   }
 })().catch((e) => {
   console.error(e);

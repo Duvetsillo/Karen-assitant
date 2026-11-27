@@ -2,22 +2,22 @@
 name: Karen Desktop Pet
 description: Una criatura de vidrio holográfico que acompaña al asistente OpenClaw en Windows.
 colors:
-  action-lavender: "#b7b2f5"
-  hologram-ice: "#8be4f3"
-  connected-mint: "#96d9c3"
-  warning-peach: "#f2c297"
-  canvas-indigo: "#11141ef0"
-  navigation-indigo: "#151824e8"
-  field-indigo: "#151a28"
-  control-indigo: "#202638"
-  control-hover: "#30384f"
+  action-lavender: "#bdb5f2"
+  hologram-ice: "#9be1e8"
+  connected-mint: "#a4dfc8"
+  warning-peach: "#f1c197"
+  canvas-indigo: "#10131c"
+  navigation-indigo: "#0c0f16"
+  field-indigo: "#141925"
+  control-indigo: "#191e2b"
+  control-hover: "#232b3c"
   navigation-selected: "#2c2c48"
-  text-primary: "#edf0fb"
-  text-secondary: "#a5adca"
+  text-primary: "#edf2fb"
+  text-secondary: "#acb8cc"
   text-control: "#e1e7fa"
   text-selected: "#ddd7ff"
-  divider: "#292e40"
-  focus-lavender: "#c7c0ff"
+  divider: "#2b3344"
+  focus-lavender: "#d1c8ff"
 typography:
   headline:
     fontFamily: '"Segoe UI Variable", "Segoe UI", sans-serif'
@@ -160,7 +160,7 @@ La letra tiene una presencia clara y tranquila. La densidad del panel se resuelv
 
 ## Layout
 
-Los ajustes usan una barra lateral fija de 198px. El espacio de trabajo restante contiene un encabezado y un área desplazable; esta última dispone controles flexibles y una vista lateral de Karen de 250px. Los márgenes horizontales de página y el espacio entre columnas corresponden a `spacing.page-inline` y `spacing.workspace-gap`.
+Los ajustes usan una barra lateral de 216px (196px en el diseño compacto). El espacio de trabajo restante contiene un encabezado y un área desplazable; esta última dispone controles flexibles y una vista lateral de Karen de 250px. Los márgenes horizontales de página y el espacio entre columnas corresponden a `spacing.page-inline` y `spacing.workspace-gap`.
 
 Al llegar a 950px de anchura o menos, la barra lateral pasa a 175px, la vista de Karen a 200px, el espacio entre columnas a 20px y el margen del cuerpo a `spacing.compact-page`. La implementación conserva las dos columnas en el mínimo de escritorio revisado. Los grupos de ajustes se separan con una regla inferior, 25px de espacio inferior y 25px de margen; no añaden superficies independientes.
 
@@ -268,3 +268,22 @@ propio; todo HTML de la respuesta permanece texto. Tres puntos de actividad con
 opacidad y desplazamiento de 2 px; estáticos con movimiento reducido. Intro usa
 fieldset de audio y detalles para opciones avanzadas; Música usa dos columnas de
 plataformas. Vistas verificadas de Windows: 1120×800 y mínimo 820×640.
+
+
+## Experience Update — 2026-11-26
+
+Fuente normativa del panel: `src/design/tokens.css`; material carbón, hielo y lavanda.
+Tipografía Segoe UI Variable: bienvenida 36/32 px, título de página 26/24 px,
+cuerpo 14 px, controles 12/13 px y metadatos 11 px. Radios: campo/control 10 px,
+superficie 18 px. El personaje conserva su material holográfico y paletas de estilo;
+las burbujas mantienen las siluetas documentadas arriba. No aplicar sus excepciones
+a todas las superficies del panel. Presencia y el centro de control reutilizan el
+espacio libre, sin una tarjeta adicional alrededor de cada sección.
+
+Cápsula musical 392×88 DIP, expansión según controles disponibles y altura máxima
+360 DIP. Aparece sin robar foco. Opacidad/transform, 140–220 ms para controles;
+la ventana cambia de tamaño sin interpolar propiedades de layout en CSS.
+El avatar interpola poses por resorte y limita reposo a 24 FPS, bajo consumo o
+sueño a 12 FPS, interacción a 60 y vista previa a 30. Movimiento reducido anula
+entradas y gestos decorativos. Treinta estados usan prioridades, nunca decisiones
+del proveedor sobre permisos.

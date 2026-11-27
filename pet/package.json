@@ -1,6 +1,6 @@
 {
   "name": "karen-desktop-pet",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "description": "Mascota holográfica de escritorio para OpenClaw",
@@ -82,7 +82,18 @@
       "python/**"
     ],
     "extraResources": [
-      {"from":"../runtime", "to":"model-core", "filter":["answers.py","core_resources.py","karen_core2/__init__.py","karen_core2/models.py","karen_core2/resource_policy.py","karen_core2/inference_queue.py"]}
+      {
+        "from": "../runtime",
+        "to": "model-core",
+        "filter": [
+          "answers.py",
+          "core_resources.py",
+          "karen_core2/__init__.py",
+          "karen_core2/models.py",
+          "karen_core2/resource_policy.py",
+          "karen_core2/inference_queue.py"
+        ]
+      }
     ],
     "win": {
       "target": "nsis",
