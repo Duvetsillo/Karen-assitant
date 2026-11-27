@@ -19,6 +19,7 @@ import { Storage } from "./storage.js";
 import { OpenClawAdapter } from "./gateway.js";
 import { LocalModelManager } from './model-manager.js';
 import { EnvironmentService } from './environment.js';
+import { FullscreenPresence } from './fullscreen-presence.js';
 import { WindowsMediaAdapter } from './music-adapter.js';
 import { interpretEnvironment } from '../shared/environment.js';
 import { CoreStore } from "./core-store.js";
@@ -73,6 +74,7 @@ const coreActivityState = new CoreActivityState();
 let microphoneArbiter: MicrophoneArbiter;
 let modelManager: LocalModelManager | undefined;
 let environment:EnvironmentService|undefined;
+let fullscreenPresence:FullscreenPresence|undefined;
 function environmentQuiet(){return Boolean(storage&&interpretEnvironment(environment?.snapshot,storage.settings.environmentObserve,storage.settings.environmentAdapt).quiet);}
 let coreStyleTimer: ReturnType<typeof setInterval> | undefined;
 let coreStyleFailed = false;
@@ -159,7 +161,7 @@ function showPoint(displayId: string, x: number, y: number) {
     pointTimer = setTimeout(stopPointing, 8000);
   }).catch(error => { stopPointing(); log('error','Señalamiento',String(error)); });
 }
-function hidePet() { startupIntros?.cancel(); stopPerception(); stopPointing(); pet?.hide(); }
+function hidePet() { fullscreenPresence?.userHide();startupIntros?.cancel(); stopPerception(); stopPointing(); pet?.hide(); }
 const boundsPath = () => join(app.getPath("userData"), "window.json");
 function emit(event: DesktopEvent) {
   if (event.type === 'connection') {
@@ -466,7 +468,8 @@ function updateSettings(patch: Partial<Settings>, fromCore = false) {
   startupIntros?.cancel();
   const before = storage.settings;
   const saved = storage.saveSettings(patch);
-  if(before.environmentObserve!==saved.environmentObserve)environment?.configure();
+  if(before.environmentObserve!==saved.environmentObserve||before.fullscreenHide!==saved.fullscreenHide)environment?.configure();
+  if(before.fullscreenHide!==saved.fullscreenHide)void fullscreenPresence?.update(environment?.snapshot?.fullscreen??null,saved.fullscreenHide);
   if(!saved.environmentAdapt||!saved.environmentObserve)emit({type:'environment',snapshot:environment?.snapshot??{enabled:false,at:Date.now(),idleSeconds:0,onBattery:false,desktopProtected:null,category:'unknown'}});
   if (before.musicEnabled !== saved.musicEnabled) musicPresence?.configure();
   else if (Object.keys(patch).some(key => key.startsWith('music'))) musicPresence?.preferencesChanged();
@@ -493,6 +496,7 @@ function updateSettings(patch: Partial<Settings>, fromCore = false) {
   emit({ type: "settings", settings: saved });
   if (
     before.gatewayUrl !== saved.gatewayUrl ||
+    before.conversationScope!==saved.conversationScope ||
     before.agentId !== saved.agentId ||
     before.authSource !== saved.authSource
   ) {
@@ -646,7 +650,7 @@ async function ready() {
     else void startupIntros?.play(undefined, true).then(played => { if (!played) pet?.showInactive(); });
   });
   startupIntros = new StartupIntroManager({
-    pet, settings: () => storage.settings, directory: app.getPath('userData'), prefs,
+    pet, settings: () => storage.settings, directory: app.getPath('userData'), prefs,catalog:join(app.getAppPath(),'assets/startup-greetings/catalog.json'),
     load: loadWindow, protect,
     blocked: () => sessionLocked || quitting || environmentQuiet() || storage.settings.mode !== 'normal' ||
       (capture.phase !== 'idle' && !(capture.kind === 'microphone' && capture.phase === 'transcribing')),
@@ -664,10 +668,14 @@ async function ready() {
     blocked:()=>sessionLocked||quitting||environmentQuiet()||departurePending||storage.settings.mode!=='normal'||Boolean(startupIntros?.active),
     safe:()=>musicPresence!.desktopSafe(),show:showMusicWindow,hide:hideMusicWindow});
   musicPresence.configure();
+  fullscreenPresence=new FullscreenPresence({visible:()=>Boolean(pet?.isVisible()),leave:()=>departure!.play(),
+    hide:()=>pet?.hide(),show:()=>{pet?.showInactive();emit({type:'wake'});},
+    reset:()=>{departure?.finish();if(pet&&!pet.isDestroyed()){pet.webContents.send('desktop-event',{type:'pet-departure',token:null} satisfies DesktopEvent);pet.setIgnoreMouseEvents(clickThrough,{forward:true});}}},
+    ()=>quitting||sessionLocked||departurePending||Boolean(startupIntros?.active));
   environment=new EnvironmentService(()=>storage.settings,new WindowsMediaAdapter(
     app.isPackaged?join(process.resourcesPath,'app.asar.unpacked/dist-native/KarenMusicBridge.exe'):join(here,'../../dist-native/KarenMusicBridge.exe'),()=>{},true),
     ()=>({idleSeconds:powerMonitor.getSystemIdleTime(),onBattery:powerMonitor.isOnBatteryPower()}),
-    snapshot=>{emit({type:'environment',snapshot});if(environmentQuiet()){cancelInitiativeSpeech();startupIntros?.cancel();}mediaWindow?.update(musicPresence!.snapshot());});
+    snapshot=>{emit({type:'environment',snapshot});void fullscreenPresence?.update(snapshot.fullscreen??null,storage.settings.fullscreenHide);if(environmentQuiet()){cancelInitiativeSpeech();startupIntros?.cancel();}mediaWindow?.update(musicPresence!.snapshot());});
   environment.configure();
   void loadWindow(pet, "pet");
   pet.on("close", (event) => {
@@ -1092,6 +1100,7 @@ else {
     microphoneArbiter?.close();
     modelManager?.dispose();
     environment?.dispose();
+    fullscreenPresence?.dispose();
     voice?.dispose();
     loopback?.cancel();
     gateway?.disconnect(false);

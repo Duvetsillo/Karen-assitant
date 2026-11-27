@@ -8,6 +8,7 @@ const assert = require('node:assert/strict');
 
 (async () => {
   const { directory, profile, cleanup } = createCoreQaProfile('karen-native-variants-');
+  const prefs=path.join(profile,'settings.json');fs.writeFileSync(prefs,JSON.stringify({...JSON.parse(fs.readFileSync(prefs,'utf8')),fullscreenHide:false}));
   const core = path.join(directory,'core.sqlite3');
   execFileSync('python',['-c','from conversations import Conversations; import sys; Conversations(sys.argv[1]).current()',core],{cwd:fs.existsSync(path.resolve('../runtime/conversations.py'))?path.resolve('../runtime'):path.resolve('..')});
   const env = {...process.env,KAREN_QA_PROFILE:profile,KAREN_CORE_DB:core};
@@ -71,7 +72,7 @@ const assert = require('node:assert/strict');
     await panel.evaluate(()=>window.karen.demo('THINKING'));
     await expect(pet.locator('.pet-renderer')).toHaveAttribute('data-idle-activity','none');
     report.yieldsToThinking = true;
-    for(const activity of ['stretch','stargaze']) {
+    for(const activity of ['drift','twirl','peek','shimmer','meditate','yawn','wiggle','orbit','stretch','stargaze']) {
       await settings({idleActivity:activity});
       await panel.evaluate(()=>window.karen.demo('IDLE'));
       await expect.poll(()=>pet.locator('.pet-renderer').getAttribute('data-idle-activity'),{timeout:25000}).toBe(activity);

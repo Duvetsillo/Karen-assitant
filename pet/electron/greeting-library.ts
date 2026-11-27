@@ -30,13 +30,36 @@ export class ResourceCache {
   clear() { this.audio = undefined; }
 }
 export class GreetingLibrary {
-  constructor(private root: string, private cache: ResourceCache, private voiceVersion?: string) {}
-  choose(id: IntroId, hour: number, text?: string): { greeting?: Greeting; audio?: Uint8Array } {
+  constructor(private root: string, private cache: ResourceCache, private voiceVersion?: string,private catalogPath?:string) {}
+  private previous?:string;
+  private pool(valid:Greeting[],id:IntroId,hour:number,options:{previousId?:string;category?:string;mix?:boolean}){
+    const category=options.category??(id==='surprise'?'humor':greetingCategory(hour));
+    let choices=valid.filter(g=>g.category===category||(options.mix&&['general','productivity','restart'].includes(g.category)));
+    if(!choices.length)choices=valid.filter(g=>g.category==='general');
+    const fresh=choices.filter(g=>g.id!==(options.previousId??this.previous));
+    if(fresh.length)choices=fresh;
+    const greeting=choices[Math.floor(Math.random()*choices.length)];this.previous=greeting?.id;return greeting;
+  }
+  private catalog(id:IntroId,text:string|undefined):Greeting[]{
+    if(!this.catalogPath)return [];
+    try{
+      if(statSync(this.catalogPath).size>500000)return [];
+      const catalog=JSON.parse(readFileSync(this.catalogPath,'utf8')) as {category:string;texts:string[]}[];
+      const valid:Greeting[]=catalog.slice(0,16).flatMap(group=>group.texts.slice(0,20).filter(line=>typeof line==='string'&&line.length<500&&(text===undefined||line===text)).map((line,index)=>{
+        const duration=Math.min(9,Math.max(2,line.length/16));return {id:`text-${group.category}-${index}`,text:line,category:group.category,file:'',voiceVersion:'text-only',intros:[id],duration,envelopeStep:.05,envelope:Array(Math.ceil(duration/.05)+1).fill(0)};
+      }));
+      return valid;
+    }catch{return [];}
+  }
+  private fallback(id:IntroId,hour:number,text:string|undefined,options:{previousId?:string;category?:string;mix?:boolean}){
+    const greeting=this.pool(this.catalog(id,text),id,hour,options);return greeting?{greeting}:{};
+  }
+  choose(id: IntroId, hour: number, text?: string,options:{previousId?:string;category?:string;mix?:boolean}={}): { greeting?: Greeting; audio?: Uint8Array } {
     try {
       const path = join(this.root, 'manifest.json');
       if (statSync(path).size > 500_000) return {};
       const manifest = JSON.parse(readFileSync(path, 'utf8'));
-      if (manifest.schema !== 1 || !Array.isArray(manifest.greetings)) return {};
+      if (manifest.schema !== 1 || !Array.isArray(manifest.greetings)) return this.fallback(id,hour,text,options);
       const valid = manifest.greetings.slice(0, 100).filter((g: Greeting) =>
         g && typeof g.id === 'string' && typeof g.text === 'string' && g.text.length < 500 &&
         typeof g.file === 'string' && typeof g.voiceVersion === 'string' &&
@@ -47,12 +70,11 @@ export class GreetingLibrary {
         Number.isFinite(g.envelopeStep) && g.envelopeStep >= .01 && g.envelopeStep <= .1 &&
         Array.isArray(g.envelope) && g.envelope.length <= 1501 && g.envelope.length >= Math.floor(g.duration / g.envelopeStep) &&
         g.envelope.every(n => Number.isFinite(n) && n >= 0 && n <= 1));
-      const category = id === 'surprise' ? 'humor' : greetingCategory(hour);
-      let choices = valid.filter((g: Greeting) => g.category === category);
-      if (!choices.length) choices = valid.filter((g: Greeting) => g.category === 'general');
-      if (!choices.length) return {};
-      const greeting: Greeting = choices[Math.floor(Math.random() * choices.length)];
-      return { greeting, audio: this.cache.load(this.root, greeting.file) };
-    } catch { return {}; }
+      const catalog=this.catalog(id,text);
+      const candidates=catalog.length?catalog.map(g=>valid.find((v:Greeting)=>v.text===g.text)??g):valid;
+      const greeting=this.pool(candidates,id,hour,options);
+      if(!greeting)return this.fallback(id,hour,text,options);
+      return greeting.voiceVersion==='text-only'?{greeting}:{ greeting, audio: this.cache.load(this.root, greeting.file) };
+    } catch { return this.fallback(id,hour,text,options); }
   }
 }

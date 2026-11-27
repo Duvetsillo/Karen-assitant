@@ -74,7 +74,9 @@ export function routeGatewayEvent(
           message: {
             id: String(p.runId ?? "error"),
             role: "assistant",
-            text: "OpenClaw no pudo completar la respuesta. Consulta su diagnóstico.",
+            text: /context|prompt is longer|format|schema|tool payload/i.test(String(p.errorMessage??object(p.error).message??''))
+              ? 'OpenClaw rechazó el contexto o el formato de la solicitud. Revisa el modelo local y su presupuesto de contexto en OpenClaw. Puedes usar una conversación propia del Pet para conservar aparte el historial compartido. La orden no se ha repetido.'
+              : 'OpenClaw no pudo completar la respuesta. Revisa Diagnóstico y la disponibilidad del modelo. La orden no se ha repetido.',
           },
           final: true,
           speak: false,

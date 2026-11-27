@@ -4,7 +4,10 @@ import { musicDefaults, MUSIC_PLATFORMS } from './music.js';
 import { PET_STYLES, VOICE_STYLES } from './types.js';
 import { PET_SCALE } from "./pet-layout.js";
 import { ROUTING_MODES, RESOURCE_PROFILES } from './models.js';
+import { IDLE_CLIPS } from './idle-clips.js';
 export const defaults: Settings = {
+  fullscreenHide:true,
+  conversationScope:'shared',
   environmentObserve:false,
   environmentAdapt:false,
   routingMode: 'auto',
@@ -124,6 +127,10 @@ export function validateSettings(
     if(!ROUTING_MODES.includes(raw.routingMode))throw new Error('Ruta de modelos desconocida.');
     s.routingMode=raw.routingMode;
   }
+  if(raw.conversationScope!==undefined){
+    if(!['shared','desktop'].includes(raw.conversationScope))throw new Error('Conversación desconocida.');
+    s.conversationScope=raw.conversationScope;
+  }
   if(raw.resourceProfile!==undefined){
     if(!RESOURCE_PROFILES.includes(raw.resourceProfile))throw new Error('Perfil de recursos desconocido.');
     s.resourceProfile=raw.resourceProfile;
@@ -133,11 +140,12 @@ export function validateSettings(
     s.petStyle = raw.petStyle;
   }
   if (raw.idleActivity !== undefined) {
-    if (!['variety', 'play', 'stretch', 'stargaze'].includes(raw.idleActivity))
+    if (raw.idleActivity!=='variety'&&!Object.hasOwn(IDLE_CLIPS,raw.idleActivity))
       throw new Error('Actividad de reposo desconocida.');
     s.idleActivity = raw.idleActivity;
   }
   for (const key of [
+    'fullscreenHide',
     'environmentObserve','environmentAdapt',
     'musicAutoShow','musicHoverExpand','musicAmbientColors','musicEnabled', 'musicPlayer', 'musicPlayerPinned', 'musicStrictYouTube', 'musicComments', 'musicAnimations', 'musicGamingReactions', 'musicHistory', 'musicObsidian',
     'introEnabled', 'introVoice', 'introSounds', 'introReducedMotion', 'introEscape', 'farewellEnabled',

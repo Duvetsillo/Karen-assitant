@@ -19,10 +19,29 @@ class MusicBridge {
     [DllImport("shell32.dll")] static extern int SHQueryUserNotificationState(out int state);
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
-    static object Context(string id, bool environment = false) {
+    [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr window, out Rect rect);
+    [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
+    [DllImport("user32.dll")] static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+    [DllImport("user32.dll")] static extern bool SetProcessDPIAware();
+    [DllImport("user32.dll",EntryPoint="GetWindowLongW")] static extern int GetWindowStyle(IntPtr window,int index);
+    [StructLayout(LayoutKind.Sequential)] struct Rect { public int Left,Top,Right,Bottom; }
+    [StructLayout(LayoutKind.Sequential)] struct MonitorInfo { public int Size; public Rect Monitor,Work; public uint Flags; }
+    static bool Fullscreen() {
+        try {
+            IntPtr window=GetForegroundWindow(); uint pid; GetWindowThreadProcessId(window,out pid);
+            if((GetWindowStyle(window,-16)&0x00c00000)!=0)return false;
+            using(var process=Process.GetProcessById((int)pid)) {
+                if(process.ProcessName.Equals("explorer",StringComparison.OrdinalIgnoreCase)||process.ProcessName.Equals("Karen Desktop Pet",StringComparison.OrdinalIgnoreCase)||process.Id==Process.GetCurrentProcess().Id)return false;
+            }
+            Rect rect; var info=new MonitorInfo();info.Size=Marshal.SizeOf(info);
+            if(!GetWindowRect(window,out rect)||!GetMonitorInfo(MonitorFromWindow(window,2),ref info))return false;
+            return rect.Left<=info.Monitor.Left+2&&rect.Top<=info.Monitor.Top+2&&rect.Right>=info.Monitor.Right-2&&rect.Bottom>=info.Monitor.Bottom-2;
+        }catch{return false;}
+    }
+    static object Context(string id, bool environment = false, bool media = true) {
         int state; bool safe = SHQueryUserNotificationState(out state) == 0 && state == 5;
         bool clear = false;
-        try {
+        if(media) try {
             string[] calls = { "teams", "ms-teams", "zoom", "discord", "skype", "phoneexperiencehost", "slack", "webex" };
             clear = !Process.GetProcesses().Any(p => calls.Contains(p.ProcessName.ToLowerInvariant()));
             using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone")) {
@@ -44,7 +63,7 @@ class MusicBridge {
                 else if (new [] { "teams", "ms-teams", "zoom", "discord", "skype", "webex" }.Contains(name)) category = "call";
             }
         } catch { category = "unknown"; }
-        using (var self = Process.GetCurrentProcess()) return new { type = "result", id = id, ok = true, safeDesktop = safe, callsClear = clear, category = category,
+        using (var self = Process.GetCurrentProcess()) return new { type = "result", id = id, ok = true, safeDesktop = safe, callsClear = clear, category = category,fullscreen=Fullscreen(),
             workingSetBytes = self.WorkingSet64, cpuSeconds = self.TotalProcessorTime.TotalSeconds };
     }
     static readonly object Gate = new object(), Output = new object();
@@ -159,13 +178,14 @@ class MusicBridge {
     }
     static int Main(string[] args) {
         Console.InputEncoding = new UTF8Encoding(false); Console.OutputEncoding = new UTF8Encoding(false);
+        SetProcessDPIAware();
         if (args.Length == 1 && args[0] == "--context-only") {
             string input;
             while ((input = Console.ReadLine()) != null) {
                 if (input.Length > 4096) continue;
                 try {
                     var request = Json.Deserialize<Dictionary<string, object>>(input);
-                    if (Convert.ToString(request["action"]) == "context") Write(Context(Convert.ToString(request["id"]), true));
+                    if (Convert.ToString(request["action"]) == "context") Write(Context(Convert.ToString(request["id"]),request.ContainsKey("environment")&&Convert.ToBoolean(request["environment"]),false));
                 } catch {}
             }
             return 0;

@@ -229,3 +229,5 @@ protegido en esta pasada. Fases 4–6 y actualización del ejecutable pendientes
 2026-11-26: entorno optativo y adaptación independiente verificados; 236 pruebas Pet y QA Windows correctos. Instalación final pendiente.
 
 2026-11-26: 1.9.0 empaquetada e instalada; acceso de escritorio verificado y aplicación normal conectada con qwen3:4b local, ruta manual. 236 Pet +425 runtime +26 contratos voz +4 legacy y tres interoperabilidades correctos. Limitaciones y aceptación humana en pet/docs/EXPERIENCE_UPDATE.md.
+
+2026-11-26: 78 saludos/11 clips y ocultación por fullscreen implementados; pruebas Windows de ocultación/regreso correctas. Gateway real vuelve a responder con gemma3:1b en sesión sintética (17,21 s). Empaquetado/instalación pendientes; ver pet/docs/PRESENCE_1_10.md.

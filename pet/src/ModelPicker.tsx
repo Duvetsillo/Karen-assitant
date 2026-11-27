@@ -40,7 +40,7 @@ export function ModelPicker() {
     else {setBusy(false); setError('');}
     return () => { request.current++; };
     // Refresh on connection/session changes, never on render or animation frames.
-  }, [connected, gateway, agent, load]);
+  }, [connected, gateway, agent, settings.conversationScope, load]);
   const providers = [...new Set(selection?.models.map(m => m.provider) ?? [])];
   const unknownSelection = selection?.selected && !selection.models.some(m => m.id === selection.selected);
   return <section className="model-picker" aria-busy={busy} aria-label="Selector de modelo">
@@ -57,6 +57,10 @@ export function ModelPicker() {
       </select>
       <button type="button" aria-label="Actualizar modelos" title="Actualizar modelos" disabled={!connected || busy} onClick={() => void load()}><RefreshCw size={16}/></button>
     </div>
+    <label className="model-session-scope">Conversación<select aria-label="Conversación de Karen" value={settings.conversationScope} disabled={busy||pending} onChange={e=>void patch({conversationScope:e.target.value as 'shared'|'desktop'})}>
+      <option value="desktop">Propia del Pet</option><option value="shared">Compartida con otros clientes</option>
+    </select></label>
+    <p className="quiet-note">La conversación propia evita cargar el historial de otros clientes. Conserva el agente y su identidad; cambiar de conversación no borra la anterior.</p>
     <div className="model-routing-controls">
       <label>Selección<select aria-label="Ruta de modelos" value={settings.routingMode} disabled={busy||pending} onChange={e=>void patch({routingMode:e.target.value as RoutingMode})}>
         {ROUTING_MODES.map(mode=><option key={mode} value={mode}>{routeLabels[mode]}</option>)}

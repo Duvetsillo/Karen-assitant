@@ -73,7 +73,7 @@ export class OpenClawAdapter {
     private modelManager?: TurnModels,
   ) {}
   get sessionKey() {
-    return `agent:${this.storage.settings.agentId}:main`;
+    return `agent:${this.storage.settings.agentId}:${this.storage.settings.conversationScope==='desktop'?'karen-desktop':'main'}`;
   }
   private status(info: ConnectionInfo) {
     this.info = info;

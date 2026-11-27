@@ -13,12 +13,12 @@ describe('coarse optional environment',()=>{
   });
   it('does not start or poll by default',async()=>{
     vi.useFakeTimers();const observer={start:vi.fn(),stop:vi.fn(),context:vi.fn()};
-    const service=new EnvironmentService(()=>defaults,observer,()=>({idleSeconds:0,onBattery:false}),vi.fn());
+    const service=new EnvironmentService(()=>({...defaults,fullscreenHide:false}),observer,()=>({idleSeconds:0,onBattery:false}),vi.fn());
     service.configure();await vi.advanceTimersByTimeAsync(60000);
     expect(observer.start).not.toHaveBeenCalled();expect(observer.context).not.toHaveBeenCalled();service.dispose();
   });
   it('samples at low frequency and drops a late result after consent is revoked',async()=>{
-    vi.useFakeTimers();let settings={...defaults,environmentObserve:true};
+    vi.useFakeTimers();let settings={...defaults,fullscreenHide:false,environmentObserve:true};
     let finish:(value:{ok:boolean;safeDesktop:boolean})=>void=()=>{};
     const observer={start:vi.fn(),stop:vi.fn(),context:vi.fn(()=>new Promise<{ok:boolean;safeDesktop:boolean}>(resolve=>{finish=resolve;}))};
     const publish=vi.fn();const service=new EnvironmentService(()=>settings,observer,()=>({idleSeconds:2,onBattery:false}),publish);

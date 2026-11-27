@@ -66,9 +66,9 @@ describe('startup intro timeline and deterministic routing', () => {
   });
 });
 describe('local greeting resources', () => {
-  it('ships exactly forty texts across the nine requested categories', () => {
+  it('ships seventy-eight texts across the nine greeting categories', () => {
     const catalog = JSON.parse(readFileSync(new URL('../assets/startup-greetings/catalog.json', import.meta.url), 'utf8')) as { texts: string[] }[];
-    expect(catalog).toHaveLength(9); expect(catalog.flatMap(c => c.texts)).toHaveLength(40);
+    expect(catalog).toHaveLength(9); expect(catalog.flatMap(c => c.texts)).toHaveLength(78);
   });
   it('extracts silence and speech envelope from real PCM samples; rejects truncation', () => {
     const metadata = analyzeGreetingWav(wav());
@@ -93,5 +93,16 @@ describe('local greeting resources', () => {
       save({ ...greeting, envelope: [9] }); expect(library.choose('sleepy', 3)).toEqual({});
       cache.clear();
     } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+  it('uses expanded readable greetings without synthesizing or repeating the last one',()=>{
+    const root=mkdtempSync(join(tmpdir(),'karen-greeting-text-'));
+    try{
+      const catalog=join(root,'catalog.json');writeFileSync(catalog,JSON.stringify([{category:'absence',texts:['Qué bueno que volviste.','Retomemos con calma.']} ]));
+      const library=new GreetingLibrary(root,new ResourceCache(),'missing-voice',catalog);
+      const first=library.choose('glass',12,undefined,{category:'absence'});
+      const second=library.choose('glass',12,undefined,{category:'absence'});
+      expect(first.greeting?.text).toBeTruthy();expect(second.greeting?.id).not.toBe(first.greeting?.id);expect(first.audio).toBeUndefined();
+      expect(first.greeting?.envelope.every(value=>value===0)).toBe(true);
+    }finally{rmSync(root,{recursive:true,force:true});}
   });
 });

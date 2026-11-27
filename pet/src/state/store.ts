@@ -84,7 +84,7 @@ export const useStore = create<Store>((set, get) => ({
   },
   event: (event) => {
     if(event.type==='environment'){set({environment:event.snapshot});return;}
-    if (event.type === 'pet-departure') { set({ departure: event.token }); return; }
+    if (event.type === 'pet-departure') { set({ departure: event.token??undefined }); return; }
     if (event.type === 'intro-landing') { set({ introLanding: event.token ?? undefined }); return; }
     if (event.type === 'music') { set({ music: event.snapshot }); return; }
     if(event.type==='initiative'){set({initiative:event.snapshot});return;}

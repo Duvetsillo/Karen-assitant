@@ -1,6 +1,7 @@
 import type { PetState, Settings } from '../../shared/types';
+import { IDLE_CLIPS,type IdleClip } from '../../shared/idle-clips';
 
-export type IdleActivity = 'none' | 'play' | 'stretch' | 'stargaze';
+export type IdleActivity = 'none' | IdleClip;
 export interface IdleFrame { kind: IdleActivity; progress: number; }
 interface Input {
   settings: Settings;
@@ -9,7 +10,6 @@ interface Input {
   blocked: boolean;
   reducedMotion: boolean;
 }
-const durations = { play: 8500, stretch: 6500, stargaze: 10000 } as const;
 
 /** Decorative clips only. Never changes assistant state or produces tool calls. */
 export class IdleActivities {
@@ -17,6 +17,7 @@ export class IdleActivities {
   private since = 0;
   private nextAt = 0;
   private previous?: IdleActivity;
+  private remaining:IdleClip[]=[];
   constructor(private random: () => number = Math.random) {}
   private roll() { const value=this.random(); return Number.isFinite(value) ? Math.max(0,Math.min(.999999,value)) : .5; }
   private previousTime = 0;
@@ -41,14 +42,14 @@ export class IdleActivities {
     this.wasAllowed=allowed;
     if (!allowed) return { kind: 'none', progress: 0 };
     if (this.kind !== 'none') {
-      const progress = (now - this.since) / durations[this.kind];
+      const progress = (now - this.since) / IDLE_CLIPS[this.kind].duration;
       if (progress < 1) return { kind: this.kind, progress: Math.max(0, progress) };
       this.kind = 'none';
       this.nextAt = now + (60 + (1 - s.activity) * 40) * ( .85 + this.roll() * .3) * 1000;
     }
     if (now >= Math.max(this.nextAt, input.lastActivity + s.idleAfter * 1000)) {
-      const choices = (['play','stretch','stargaze'] as const).filter(kind=>kind!==this.previous);
-      this.kind = s.idleActivity === 'variety' ? choices[Math.floor(this.roll()*choices.length)] : s.idleActivity;
+      if(!this.remaining.length)this.remaining=(Object.keys(IDLE_CLIPS) as IdleClip[]).filter(kind=>kind!==this.previous);
+      this.kind = s.idleActivity === 'variety' ? this.remaining.splice(Math.floor(this.roll()*this.remaining.length),1)[0] : s.idleActivity;
       this.previous = this.kind;
       this.since = now;
       return { kind: this.kind, progress: 0 };

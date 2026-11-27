@@ -28,7 +28,7 @@ async function until(check: () => boolean, timeout = 4000) {
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 }
-async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: string, prompt: string, answer: string): void }, manager?:TurnModels) {
+async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: string, prompt: string, answer: string): void }, manager?:TurnModels,scope:'shared'|'desktop'='shared') {
   const server = new WebSocketServer({ port: 0, host: "127.0.0.1" });
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address();
@@ -58,7 +58,7 @@ async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: stri
   let delayedSend: { id: string; payload: unknown } | undefined;
   const adapter = new OpenClawAdapter(
     {
-      settings: { ...defaults, gatewayUrl: `ws://127.0.0.1:${address.port}` },
+      settings: { ...defaults,conversationScope:scope, gatewayUrl: `ws://127.0.0.1:${address.port}` },
       credential: () => ({ token: "test-only-bootstrap" }),
       hostDeps: () => ({
         loadOrCreateDeviceIdentity: () => identity,
@@ -148,7 +148,7 @@ async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: stri
       ]};
       if (req.method === 'sessions.list') {
         const [modelProvider, model] = (selectedModel ?? 'ollama/test-small').split('/');
-        payload = {defaults: {modelProvider:'ollama', model:'test-small'}, sessions: [{key:'agent:main:main', model, modelProvider, modelOverrideSource: selectedModel ? 'user' : null}]};
+        payload = {defaults: {modelProvider:'ollama', model:'test-small'}, sessions: [{key:adapter.sessionKey, model, modelProvider, modelOverrideSource: selectedModel ? 'user' : null}]};
       }
       if (req.method === 'sessions.patch') {
         if (failModelPatch) {
@@ -199,6 +199,13 @@ async function setup(core?: { appendOpenClawTurn(sessionKey: string, runId: stri
   };
 }
 describe("adaptador contra servidor de contrato WebSocket", () => {
+  it('keeps desktop history and model edits in their own session',async()=>{
+    const t=await setup(undefined,undefined,'desktop');
+    expect(t.adapter.sessionKey).toBe('agent:main:karen-desktop');
+    await t.adapter.selectModel('ollama/test-large');await t.adapter.send('Hola');
+    expect(t.requests.find(r=>r.method==='sessions.patch')?.params.key).toBe('agent:main:karen-desktop');
+    expect(t.requests.find(r=>r.method==='chat.send')?.params.sessionKey).toBe('agent:main:karen-desktop');
+  });
   it('routes before sending, confirms the model and releases ownership on the terminal event',async()=>{
     const release=vi.fn();
     const manager:TurnModels={inspect:vi.fn().mockRejectedValue(new Error('metadata test')),

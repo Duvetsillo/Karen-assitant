@@ -10,7 +10,7 @@ const assert = require("node:assert/strict");
   delete env.KAREN_CORE_DB;delete env.KAREN_TASKS_DB;
   const profile=fs.mkdtempSync(path.join(os.tmpdir(),'karen-native-'));
   env.KAREN_QA_PROFILE=profile;
-  fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({introEnabled:false,mode:'normal',alwaysOnTop:true,gatewayUrl:'ws://127.0.0.1:1',authSource:'stored'}));
+  fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({fullscreenHide:false,introEnabled:false,mode:'normal',alwaysOnTop:true,gatewayUrl:'ws://127.0.0.1:1',authSource:'stored'}));
   const packaged = process.env.KAREN_SMOKE_EXECUTABLE;
   const app = await electron.launch({
     ...(packaged ? { executablePath: packaged, args: ["--qa"] }

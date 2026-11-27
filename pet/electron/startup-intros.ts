@@ -8,6 +8,7 @@ import { IntroGuard } from './intro-guard.js';
 import { randomUUID } from 'node:crypto';
 
 export class StartupIntroManager {
+  private previousGreeting?:string;
   private window?: BrowserWindow;
   private guard?: IntroGuard;
   private cache?: ResourceCache;
@@ -27,6 +28,7 @@ export class StartupIntroManager {
   private automatic = false;
   constructor(private options: {
     pet: BrowserWindow; settings: () => Settings; directory: string;
+    catalog?:string;
     prefs: () => Electron.WebPreferences;
     load: (window: BrowserWindow, view: string) => Promise<unknown>;
     protect: (window: BrowserWindow) => void;
@@ -129,8 +131,16 @@ export class StartupIntroManager {
       if (settings.introVoice) {
         try {
           const version = greetingVoiceVersion(settings, settings.voiceRoot || process.env.KAREN_PROJECT_ROOT || join(this.options.directory, 'voice'));
-          greeting = new GreetingLibrary(join(this.options.directory, 'startup-greetings'), this.cache, version).choose(selected, new Date().getHours());
+          greeting = new GreetingLibrary(join(this.options.directory, 'startup-greetings'), this.cache, version,
+            this.options.catalog).choose(selected, new Date().getHours(),undefined,
+              {previousId:this.previousGreeting,category:trigger==='return'?'absence':undefined,mix:trigger!=='return'});
+          this.previousGreeting=greeting.greeting?.id;
         } catch { /* Missing voice identity keeps the cinematic silent. */ }
+      }
+      if(!greeting.greeting){
+        greeting=new GreetingLibrary(join(this.options.directory,'startup-greetings'),this.cache,'text-only',this.options.catalog)
+          .choose(selected,new Date().getHours(),undefined,{previousId:this.previousGreeting,category:trigger==='return'?'absence':undefined,mix:trigger!=='return'});
+        this.previousGreeting=greeting.greeting?.id;
       }
       this.payload = { id: selected, settings, target, ...greeting };
       this.guard.expectOverlay();

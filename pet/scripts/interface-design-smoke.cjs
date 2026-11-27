@@ -4,7 +4,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sections=['Presencia','Centro de control','Memoria','Obsidian','Herramientas','Personalidad','Privacidad','Conversación','Iniciativa','Música','Apariencia','Comportamiento','Voz','OpenClaw','Percepción','Sistema','Diagnóstico'];
 (async()=>{
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'karen-interface-'));
- fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({introEnabled:false,voiceEnabled:false,musicEnabled:false}));
+ fs.writeFileSync(path.join(profile,'settings.json'),JSON.stringify({fullscreenHide:false,introEnabled:false,voiceEnabled:false,musicEnabled:false}));
  const env={...process.env,KAREN_QA_PROFILE:profile};for(const key of ['ELECTRON_RUN_AS_NODE','KAREN_CORE_DB','KAREN_TASKS_DB'])delete env[key];
  const output=path.resolve('qa/interface-design/after');fs.mkdirSync(output,{recursive:true});let app;const errors=[],checks=[];
  try{

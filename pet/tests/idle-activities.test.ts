@@ -23,7 +23,7 @@ describe('reposo decorativo, sin acciones del asistente', () => {
     expect(scheduler.update(context, 98499).kind).toBe('none');
     expect(scheduler.update(context, 114500).kind).toBe('stretch');
     expect(scheduler.update(context, 121000).kind).toBe('none');
-    expect(scheduler.update(context, 197000).kind).toBe('play');
+    expect(scheduler.update(context, 197000).kind).toBe('stargaze');
   });
   it.each(['LISTENING','THINKING','SPEAKING','ERROR','DRAGGING','SLEEPING'] as PetState[])(
     'cede inmediatamente ante %s', state => {

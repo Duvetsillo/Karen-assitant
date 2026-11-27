@@ -17,6 +17,7 @@ import { DESKTOP_RESOLUTION, introAvatarResolution, avatarSourceBytes } from '..
 import { bridge } from '../native';
 import { DepartureTimeline } from '../../shared/departure';
 import { interpretEnvironment } from '../../shared/environment';
+import {idlePose} from '../../shared/idle-clips';
 
 function damp(value: number, target: number, dt: number, rate = 9) {
   return value + (target - value) * (1 - Math.exp(-rate * dt));
@@ -300,7 +301,13 @@ export function PetRenderer({
         const play = idle.kind === 'play' ? idleEnvelope : 0;
         const stretch = idle.kind === 'stretch' ? idleEnvelope : 0;
         const stargaze = idle.kind === 'stargaze' ? idleEnvelope : 0;
+        const idleMotion=idlePose(idle.kind,idle.progress);
         pastime.clear();
+        if(idleMotion.glow>0)for(let i=0;i<5;i++){
+          const angle=idle.progress*Math.PI*3+i*Math.PI*2/5;
+          pastime.circle(Math.cos(angle)*(100+i*3),Math.sin(angle)*55-75,2+i%2)
+            .fill({color:0xbceeff,alpha:idleMotion.glow*.75});
+        }
         if (play > 0) {
           const ballX = Math.sin(idle.progress * Math.PI * 6) * 112;
           const ballY = 154 - Math.abs(Math.sin(idle.progress * Math.PI * 6)) * 37;
@@ -351,8 +358,8 @@ export function PetRenderer({
         if (motion) targetTilt += Math.sin(t * 0.6) * 0.022 + gaze.x * 0.002 + Math.sin(t * 2.8) * speech.envelope * 0.045 + speech.side * speech.gesture * 0.055 + Math.sin(idle.progress * Math.PI * 6) * play * .06 - stargaze * .12;
         if (!motion) headSpring.reset();
         tilt = headSpring.update(motion ? targetTilt : 0, dt);
-        root.rotation = tilt;
-        root.x = damp(root.x, motion ? Math.sin(t * 2.8) * speech.envelope * 6 + speech.side * speech.gesture * 4 : 0, dt, 8);
+        root.rotation = tilt+idleMotion.tilt;
+        root.x = damp(root.x, motion ? Math.sin(t * 2.8) * speech.envelope * 6 + speech.side * speech.gesture * 4 + idleMotion.x : 0, dt, 8);
         const bob = presence.bob;
         const happy = presence.lift;
         const laughBounce = laughing && motion ? Math.sin(t * 6) * -3 * speech.envelope : 0;
@@ -368,11 +375,11 @@ export function PetRenderer({
           dt,
           9,
         );
-        root.y = float;
+        root.y = float+idleMotion.y;
         const breathe =
           1 + presence.breath;
         const voicePulse = motion ? speech.envelope * 0.028 : 0;
-        root.scale.set(breathe - voicePulse - stretch * .035, 2 - breathe + voicePulse + stretch * .055);
+        root.scale.set(breathe - voicePulse - stretch * .035-idleMotion.squash, 2 - breathe + voicePulse + stretch * .055+idleMotion.squash);
         root.alpha = damp(
           root.alpha,
           (sleeping ? 0.57 : 1) * (s.nightMode ? 0.7 : 1) * s.opacity,
@@ -465,8 +472,9 @@ export function PetRenderer({
         eyes.position.set(motion ? eyeX * 0.2 : 0, -7 + (motion ? eyeY * 0.16 : 0));
         irisL.position.set(3 + eyeX, 6 + eyeY);
         irisR.position.set(3 - eyeX, 6 + eyeY);
-        eyeL.scale.y = 0.7 * eyeOpen;
-        eyeR.scale.y = 0.7 * rightOpen;
+        irisL.x+=idleMotion.gazeX;irisR.x-=idleMotion.gazeX;irisL.y+=idleMotion.gazeY;irisR.y+=idleMotion.gazeY;
+        eyeL.scale.y = 0.7 * eyeOpen*idleMotion.eye;
+        eyeR.scale.y = 0.7 * rightOpen*idleMotion.eye;
         eyeL.rotation = damp(eyeL.rotation, laughing || expression === "HAPPY" ? -0.1 : angry ? 0.13 : state === "CONFUSED" ? -0.08 : 0, dt, 12);
         eyeR.rotation = damp(eyeR.rotation, laughing || expression === "HAPPY" ? 0.1 : angry ? -0.13 : 0, dt, 12);
         mouth = damp(mouth, voiceEnergy * (motion ? 1 : 0.35), dt, voiceEnergy > mouth ? 22 : 12);
@@ -589,7 +597,7 @@ export function PetRenderer({
           scene.alpha = exit.alpha; root.y += exit.y; root.rotation += exit.tilt; root.scale.set(exit.scale);
           armR.rotation -= exit.wave; finR.rotation += exit.wave * .3; eyeR.scale.y *= exit.wink;
           if (exit.done && !departureDone) { departureDone = true; void bridge.departureComplete?.(departure).catch(() => {}); }
-        }
+        }else if(departureToken){departureToken='';departureDone=false;scene.alpha=1;}
       });
       const oldCleanup = cleanup;
       const pointer = (event: PointerEvent) => {

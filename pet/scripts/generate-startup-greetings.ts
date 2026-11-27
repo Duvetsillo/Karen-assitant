@@ -36,8 +36,9 @@ try {
   let number = 0;
   for (const category of catalog) for (const text of category.texts) {
     if (process.exitCode) throw new Error('Generación cancelada.');
-    const id = `greeting-${String(++number).padStart(2, '0')}`, file = `${id}.wav`;
-    const previous = existing.find(g => g.id === id && g.voiceVersion === voiceVersion && g.text === text);
+    number++;
+    const previous = existing.find(g => g.voiceVersion === voiceVersion && g.text === text);
+    const id=previous?.id??`greeting-${createHash('sha256').update(text).digest('hex').slice(0,16)}`,file=previous?.file??`${id}.wav`;
     if (previous && existsSync(join(output, file))) {
       const metadata = analyzeGreetingWav(readFileSync(join(output, file)));
       greetings.push({ ...previous, ...metadata });

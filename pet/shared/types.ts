@@ -48,6 +48,8 @@ export type ConnectionState =
   | "reconnecting"
   | "action-required";
 export interface Settings extends IntroPreferences, MusicPreferences {
+  fullscreenHide:boolean;
+  conversationScope:'shared'|'desktop';
   environmentObserve:boolean;
   environmentAdapt:boolean;
   routingMode: import('./models.js').RoutingMode;
@@ -62,7 +64,7 @@ export interface Settings extends IntroPreferences, MusicPreferences {
   showArms: boolean;
   showLegs: boolean;
   idleActivities: boolean;
-  idleActivity: 'variety' | 'play' | 'stretch' | 'stargaze';
+  idleActivity: 'variety' | import('./idle-clips.js').IdleClip;
   idleAfter: number;
   scale: number;
   brightness: number;
@@ -136,7 +138,7 @@ export interface CaptureStatus {
 }
 export type DesktopEvent =
   | {type:'environment';snapshot:import('./environment.js').EnvironmentSnapshot}
-  | { type: 'pet-departure'; token: string }
+  | { type: 'pet-departure'; token: string|null }
   | { type: 'intro-landing'; token: string | null }
   | { type: 'music'; snapshot: import('./music.js').MusicSnapshot }
   | { type: 'initiative'; snapshot: import('./initiative.js').InitiativeSnapshot; notice?: import('./initiative.js').InitiativeNotice }

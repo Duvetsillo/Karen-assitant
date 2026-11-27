@@ -50,6 +50,7 @@ import { PET_SCALE } from "../shared/pet-layout";
 import { effectiveSettings } from '../shared/settings';
 import { Perception, CaptureIndicator } from "./Perception";
 import { ModelPicker } from './ModelPicker';
+import { IDLE_CLIPS,type IdleClip } from '../shared/idle-clips';
 import { StylePicker } from './pet/StylePicker';
 import { StartupIntro } from './intros/StartupIntro';
 import { IntroPreferencesPanel } from './intros/IntroPreferencesPanel';
@@ -571,8 +572,8 @@ function Behavior() {
         <div className="input-field">
           <label htmlFor="idle-activity">Actividad favorita</label>
           <select id="idle-activity" value={s.idleActivity} onChange={e => void patch({idleActivity:e.target.value as Settings['idleActivity']})}>
-            <option value="variety">Un poco de todo</option><option value="play">Jugar con una luz</option>
-            <option value="stretch">Estirarse</option><option value="stargaze">Mirar estrellas</option>
+            <option value="variety">Un poco de todo · sin repetir la ronda</option>
+            {(Object.keys(IDLE_CLIPS) as IdleClip[]).map(id=><option key={id} value={id}>{IDLE_CLIPS[id].label}</option>)}
           </select>
         </div>
         <Range label="Comenzar tras estar libre" value={s.idleAfter} min={15} max={300} step={1} unit="s" onChange={idleAfter => void patch({idleAfter})}/>
@@ -984,6 +985,7 @@ function System() {
         <p className="quiet-note">Gaming reduce animación, partículas y overlays; conserva la voz configurada. No molestar también pausa escucha y voz automáticas. No detecta juegos ni cambia Windows.</p>
       </Group>
       <Group title="En tu escritorio">
+        <Toggle label="Ocultarse al entrar en pantalla completa" description="Se despide con una animación breve y vuelve al salir. Solo comprueba el tamaño de la ventana activa; no captura pantalla ni activa la observación del entorno." value={s.fullscreenHide} onChange={fullscreenHide=>void patch({fullscreenHide})}/>
         <Toggle
           label="Iniciar con Windows"
           description="Karen aparece al entrar en tu cuenta, después de instalarla."

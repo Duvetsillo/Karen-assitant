@@ -20,7 +20,7 @@ it('varies idle activities without immediately repeating the previous clip',()=>
   const input={settings:defaults,state:'IDLE' as const,lastActivity:0,blocked:false,reducedMotion:false};
   const low=new IdleActivities(()=>0), high=new IdleActivities(()=>.999);
   expect(low.update(input,30000).kind).toBe('play');
-  expect(high.update(input,30000).kind).toBe('stargaze');
+  expect(high.update(input,30000).kind).toBe('orbit');
   low.update(input,40000);
   expect(low.update(input,200000).kind).not.toBe('play');
 });

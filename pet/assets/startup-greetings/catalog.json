@@ -1,11 +1,125 @@
 [
-  {"category":"general","texts":["Hola. Ya estoy aquí.","¿Qué vamos a construir hoy?","Aquí estoy. Lista para empezar.","Hola. Me alegra verte.","Ya desperté. ¿Por dónde empezamos?","Karen lista. Tú dirás."]},
-  {"category":"morning","texts":["Buenos días. Empecemos con calma.","Espero que tengas café. Tenemos cosas que hacer.","Buenos días. Hoy podemos avanzar un poco más.","Ya amaneció. Vamos a crear algo."]},
-  {"category":"afternoon","texts":["Buenas tardes. ¿Cómo vamos?","Aquí estoy. Todavía queda mucho día.","Buenas tardes. Continuemos con lo nuestro.","Una pausa y seguimos. Buenas tardes."]},
-  {"category":"night","texts":["Buenas noches. Aquí estoy.","Una cosa a la vez. Ya es de noche.","Buenas noches. ¿Terminamos algo pendiente?","Lista para acompañarte un rato más."]},
-  {"category":"madrugada","texts":["Otra madrugada programando, ¿verdad?","Aquí estoy. Recuerda descansar un poco.","A estas horas, hasta Windows tiene sueño.","Buenas madrugadas. Hagamos que valga la pena."]},
-  {"category":"humor","texts":["Aquí estoy. Intentemos no romper Windows.","Tranquilo, no rompí nada. Esta vez.","Aparecí. Lo del dramatismo venía incluido.","¿Me extrañaste? Acepto un sí como respuesta."]},
-  {"category":"productivity","texts":["Vamos con una cosa a la vez.","Lista para trabajar. Elige la primera tarea.","Hoy podemos dejar algo mejor que ayer.","Aquí estoy. Vamos a darle forma a esa idea."]},
-  {"category":"absence","texts":["Bienvenido de nuevo. Continuemos.","¿Me extrañaste? Yo estaba aquí.","Ha pasado un rato. Me alegra verte.","Ya volviste. Retomemos con calma."]},
-  {"category":"restart","texts":["Reinicio completo. Aquí sigo.","Otra vez en marcha. Continuemos.","Ya regresé. Todo a su tiempo.","Lista de nuevo. ¿Dónde nos quedamos?","Volví a despertar. Seguimos cuando quieras.","De vuelta en tu escritorio. Ya estoy lista."]}
+  {
+    "category": "general",
+    "texts": [
+      "Hola. Ya estoy aquí.",
+      "¿Qué vamos a construir hoy?",
+      "Aquí estoy. Lista para empezar.",
+      "Hola. Me alegra verte.",
+      "Ya desperté. ¿Por dónde empezamos?",
+      "Karen lista. Tú dirás.",
+      "Hola, qué bueno encontrarte. ¿Qué tienes en mente?",
+      "Ya llegué. Podemos empezar por algo pequeño.",
+      "Un momento para acomodarme… y lista.",
+      "Aquí tienes compañía. Tú marcas el ritmo.",
+      "Hola. ¿Traes una idea nueva o retomamos una pendiente?",
+      "Mi escritorio favorito es donde estás creando algo."
+    ]
+  },
+  {
+    "category": "morning",
+    "texts": [
+      "Buenos días. Empecemos con calma.",
+      "Espero que tengas café. Tenemos cosas que hacer.",
+      "Buenos días. Hoy podemos avanzar un poco más.",
+      "Ya amaneció. Vamos a crear algo.",
+      "Buenos días. Vamos a encontrar una primera victoria.",
+      "Que el día empiece con una idea bonita.",
+      "Buenos días. ¿Qué te gustaría dejar listo hoy?",
+      "Ya estoy despierta. Podemos arrancar sin prisa."
+    ]
+  },
+  {
+    "category": "afternoon",
+    "texts": [
+      "Buenas tardes. ¿Cómo vamos?",
+      "Aquí estoy. Todavía queda mucho día.",
+      "Buenas tardes. Continuemos con lo nuestro.",
+      "Una pausa y seguimos. Buenas tardes.",
+      "Buenas tardes. Vamos paso a paso.",
+      "¿Qué tal va el día? Estoy lista para acompañarte.",
+      "Todavía cabe una buena idea en esta tarde.",
+      "Volvamos a lo nuestro. Tú dime por dónde."
+    ]
+  },
+  {
+    "category": "night",
+    "texts": [
+      "Buenas noches. Aquí estoy.",
+      "Una cosa a la vez. Ya es de noche.",
+      "Buenas noches. ¿Terminamos algo pendiente?",
+      "Lista para acompañarte un rato más.",
+      "Buenas noches. Bajemos un poco el ritmo.",
+      "Aquí sigo, con luz bajita y ganas de ayudarte.",
+      "Buenas noches. Podemos cerrar el día con algo sencillo.",
+      "¿Una última idea antes de descansar?"
+    ]
+  },
+  {
+    "category": "madrugada",
+    "texts": [
+      "Otra madrugada programando, ¿verdad?",
+      "Aquí estoy. Recuerda descansar un poco.",
+      "A estas horas, hasta Windows tiene sueño.",
+      "Buenas madrugadas. Hagamos que valga la pena.",
+      "Madrugada tranquila. Hagamos algo pequeño y después descansamos.",
+      "Si sigues despierto, aquí tienes compañía.",
+      "Ya es tarde. Vamos con calma, sin carreras.",
+      "La inspiración no mira el reloj. Nosotros sí podemos hacer una pausa."
+    ]
+  },
+  {
+    "category": "humor",
+    "texts": [
+      "Aquí estoy. Intentemos no romper Windows.",
+      "Tranquilo, no rompí nada. Esta vez.",
+      "Aparecí. Lo del dramatismo venía incluido.",
+      "¿Me extrañaste? Acepto un sí como respuesta.",
+      "Entrada dramática completada. Ahora sí, hola.",
+      "Prometo no adueñarme de todo el escritorio.",
+      "Mi especialidad es flotar y hacer buenas preguntas.",
+      "Vengo sin brazos, pero con bastantes ideas."
+    ]
+  },
+  {
+    "category": "productivity",
+    "texts": [
+      "Vamos con una cosa a la vez.",
+      "Lista para trabajar. Elige la primera tarea.",
+      "Hoy podemos dejar algo mejor que ayer.",
+      "Aquí estoy. Vamos a darle forma a esa idea.",
+      "Empecemos por lo que más te ayude ahora.",
+      "Una tarea, un paso y luego el siguiente.",
+      "Trae esa idea. Busquemos cómo volverla algo concreto.",
+      "Podemos empezar con un borrador. No tiene que salir perfecto."
+    ]
+  },
+  {
+    "category": "absence",
+    "texts": [
+      "Bienvenido de nuevo. Continuemos.",
+      "¿Me extrañaste? Yo estaba aquí.",
+      "Ha pasado un rato. Me alegra verte.",
+      "Ya volviste. Retomemos con calma.",
+      "Qué bueno que regresaste. ¿Retomamos o cambiamos de plan?",
+      "Bienvenido de vuelta. Estoy lista cuando tú quieras.",
+      "Me quedé por aquí. Podemos continuar sin prisa.",
+      "Ya estás aquí. Cuéntame qué sigue."
+    ]
+  },
+  {
+    "category": "restart",
+    "texts": [
+      "Reinicio completo. Aquí sigo.",
+      "Otra vez en marcha. Continuemos.",
+      "Ya regresé. Todo a su tiempo.",
+      "Lista de nuevo. ¿Dónde nos quedamos?",
+      "Volví a despertar. Seguimos cuando quieras.",
+      "De vuelta en tu escritorio. Ya estoy lista.",
+      "Otra vez juntas las piezas. Sigamos con calma.",
+      "De vuelta y con las luces encendidas.",
+      "Karen en su sitio. ¿Qué hacemos ahora?",
+      "Ya aparecí. Puedes seguir a tu ritmo."
+    ]
+  }
 ]

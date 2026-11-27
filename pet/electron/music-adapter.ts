@@ -8,7 +8,7 @@ export class WindowsMediaAdapter implements MediaProvider {
   control(request: MusicRequest) { return this.command(request); }
   private child?: ChildProcessWithoutNullStreams;
   private sequence = 0;
-  private pending = new Map<string, { resolve: (value: { ok: boolean; safeDesktop?: boolean; callsClear?: boolean;category?:EnvironmentSnapshot['category'] }) => void; timer: ReturnType<typeof setTimeout> }>();
+  private pending = new Map<string, { resolve: (value: { ok: boolean; safeDesktop?: boolean; callsClear?: boolean;fullscreen?:boolean;category?:EnvironmentSnapshot['category'] }) => void; timer: ReturnType<typeof setTimeout> }>();
   constructor(private executable: string, private publish: (sessions: MediaSession[], error?: string) => void,private contextOnly=false) {}
   start() {
     if (this.child) return;
@@ -29,7 +29,7 @@ export class WindowsMediaAdapter implements MediaProvider {
           } else if (value.type === 'result') {
             const request = this.pending.get(value.id);
             if (request) { clearTimeout(request.timer); this.pending.delete(value.id); request.resolve({ ok: value.ok === true, safeDesktop: value.safeDesktop === true, callsClear: value.callsClear === true,
-              category:['coding','browser','call','game','other'].includes(value.category)?value.category:'unknown' }); }
+              fullscreen:typeof value.fullscreen==='boolean'?value.fullscreen:undefined,category:['coding','browser','call','game','other'].includes(value.category)?value.category:'unknown' }); }
           } else if (value.type === 'error') this.publish([], 'GSMTC no está disponible.');
         } catch { this.publish([], 'Respuesta multimedia inválida.'); }
       }
@@ -41,8 +41,8 @@ export class WindowsMediaAdapter implements MediaProvider {
   command(request: MusicRequest): Promise<boolean> {
     return this.request(request).then(r => r.ok);
   }
-  context() { return this.request({ action: 'context' }); }
-  private request(request: MusicRequest | { action: 'context' }): Promise<{ ok: boolean; safeDesktop?: boolean; callsClear?: boolean;category?:EnvironmentSnapshot['category'] }> {
+  context(environment=false) { return this.request({ action: 'context',environment }); }
+  private request(request: MusicRequest | { action: 'context';environment?:boolean }): Promise<{ ok: boolean; safeDesktop?: boolean; callsClear?: boolean;fullscreen?:boolean;category?:EnvironmentSnapshot['category'] }> {
     if (!this.child || this.pending.size > 8) return Promise.resolve({ ok: false });
     const id = String(++this.sequence);
     return new Promise(resolve => {

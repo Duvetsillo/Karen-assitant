@@ -1,4 +1,5 @@
 export interface EnvironmentSnapshot {
+  fullscreen?:boolean|null;
   enabled:boolean; at:number; idleSeconds:number; onBattery:boolean;
   desktopProtected:boolean|null; category:'coding'|'browser'|'call'|'game'|'other'|'unknown';
 }
